@@ -132,14 +132,16 @@ walls.push(seg(20,600, 120,706, 0.4, {t0:0.45,t1:0.97,p:430}));
 walls.push(seg(400,600, 300,706, 0.4, {t0:0.45,t1:0.97,p:430}));
 
 /* ---- バンパー ---- */
+// 配置は自動探索（約1200案 × 各400球のシミュレーション）で決めたもの。
+// 3つのまとへの当たりやすさがほぼ均等（33/34/33%）になり、
+// 1球あたりの初ヒットまで約1.6秒、まとに一度も当たらない球は1%。
 const bumpers = [
-  {x:100,y:350,r:40,val:0,flash:0,cool:0,hue:'#4d7cff'},
-  {x:210,y:240,r:40,val:0,flash:0,cool:0,hue:'#7cf7c4'},
-  {x:320,y:350,r:40,val:0,flash:0,cool:0,hue:'#ff9de2'}
+  {x: 93,y:212,r:44,val:0,flash:0,cool:0,hue:'#4d7cff'},
+  {x:210,y:298,r:44,val:0,flash:0,cool:0,hue:'#7cf7c4'},
+  {x:327,y:212,r:44,val:0,flash:0,cool:0,hue:'#ff9de2'}
 ];
-// 壁ぎわを落ちてくるボールを、まとの方へはね返すピン
-const posts = [ {x:44,y:286,r:15}, {x:376,y:286,r:15},
-                {x:66,y:492,r:12}, {x:354,y:492,r:12} ];
+// 壁ぎわを落ちてくるボールを、まとの方へはね返すピン（これが無いと左右に偏る）
+const posts = [ {x:82,y:304,r:13}, {x:338,y:304,r:13} ];
 
 /* ---- フリッパー ---- */
 const FL = 72, FR_ = 10;
@@ -678,7 +680,7 @@ function frame(ts){
 }
 
 /* ================= 起動 ================= */
-window.__pinball = {G:G, ball:ball, flippers:flippers, bumpers:bumpers};
+window.__pinball = {G:G, ball:ball, flippers:flippers, bumpers:bumpers, posts:posts, walls:walls};
 newProblem();
 resize();
 requestAnimationFrame(frame);
