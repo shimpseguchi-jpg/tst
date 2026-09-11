@@ -109,6 +109,10 @@ const BR = 11;                   // ボール半径
 const GRAV = 1000;               // 重力 (px/s^2)
 const VMAX = 1500;               // 速度上限（すり抜け防止）
 const DRAIN_Y = 810;
+// ねらいを定めやすくするスロー再生の範囲と強さ
+const AIM_Y0 = 530, AIM_Y1 = 690, SLOW_MAX = 0.62;
+// はね返しの強さ。弱いほどボールが上に張りつかず、手元に返ってきやすい。
+const BUMP_KICK = 430, SLING_KICK = 380, POST_KICK = 260;
 
 const cv = document.getElementById('cv');
 const ctx = cv.getContext('2d');
@@ -128,18 +132,21 @@ walls.push(seg(470,275, 470,780));                  // 外側の右壁（発射�
 walls.push(seg(400,780, 470,780));                  // レーンの底
 walls.push(seg(400,240, 400,780));                  // レーン仕切り
 // 下部の斜め壁＝スリングショット（t=0.35〜0.95 で強く弾く）
-walls.push(seg(20,600, 120,706, 0.4, {t0:0.45,t1:0.97,p:430}));
-walls.push(seg(400,600, 300,706, 0.4, {t0:0.45,t1:0.97,p:430}));
+walls.push(seg(20,600, 120,706, 0.4, {t0:0.45,t1:0.97,p:SLING_KICK}));
+walls.push(seg(400,600, 300,706, 0.4, {t0:0.45,t1:0.97,p:SLING_KICK}));
 
-/* ---- バンパー ---- */
-// 配置は自動探索（約1200案 × 各400球のシミュレーション）で決めたもの。
-// 3つのまとへの当たりやすさがほぼ均等（33/34/33%）になり、
-// 1球あたりの初ヒットまで約1.6秒、まとに一度も当たらない球は1%。
+/* ---- バンパー（答えの数字ボール）---- */
+// hx,hy が定位置。そこを中心に BUMP_MOVE のぶんだけ ゆっくり動く。
+// 左右のまとは dir を逆にして、鏡のように対称に動かす（当たりやすさを左右均等に保つため）。
+// 横に揺らすと左右の壁とのすき間が開いてボールが素通りするので、たてゆれだけにしてある。
+const BUMP_MOVE = {ax:0, ay:10, sp:1.3};
+// 配置は自動探索（各案を最大400球ぶん自動プレイして比較）で決めたもの。
 const bumpers = [
-  {x: 93,y:212,r:44,val:0,flash:0,cool:0,hue:'#4d7cff'},
-  {x:210,y:298,r:44,val:0,flash:0,cool:0,hue:'#7cf7c4'},
-  {x:327,y:212,r:44,val:0,flash:0,cool:0,hue:'#ff9de2'}
+  {hx: 93,hy:212,r:42, ph:0,   dir: 1, val:0,flash:0,cool:0,hue:'#4d7cff'},
+  {hx:210,hy:328,r:42, ph:1.7, dir: 1, val:0,flash:0,cool:0,hue:'#7cf7c4'},
+  {hx:327,hy:212,r:42, ph:0,   dir:-1, val:0,flash:0,cool:0,hue:'#ff9de2'}
 ];
+bumpers.forEach(b=>{ b.x=b.hx; b.y=b.hy; });
 // 壁ぎわを落ちてくるボールを、まとの方へはね返すピン（これが無いと左右に偏る）
 const posts = [ {x:82,y:304,r:13}, {x:338,y:304,r:13} ];
 
@@ -258,7 +265,8 @@ function renderHUD(){
 const G = {
   state:'title',      // title | ready | play | over
   score:0, combo:1, correct:0, balls:3, ballsMax:3, level:1,
-  prob:null, power:0, charging:false, toasts:[], shake:0, stuck:0,
+  prob:null, power:0, charging:false, toasts:[], shake:0, stuck:0, flips:0,
+  slow:0, aim:null, aimTick:0, aimPrev:null,
   hintOn:false, hintTimer:0
 };
 const ball = {x:435, y:750, vx:0, vy:0, live:false};
@@ -289,7 +297,10 @@ function hitBumper(b){
   if(b.cool>0) return;
   b.cool = 0.25;
   if(b.val === G.prob.ans){
-    b.flash = 1; b.ok = true;
+    b.flash = 1; b.ok = true; b.ring = 0.001;
+    burst(b.x, b.y, '#7cf7c4', 30, 360);
+    burst(b.x, b.y, '#ffd166', 20, 280);
+    burst(b.x, b.y, '#ffffff', 10, 200);
     const gain = 100*G.combo;
     G.score += gain; G.correct++;
     toast('せいかい！ +'+gain, '#7cf7c4');
@@ -303,7 +314,8 @@ function hitBumper(b){
     }
     newProblem();
   } else {
-    b.flash = 1; b.ok = false;
+    b.flash = 1; b.ok = false; b.ring = 0.001;
+    burst(b.x, b.y, '#ff6b6b', 16, 230);
     G.combo = 1;
     toast('ざんねん…', '#ff6b6b');
     sfx.bad();
@@ -313,101 +325,126 @@ function hitBumper(b){
 }
 
 /* ================= 物理 ================= */
-function clampSpeed(){
-  const s = Math.hypot(ball.vx, ball.vy);
-  if(s > VMAX){ ball.vx = ball.vx/s*VMAX; ball.vy = ball.vy/s*VMAX; }
+/* ボールを引数で受けるようにしてあるので、同じコードで
+   「いま はじいたら どこへ とぶか」の先読みにも使える。 */
+
+// フリッパーに落ちてくるあいだ、どれくらいゆっくりにするか（0=ふつう 1=いちばん遅い）
+function aimSlowFactor(b){
+  if(!b.live || b.vy <= 0 || b.y < AIM_Y0) return 0;
+  return Math.min(1, (b.y - AIM_Y0) / (AIM_Y1 - AIM_Y0));
 }
-function collideSegment(w){
+
+let animT = 0;                          // 数字ボールをゆっくり動かすための時計
+function moveBumpers(dt){
+  animT += dt;
+  for(const b of bumpers){
+    b.x = b.hx + Math.cos(animT*BUMP_MOVE.sp + b.ph) * BUMP_MOVE.ax * b.dir;
+    b.y = b.hy + Math.sin(animT*BUMP_MOVE.sp + b.ph) * BUMP_MOVE.ay;
+  }
+}
+function clampSpeed(b){
+  const s = Math.hypot(b.vx, b.vy);
+  if(s > VMAX){ b.vx = b.vx/s*VMAX; b.vy = b.vy/s*VMAX; }
+}
+function collideSegment(b, w){          // 0=当たらない 1=ふつうの壁 2=スリングショット
   const dx=w.x2-w.x1, dy=w.y2-w.y1;
   const L2 = dx*dx+dy*dy;
-  let t = L2 ? ((ball.x-w.x1)*dx + (ball.y-w.y1)*dy)/L2 : 0;
+  let t = L2 ? ((b.x-w.x1)*dx + (b.y-w.y1)*dy)/L2 : 0;
   t = t<0?0:(t>1?1:t);
   const cx = w.x1+dx*t, cy = w.y1+dy*t;
-  let nx = ball.x-cx, ny = ball.y-cy;
+  let nx = b.x-cx, ny = b.y-cy;
   let d = Math.hypot(nx,ny);
-  if(d >= BR) return false;
+  if(d >= BR) return 0;
   if(d < 0.0001){ nx = -dy; ny = dx; d = Math.hypot(nx,ny) || 1; }
   nx/=d; ny/=d;
-  ball.x = cx + nx*BR; ball.y = cy + ny*BR;
-  const vn = ball.vx*nx + ball.vy*ny;
+  b.x = cx + nx*BR; b.y = cy + ny*BR;
+  const vn = b.vx*nx + b.vy*ny;
   if(vn < 0){
-    ball.vx -= (1+w.e)*vn*nx;
-    ball.vy -= (1+w.e)*vn*ny;
+    b.vx -= (1+w.e)*vn*nx;
+    b.vy -= (1+w.e)*vn*ny;
   }
   if(w.kick && t>=w.kick.t0 && t<=w.kick.t1){
-    ball.vx += nx*w.kick.p; ball.vy += ny*w.kick.p;
-    sfx.post();
+    b.vx += nx*w.kick.p; b.vy += ny*w.kick.p;
+    return 2;
   }
-  return true;
+  return 1;
 }
-function collideCircle(c, restitution, kick){
-  const nx0 = ball.x-c.x, ny0 = ball.y-c.y;
+function collideCircle(b, c, restitution, kick){
+  const nx0 = b.x-c.x, ny0 = b.y-c.y;
   let d = Math.hypot(nx0,ny0);
   const rr = c.r + BR;
   if(d >= rr) return false;
   if(d < 0.0001){ d = 0.0001; }
   const nx = nx0/d, ny = ny0/d;
-  ball.x = c.x + nx*rr; ball.y = c.y + ny*rr;
-  const vn = ball.vx*nx + ball.vy*ny;
-  if(vn < 0){ ball.vx -= (1+restitution)*vn*nx; ball.vy -= (1+restitution)*vn*ny; }
+  b.x = c.x + nx*rr; b.y = c.y + ny*rr;
+  const vn = b.vx*nx + b.vy*ny;
+  if(vn < 0){ b.vx -= (1+restitution)*vn*nx; b.vy -= (1+restitution)*vn*ny; }
   if(kick){
-    const s = ball.vx*nx + ball.vy*ny;
-    if(s < kick){ ball.vx += nx*(kick-s); ball.vy += ny*(kick-s); }
+    const s = b.vx*nx + b.vy*ny;
+    if(s < kick){ b.vx += nx*(kick-s); b.vy += ny*(kick-s); }
   }
   return true;
 }
-function collideFlipper(f, dt){
-  const cosA=Math.cos(f.a), sinA=Math.sin(f.a);
-  const x2=f.px+f.len*cosA, y2=f.py+f.len*sinA;
+function collideFlipper(b, f){
+  const x2=f.px+f.len*Math.cos(f.a), y2=f.py+f.len*Math.sin(f.a);
   const dx=x2-f.px, dy=y2-f.py, L2=dx*dx+dy*dy;
-  let t = ((ball.x-f.px)*dx + (ball.y-f.py)*dy)/L2;
+  let t = ((b.x-f.px)*dx + (b.y-f.py)*dy)/L2;
   t = t<0?0:(t>1?1:t);
   const cx=f.px+dx*t, cy=f.py+dy*t;
-  let nx=ball.x-cx, ny=ball.y-cy;
+  let nx=b.x-cx, ny=b.y-cy;
   let d=Math.hypot(nx,ny);
   const rr = BR + FR_;
-  if(d >= rr) return;
+  if(d >= rr) return false;
   if(d < 0.0001){ nx=-dy; ny=dx; d=Math.hypot(nx,ny)||1; }
   nx/=d; ny/=d;
-  ball.x = cx + nx*rr; ball.y = cy + ny*rr;
+  b.x = cx + nx*rr; b.y = cy + ny*rr;
   // フリッパー表面の速度（角速度 × 半径）
   const rx = cx-f.px, ry = cy-f.py;
   const svx = -f.w*ry, svy = f.w*rx;
-  const rvn = (ball.vx-svx)*nx + (ball.vy-svy)*ny;
+  const rvn = (b.vx-svx)*nx + (b.vy-svy)*ny;
   if(rvn < 0){
     const e = 0.55;
-    ball.vx -= (1+e)*rvn*nx;
-    ball.vy -= (1+e)*rvn*ny;
+    b.vx -= (1+e)*rvn*nx;
+    b.vy -= (1+e)*rvn*ny;
   }
+  return true;
 }
-
-function stepPhysics(dt){
-  // フリッパーの角度更新
-  for(const f of flippers){
+function stepFlippers(fls, dt){
+  for(const f of fls){
     const target = f.held ? f.up : f.rest;
-    const spd = (f.held ? 26 : 15) * (f.dir>0?1:1);
+    const spd = f.held ? 26 : 15;
     const prev = f.a;
     if(f.a < target) f.a = Math.min(target, f.a + spd*dt);
     else             f.a = Math.max(target, f.a - spd*dt);
     f.w = (f.a-prev)/dt;
   }
-  if(!ball.live) return;
-
+}
+// ボール b を dt ぶん進める。hit(種類, 相手) は当たったときに呼ばれる（省略可）
+function advance(b, fls, dt, hit){
   const SUB = 4, h = dt/SUB;
   for(let s=0;s<SUB;s++){
-    ball.vy += GRAV*h;
-    ball.vx *= 0.9994; ball.vy *= 0.9994;
-    clampSpeed();
-    ball.x += ball.vx*h; ball.y += ball.vy*h;
-
-    for(const w of walls) collideSegment(w);
-    for(const p of posts) if(collideCircle(p, 0.75, 260)) sfx.post();
-    for(const b of bumpers){
-      if(collideCircle(b, 0.5, 430)){ sfx.bump(); hitBumper(b); G.score += 5; }
-    }
-    for(const f of flippers) collideFlipper(f, h);
+    b.vy += GRAV*h;
+    b.vx *= 0.9994; b.vy *= 0.9994;
+    clampSpeed(b);
+    b.x += b.vx*h; b.y += b.vy*h;
+    for(const w of walls){ const k = collideSegment(b,w); if(k===2 && hit) hit('sling'); }
+    for(const p of posts)   if(collideCircle(b,p,0.75,POST_KICK) && hit) hit('post', p);
+    for(const bp of bumpers) if(collideCircle(b,bp,0.5,BUMP_KICK) && hit) hit('bumper', bp);
+    for(const f of fls)     if(collideFlipper(b,f) && hit) hit('flipper', f);
   }
-  clampSpeed();
+  clampSpeed(b);
+}
+
+function stepPhysics(dt){
+  stepFlippers(flippers, dt);
+  moveBumpers(dt);
+  if(!ball.live) return;
+
+  advance(ball, flippers, dt, (kind, obj)=>{
+    if(kind==='sling' || kind==='post') sfx.post();
+    else if(kind==='bumper'){ sfx.bump(); hitBumper(obj); G.score += 5; }
+    else if(kind==='flipper') G.flips++;      // フリッパーに当たった回数（配置調整ツールが見る）
+  });
 
   // 発射レーンに戻ってしまったら、もう一度うてるようにする
   if(ball.x > 406 && ball.y > 715 && Math.hypot(ball.vx,ball.vy) < 90){ setReady(); return; }
@@ -419,7 +456,71 @@ function stepPhysics(dt){
   if(ball.y > DRAIN_Y){ ball.live=false; loseBall(); }
 }
 
+/* ---- ねらい表示：いま はじいたら ボールが どこへ とぶか ---- */
+function predictAim(){
+  const side = ball.x < 210 ? 0 : 1;
+  const b = {x:ball.x, y:ball.y, vx:ball.vx, vy:ball.vy};
+  const fls = flippers.map(f=>({px:f.px, py:f.py, len:f.len, rest:f.rest, up:f.up,
+                                a:f.a, w:f.w, held:false}));
+  fls[side].held = true;                 // 「いま はじいた」とみなす
+  const pts = [{x:b.x, y:b.y}];
+  let target = null, rose = false;
+  const h = 1/60;
+  for(let i=0;i<54 && !target;i++){
+    stepFlippers(fls, h);
+    advance(b, fls, h, (kind, obj)=>{ if(kind==='bumper' && !target) target = obj; });
+    pts.push({x:b.x, y:b.y});
+    if(b.vy < -60) rose = true;
+    // 上がりきって落ちはじめたら、そこで打ち切る（行き先が一目で分かるように）
+    if(rose && b.vy > 0) break;
+    if(b.y > DRAIN_Y || b.y < 60) break;
+  }
+  return {side:side, pts:pts, target:target};
+}
+
 /* ================= 描画 ================= */
+/* ---- 色のちいさな道具 ---- */
+function rgba(hex,a){
+  const n = parseInt(hex.slice(1),16);
+  return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';
+}
+function mix(h1,h2,t){
+  const a=parseInt(h1.slice(1),16), b=parseInt(h2.slice(1),16);
+  const r=Math.round(((a>>16)&255)*(1-t)+((b>>16)&255)*t);
+  const g=Math.round(((a>>8)&255)*(1-t)+((b>>8)&255)*t);
+  const c=Math.round((a&255)*(1-t)+(b&255)*t);
+  return '#'+(((1<<24)|(r<<16)|(g<<8)|c).toString(16).slice(1));
+}
+
+/* ---- 当たったときに はじける つぶ ---- */
+const sparks = [];
+function burst(x,y,color,n,power){
+  for(let i=0;i<n && sparks.length<150;i++){
+    const a = Math.random()*Math.PI*2, sp = power*(0.35+Math.random()*0.95);
+    sparks.push({x:x, y:y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-70,
+                 t:0, life:0.50+Math.random()*0.50, c:color, r:3+Math.random()*4.5});
+  }
+}
+function stepSparks(dt){
+  for(let i=sparks.length-1;i>=0;i--){
+    const p = sparks[i]; p.t += dt;
+    if(p.t >= p.life){ sparks.splice(i,1); continue; }
+    p.vy += 520*dt; p.vx *= 0.985; p.vy *= 0.985;
+    p.x += p.vx*dt; p.y += p.vy*dt;
+  }
+}
+function drawSparks(){
+  for(const p of sparks){
+    const k = 1 - p.t/p.life;
+    ctx.globalAlpha = k;
+    ctx.fillStyle = p.c;
+    ctx.shadowColor = p.c; ctx.shadowBlur = 8*k;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r*k+1.0, 0, 7); ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+  ctx.globalAlpha = 1;
+}
+
 function rrect(x,y,w,h,r){          // roundRect が無い iPadOS でも動くように
   r = Math.min(r, w/2, h/2);
   ctx.beginPath();
@@ -452,15 +553,6 @@ function drawTable(){
   ctx.fillStyle='rgba(120,170,255,0.06)'; ctx.fill();
   ctx.restore();
 
-  // 目盛りの飾り（10のまとまりの帯）
-  ctx.save(); ctx.globalAlpha=0.16;
-  for(let i=0;i<10;i++){
-    ctx.fillStyle = i<5 ? '#4d7cff' : '#7cf7c4';
-    ctx.fillRect(36+ i*33, 545, 26, 10);
-  }
-  ctx.restore();
-  roundedText('10のまとまり', 210, 528, 15, 'rgba(200,220,255,.4)','700');
-
   // 壁
   ctx.lineCap='round'; ctx.lineWidth=6; ctx.strokeStyle='#6f8cff';
   ctx.shadowColor='rgba(111,140,255,.9)'; ctx.shadowBlur=10;
@@ -490,18 +582,131 @@ function drawTable(){
 }
 function drawBumpers(){
   for(const b of bumpers){
-    const pulse = 1 + b.flash*0.22;
-    const col = b.flash>0 ? (b.ok?'#7cf7c4':'#ff6b6b') : b.hue;
-    ctx.beginPath(); ctx.arc(b.x,b.y,b.r*pulse+7,0,7);
-    ctx.fillStyle='rgba(255,255,255,'+(0.05+b.flash*0.22)+')'; ctx.fill();
-    ctx.beginPath(); ctx.arc(b.x,b.y,b.r*pulse,0,7);
-    const gr=ctx.createRadialGradient(b.x-10,b.y-12,4,b.x,b.y,b.r*pulse);
-    gr.addColorStop(0,'#ffffff'); gr.addColorStop(0.35,col); gr.addColorStop(1,'#101a40');
-    ctx.fillStyle=gr; ctx.shadowColor=col; ctx.shadowBlur=18+b.flash*24; ctx.fill(); ctx.shadowBlur=0;
-    ctx.lineWidth=3; ctx.strokeStyle='rgba(255,255,255,.75)'; ctx.stroke();
-    roundedText(String(b.val), b.x, b.y+2, 38, '#0b1024');
+    const hit = b.flash;
+    const col = hit>0 ? (b.ok ? mix(b.hue,'#ffffff',0.70) : '#ff6b6b') : b.hue;
+    const R0  = b.r*(1 + hit*0.14);
+
+    // 盤面に落ちる影（浮いているように見せる）
+    ctx.save(); ctx.globalAlpha = 0.42; ctx.fillStyle = '#050a1e';
+    ctx.beginPath(); ctx.ellipse(b.x+6, b.y+11, R0*0.94, R0*0.82, 0, 0, 7); ctx.fill();
+    ctx.restore();
+
+    // まわりのぼんやりした光
+    const halo = ctx.createRadialGradient(b.x,b.y,R0*0.85, b.x,b.y,R0+22+hit*22);
+    halo.addColorStop(0, rgba(col, 0.40+hit*0.40));
+    halo.addColorStop(1, rgba(col, 0));
+    ctx.fillStyle = halo;
+    ctx.beginPath(); ctx.arc(b.x,b.y,R0+22+hit*22,0,7); ctx.fill();
+
+    // 玉ほんたい（左上から光が当たっている想定）
+    const g = ctx.createRadialGradient(b.x-R0*0.34, b.y-R0*0.40, R0*0.06, b.x, b.y, R0*1.10);
+    g.addColorStop(0,    '#ffffff');
+    g.addColorStop(0.16, mix(col,'#ffffff',0.55));
+    g.addColorStop(0.52, col);
+    g.addColorStop(0.88, mix(col,'#0b1024',0.55));
+    g.addColorStop(1,    mix(col,'#0b1024',0.74));
+    ctx.beginPath(); ctx.arc(b.x,b.y,R0,0,7); ctx.fillStyle = g; ctx.fill();
+
+    // 下からの照り返し
+    ctx.beginPath(); ctx.arc(b.x, b.y, R0-3, 0.22*Math.PI, 0.78*Math.PI);
+    ctx.lineWidth = 4; ctx.strokeStyle = rgba('#ffffff',0.28); ctx.stroke();
+
+    // ふち
+    ctx.beginPath(); ctx.arc(b.x,b.y,R0,0,7);
+    ctx.lineWidth = 3; ctx.strokeStyle = rgba('#ffffff',0.78); ctx.stroke();
+
+    // つやのハイライト
+    ctx.save(); ctx.globalAlpha = 0.72; ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.ellipse(b.x-R0*0.34, b.y-R0*0.40, R0*0.26, R0*0.16, -0.7, 0, 7); ctx.fill();
+    ctx.restore();
+
+    // 数字（白フチをつけて、どの色の上でも読めるように）
+    const fs = 42*(1 + hit*0.10);
+    ctx.font = '800 '+fs+'px "Hiragino Maru Gothic ProN","Hiragino Sans",system-ui,sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = 7; ctx.lineJoin = 'round';
+    ctx.strokeStyle = rgba('#ffffff',0.88); ctx.strokeText(String(b.val), b.x, b.y+2);
+    ctx.fillStyle = '#101736';             ctx.fillText(String(b.val), b.x, b.y+2);
+
+    // 当たったときに ひろがる輪
+    if(b.ring > 0 && b.ring < 1){
+      const rc = b.ok ? '#ffffff' : '#ff6b6b';
+      ctx.beginPath(); ctx.arc(b.x, b.y, R0 + b.ring*70, 0, 7);
+      ctx.lineWidth = 11*(1-b.ring);
+      ctx.strokeStyle = rgba(rc, (1-b.ring)*0.95);
+      ctx.shadowColor = rc; ctx.shadowBlur = 16*(1-b.ring);
+      ctx.stroke(); ctx.shadowBlur = 0;
+      if(b.ok){                                  // 正解はもう一段 外側にも輪を出す
+        const r2 = Math.max(0, b.ring-0.22);
+        if(r2 > 0){
+          ctx.beginPath(); ctx.arc(b.x, b.y, R0 + r2*88, 0, 7);
+          ctx.lineWidth = 6*(1-r2);
+          ctx.strokeStyle = rgba('#7cf7c4', (1-r2)*0.6);
+          ctx.stroke();
+        }
+      }
+    }
   }
 }
+
+/* ---- ねらい表示：いま はじいたら どこへ とぶか ---- */
+function drawAim(){
+  const a = G.aim;
+  if(!a || G.slow < 0.08) return;
+  const al = Math.min(1, G.slow*1.5);
+  const p0 = a.pts[0], pz = a.pts[a.pts.length-1];
+  ctx.save();
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  // 手前は濃く、先へ行くほど薄く（先ほど当てにならないので）
+  const grad = ctx.createLinearGradient(p0.x, p0.y, pz.x, pz.y);
+  grad.addColorStop(0, rgba('#ffe9a8', 0.90*al));
+  grad.addColorStop(1, rgba('#ffe9a8', 0.22*al));
+  ctx.strokeStyle = grad;
+  ctx.setLineDash([12,10]);
+  ctx.lineDashOffset = -((animT*90) % 22);
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(p0.x, p0.y);
+  for(let i=1;i<a.pts.length;i++) ctx.lineTo(a.pts[i].x, a.pts[i].y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 1;
+
+  const n = a.pts.length;
+  if(n >= 2){                                   // 矢じり
+    const p1 = a.pts[n-1], p0 = a.pts[n-2];
+    const ang = Math.atan2(p1.y-p0.y, p1.x-p0.x);
+    ctx.globalAlpha = 0.80*al; ctx.fillStyle = '#ffe9a8';
+    ctx.beginPath();
+    ctx.moveTo(p1.x + 6*Math.cos(ang), p1.y + 6*Math.sin(ang));
+    ctx.lineTo(p1.x - 21*Math.cos(ang-0.42), p1.y - 21*Math.sin(ang-0.42));
+    ctx.lineTo(p1.x - 21*Math.cos(ang+0.42), p1.y - 21*Math.sin(ang+0.42));
+    ctx.closePath(); ctx.fill();
+  }
+  if(a.target){                                 // 当たりそうな まとを丸でかこむ
+    ctx.globalAlpha = 0.85*al;
+    ctx.strokeStyle = '#ffe9a8'; ctx.lineWidth = 5;
+    ctx.setLineDash([8,10]); ctx.lineDashOffset = (animT*50) % 18;
+    ctx.beginPath(); ctx.arc(a.target.x, a.target.y, a.target.r+14, 0, 7); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.restore();
+}
+
+/* ---- ゆっくりになっていることを見せる ---- */
+function drawSlowTint(){
+  if(G.slow < 0.06) return;
+  const y0 = AIM_Y0 - 30;
+  const g = ctx.createLinearGradient(0, y0, 0, H);
+  g.addColorStop(0, 'rgba(124,247,196,0)');
+  g.addColorStop(1, 'rgba(124,247,196,'+(G.slow*0.16)+')');
+  ctx.fillStyle = g; ctx.fillRect(0, y0, W, H-y0);
+  ctx.save();
+  ctx.globalAlpha = Math.min(1, G.slow*1.6)*0.9;
+  roundedText('ゆっくり… ねらって！', 210, y0+8, 23, '#7cf7c4','800');
+  ctx.restore();
+}
+
 function drawFlippers(){
   for(const f of flippers){
     const x2=f.px+f.len*Math.cos(f.a), y2=f.py+f.len*Math.sin(f.a);
@@ -514,8 +719,16 @@ function drawFlippers(){
     ctx.beginPath(); ctx.arc(f.px,f.py,5,0,7); ctx.fillStyle='#0b1024'; ctx.fill();
   }
 }
+const trail = [];
 function drawBall(){
   if(!ball.live && G.state!=='ready') return;
+  for(let i=0;i<trail.length;i++){       // 残像（ゆっくりのときに見やすい）
+    const k=(i+1)/trail.length;
+    ctx.globalAlpha = k*0.30;
+    ctx.fillStyle='#cfdcff';
+    ctx.beginPath(); ctx.arc(trail[i].x, trail[i].y, BR*k*0.85, 0, 7); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
   const gr=ctx.createRadialGradient(ball.x-4,ball.y-5,1,ball.x,ball.y,BR);
   gr.addColorStop(0,'#ffffff'); gr.addColorStop(0.5,'#dfe7ff'); gr.addColorStop(1,'#7f8fc4');
   ctx.beginPath(); ctx.arc(ball.x,ball.y,BR,0,7);
@@ -538,7 +751,7 @@ function drawToasts(dt){
     if(t.t>t.life){ G.toasts.splice(i,1); continue; }
     const k=t.t/t.life;
     ctx.globalAlpha = 1-k*k;
-    roundedText(t.text, 210, 470 - k*70, 40, t.color);
+    roundedText(t.text, 210, 455 - k*60, 40, t.color);
     ctx.globalAlpha = 1;
   }
 }
@@ -553,9 +766,12 @@ function draw(dt){
   if(G.shake>0){ ctx.translate((Math.random()-0.5)*G.shake,(Math.random()-0.5)*G.shake); G.shake*=0.86; if(G.shake<0.4)G.shake=0; }
   drawTable();
   drawBumpers();
+  drawAim();
   drawFlippers();
   drawPlunger();
+  drawSlowTint();
   drawBall();
+  drawSparks();
   drawToasts(dt);
 
   if(G.state==='title'){
@@ -671,11 +887,37 @@ function frame(ts){
   if(dt > 0.05) dt = 0.05;
 
   if(G.state==='ready' && G.charging) G.power = Math.min(1, G.power + dt*1.15);
-  for(const b of bumpers){ if(b.flash>0) b.flash=Math.max(0,b.flash-dt*3); if(b.cool>0) b.cool-=dt; }
+  for(const b of bumpers){
+    if(b.flash>0) b.flash = Math.max(0, b.flash-dt*3);
+    if(b.cool>0)  b.cool -= dt;
+    if(b.ring>0){ b.ring += dt*2.4; if(b.ring>=1) b.ring = 0; }
+  }
   if(G.hintTimer>0) G.hintTimer -= dt;
   elHint.classList.toggle('show', G.hintOn || G.hintTimer>0);
 
-  if(G.state==='play' || G.state==='ready') stepPhysics(dt);
+  // フリッパーに落ちてくるあいだは ゆっくりにして、ねらいを定めやすくする
+  const want = (G.state==='play') ? aimSlowFactor(ball) : 0;
+  G.slow += (want - G.slow) * Math.min(1, dt*8);
+  const tscale = 1 - SLOW_MAX*G.slow;
+
+  if(G.state==='play' || G.state==='ready') stepPhysics(dt*tscale);
+  stepSparks(dt);
+
+  // 「いま はじいたら どこへ とぶか」は 3フレームに1回だけ計算する
+  if(G.slow > 0.06 && G.state==='play' && ball.live){
+    if(--G.aimTick <= 0){
+      const a = predictAim();
+      // まとを丸でかこむのは、2回つづけて同じまとを指したときだけ
+      const raw = a.target;
+      a.target = (raw && raw === G.aimPrev) ? raw : null;
+      G.aimPrev = raw;
+      G.aim = a; G.aimTick = 3;
+    }
+  } else { G.aim = null; G.aimTick = 0; G.aimPrev = null; }
+
+  if(ball.live){ trail.push({x:ball.x, y:ball.y}); if(trail.length>9) trail.shift(); }
+  else trail.length = 0;
+
   draw(dt);
 }
 
