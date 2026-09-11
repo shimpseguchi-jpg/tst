@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>カルティア想造録</title>
+<meta name="description" content="漢字一文字のカルティアを二枚 組み合わせて熟語を想造する、小学生のための漢字学習ゲーム。">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ── タイトル ───────────────────────────── -->
+  <section class="screen title-wrap" id="s-title">
+    <div class="sigil hovering" id="title-sigil"></div>
+    <h1 class="game-title">カルティア</h1>
+    <p class="game-sub">漢 字 想 造 録</p>
+    <hr class="rule">
+    <p class="lede">
+      この世界の 力は すべて <b>カルティア</b> —— 漢字 一文字の 札に 宿る。
+      札と 札を 意味の つながる ように 組み合わせれば、熟語は <b>法術</b> と なって 幻獣を うつ。
+      「流」と「水」で <b>流水</b>。それが 想造だ。
+    </p>
+    <p class="lede">
+      六つの 層は 小学一年から 六年の 漢字に 対応する。
+      よみと いみを 手がかりに、手札から 二枚を えらび、正しい 熟語を 組み立てろ。
+    </p>
+    <div class="title-actions">
+      <button class="btn btn-primary" type="button" id="btn-start">想造を はじめる</button>
+      <button class="btn btn-quiet" type="button" id="btn-open-note">まなびノート</button>
+      <button class="btn btn-quiet" type="button" id="btn-sound">音 ある</button>
+    </div>
+  </section>
+
+  <!-- ── 層のえらび ─────────────────────────── -->
+  <section class="screen" id="s-select" hidden>
+    <div>
+      <p class="eyebrow">想 造 の 塔</p>
+      <h2 class="section">どの 層へ いく</h2>
+    </div>
+    <div class="layer-list" id="layer-list"></div>
+    <hr class="rule">
+    <div class="title-actions">
+      <button class="btn btn-quiet" type="button" id="btn-note-from-select">まなびノート</button>
+      <span class="layer-meta" id="note-count"></span>
+    </div>
+  </section>
+
+  <!-- ── 戦闘 ───────────────────────────────── -->
+  <section class="screen" id="s-battle" hidden>
+    <div class="hud">
+      <div class="hud-layer" id="hud-layer"></div>
+      <div class="hearts" id="hearts"></div>
+    </div>
+
+    <div class="beast">
+      <div class="sigil hovering" id="beast-sigil"></div>
+      <div class="beast-name" id="beast-name"></div>
+      <div class="beast-kind" id="beast-kind"></div>
+      <div class="hpbar"><i id="beast-hp" style="width:100%"></i></div>
+    </div>
+
+    <div class="scroll">
+      <p class="scroll-label">詠 唱 書</p>
+      <p class="q-yomi" id="q-yomi"></p>
+      <p class="q-mean" id="q-mean"></p>
+    </div>
+
+    <div class="forge">
+      <button class="slot" type="button" id="slot-0" aria-label="想造盤 一枚目"></button>
+      <span class="plus" aria-hidden="true">＋</span>
+      <button class="slot" type="button" id="slot-1" aria-label="想造盤 二枚目"></button>
+    </div>
+
+    <div class="original-bar" id="original-bar"></div>
+
+    <div class="actions">
+      <button class="btn btn-primary" type="button" id="btn-cast" disabled>想 造</button>
+      <button class="btn btn-quiet" type="button" id="btn-hint">ヒント</button>
+      <button class="btn btn-quiet" type="button" id="btn-retreat">層を えらぶ</button>
+    </div>
+
+    <div class="hand" id="hand"></div>
+    <div class="verdict" id="verdict" role="status" hidden></div>
+  </section>
+
+  <!-- ── 決着 ───────────────────────────────── -->
+  <section class="screen" id="s-result" hidden>
+    <div id="result-body"></div>
+  </section>
+
+  <!-- ── まなびノート ───────────────────────── -->
+  <section class="screen" id="s-note" hidden>
+    <div>
+      <p class="eyebrow">ま な び ノ ー ト</p>
+      <h2 class="section">しくじった 熟語</h2>
+      <p class="lede">ここに たまった 熟語は、正しく 想造 できれば 消えていく。</p>
+    </div>
+    <div id="note-body"></div>
+    <hr class="rule">
+    <div class="title-actions">
+      <button class="btn btn-primary" type="button" id="btn-review">ノートで 復習する</button>
+      <button class="btn btn-quiet" type="button" id="btn-note-back">層を えらぶ</button>
+    </div>
+  </section>
+
+</div>
+<div class="flash" id="flash" aria-hidden="true"></div>
+
+<script src="assets/data.js"></script>
+<script src="assets/game.js"></script>
+</body>
+</html>

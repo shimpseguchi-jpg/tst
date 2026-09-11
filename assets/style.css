@@ -1,0 +1,306 @@
+/* カルティア想造録 — 意図的に単一の暗色世界（幻想SRPGの祭壇）にコミットした設計 */
+:root {
+  --night:    #070c18;
+  --ink:      #131c33;
+  --ink-soft: #1c2745;
+  --gold:     #d4ae57;
+  --gold-lit: #f5e2ab;
+  --gold-dim: #6c5a30;
+  --washi:    #e9dfc7;
+  --sumi:     #141827;
+  --crimson:  #b8463c;
+  --jade:     #5b9c86;
+
+  --f-min: "Hiragino Mincho ProN", "Yu Mincho", YuMincho, "Noto Serif JP", "MS PMincho", serif;
+  --f-got: "Hiragino Sans", "Yu Gothic", YuGothic, "Noto Sans JP", Meiryo, system-ui, sans-serif;
+
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--night);
+  background-image:
+    radial-gradient(120% 70% at 50% -10%, #1a2444 0%, transparent 60%),
+    radial-gradient(90% 50% at 50% 110%, #16112a 0%, transparent 65%);
+  background-attachment: fixed;
+  color: var(--washi);
+  font-family: var(--f-got);
+  font-size: 15px;
+  line-height: 1.7;
+  -webkit-text-size-adjust: 100%;
+}
+
+#app {
+  max-width: 560px;
+  margin: 0 auto;
+  padding-inline: 18px;
+  padding-block: 20px 40px;
+  min-height: 100svh;
+}
+
+.screen { display: flex; flex-direction: column; gap: 20px; }
+.screen[hidden], [hidden] { display: none !important; }
+
+/* ─── 共通パーツ ─────────────────────────────── */
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: .22em;
+  color: var(--gold);
+  text-transform: none;
+  margin: 0;
+}
+.rule {
+  height: 1px; border: 0; margin: 0;
+  background: linear-gradient(90deg, transparent, var(--gold-dim) 20%, var(--gold-dim) 80%, transparent);
+}
+
+button { font-family: inherit; font-size: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, .card:focus-visible, .slot:focus-visible {
+  outline: 2px solid var(--gold-lit);
+  outline-offset: 3px;
+}
+
+.btn {
+  border: 1px solid var(--gold-dim);
+  background: linear-gradient(180deg, var(--ink-soft), var(--ink));
+  color: var(--gold-lit);
+  padding: 13px 22px;
+  border-radius: 2px;
+  font-family: var(--f-min);
+  font-size: 17px;
+  letter-spacing: .12em;
+  transition: border-color .2s, color .2s, background .2s;
+}
+.btn:hover:not(:disabled) { border-color: var(--gold); background: var(--ink-soft); }
+.btn:disabled { opacity: .35; cursor: not-allowed; }
+.btn-primary {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, #2b3559, #1a2440);
+  box-shadow: 0 0 0 1px rgba(212,174,87,.18), 0 8px 26px -14px var(--gold);
+}
+.btn-quiet { font-size: 14px; padding: 10px 16px; color: var(--washi); letter-spacing: .08em; }
+
+/* ─── 紋章（幻獣・層の核） ───────────────────── */
+.sigil { position: relative; width: 152px; height: 152px; display: grid; place-items: center; }
+.sigil svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.sigil .ring-a { animation: spin 44s linear infinite; transform-origin: 50% 50%; }
+.sigil .ring-b { animation: spin 30s linear infinite reverse; transform-origin: 50% 50%; }
+.sigil-core {
+  font-family: var(--f-min);
+  font-size: 60px;
+  line-height: 1;
+  color: var(--gold-lit);
+  text-shadow: 0 0 22px rgba(212,174,87,.55);
+  position: relative;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes float { 50% { transform: translateY(-7px); } }
+.sigil.hovering { animation: float 5.5s ease-in-out infinite; }
+.sigil.struck { animation: struck .42s ease; }
+@keyframes struck {
+  20% { transform: translateX(-11px) rotate(-3deg); }
+  55% { transform: translateX(9px)  rotate(2deg); }
+  100% { transform: none; }
+}
+.sigil.fading { transition: opacity .55s, filter .55s; opacity: 0; filter: blur(7px); }
+
+/* ─── タイトル ───────────────────────────────── */
+.title-wrap { align-items: center; text-align: center; gap: 14px; padding-top: 14px; }
+.game-title {
+  font-family: var(--f-min);
+  font-size: clamp(40px, 13vw, 62px);
+  letter-spacing: .3em;
+  text-indent: .3em;
+  margin: 0;
+  color: var(--gold-lit);
+  text-wrap: balance;
+  text-shadow: 0 0 34px rgba(212,174,87,.35);
+}
+.game-sub { font-family: var(--f-min); font-size: 15px; letter-spacing: .3em; color: var(--gold); margin: 0; }
+.lede { margin: 0; max-width: 34em; color: #c9c2ae; font-size: 14px; }
+.lede b { color: var(--gold-lit); font-weight: 600; }
+.title-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+
+/* ─── 層のえらび ─────────────────────────────── */
+.layer-list { display: flex; flex-direction: column; gap: 10px; }
+.layer-btn {
+  display: grid;
+  grid-template-columns: 58px 1fr auto;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
+  padding: 14px 16px;
+  border: 1px solid var(--gold-dim);
+  border-left: 3px solid var(--gold-dim);
+  background: linear-gradient(90deg, rgba(28,39,69,.85), rgba(19,28,51,.5));
+  border-radius: 2px;
+  transition: border-color .2s, transform .15s;
+}
+.layer-btn:hover { border-left-color: var(--gold); transform: translateX(3px); }
+.layer-btn[data-cleared="1"] { border-left-color: var(--jade); }
+.layer-glyph {
+  font-family: var(--f-min); font-size: 38px; line-height: 1;
+  color: var(--gold-lit); text-align: center;
+  text-shadow: 0 0 16px rgba(212,174,87,.4);
+}
+.layer-name { display: block; font-family: var(--f-min); font-size: 19px; letter-spacing: .1em; color: var(--washi); }
+.layer-meta { display: block; font-size: 12px; color: #9aa2b8; letter-spacing: .05em; }
+.layer-seal { font-size: 12px; color: var(--jade); letter-spacing: .1em; font-variant-numeric: tabular-nums; }
+
+/* ─── 戦闘 ───────────────────────────────────── */
+.hud { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.hud-layer { font-family: var(--f-min); font-size: 15px; letter-spacing: .14em; color: var(--gold); }
+.hud-layer small { display: block; font-family: var(--f-got); font-size: 11px; letter-spacing: .08em; color: #8b93aa; }
+.hearts { display: flex; gap: 6px; }
+.heart {
+  width: 13px; height: 13px; rotate: 45deg; border-radius: 2px;
+  background: linear-gradient(135deg, var(--gold-lit), var(--gold));
+  box-shadow: 0 0 10px rgba(212,174,87,.5);
+}
+.heart.lost { background: none; border: 1px solid #3c4568; box-shadow: none; }
+
+.beast { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.beast-name { font-family: var(--f-min); font-size: 20px; letter-spacing: .14em; }
+.beast-name ruby rt { font-size: 9px; color: var(--gold); letter-spacing: .05em; }
+.beast-kind { font-size: 11px; letter-spacing: .14em; color: var(--gold); }
+.beast-kind span { color: #8b93aa; letter-spacing: .04em; }
+.hpbar { width: min(260px, 80%); height: 3px; background: #2a3355; border-radius: 2px; overflow: hidden; }
+.hpbar i { display: block; height: 100%; background: linear-gradient(90deg, var(--crimson), var(--gold)); transition: width .5s ease; }
+
+/* 詠唱書 */
+.scroll {
+  border: 1px solid var(--gold-dim);
+  border-radius: 2px;
+  background: linear-gradient(180deg, rgba(233,223,199,.06), rgba(233,223,199,.02));
+  padding: 16px 18px;
+  text-align: center;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.scroll-label { font-size: 10px; letter-spacing: .3em; color: var(--gold); }
+.q-yomi { font-family: var(--f-min); font-size: clamp(26px, 8vw, 34px); letter-spacing: .16em; margin: 0; color: var(--gold-lit); }
+.q-mean { margin: 0; font-size: 14px; color: #c3bca9; }
+.veiled { color: #77809b; }
+
+/* 想造盤 */
+.forge { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.forge .plus { font-family: var(--f-min); font-size: 24px; color: var(--gold-dim); }
+.slot {
+  width: 76px; height: 90px;
+  border: 1px dashed var(--gold-dim);
+  border-radius: 2px;
+  background: rgba(255,255,255,.02);
+  display: grid; place-items: center;
+  font-family: var(--f-min); font-size: 44px; line-height: 1;
+  color: var(--sumi);
+  padding: 0;
+  transition: border-color .2s;
+}
+.slot.filled {
+  border-style: solid; border-color: var(--gold);
+  background: linear-gradient(175deg, #f3ecd9, var(--washi));
+  box-shadow: 0 0 20px -6px rgba(212,174,87,.6);
+}
+.slot.casting { animation: cast .5s ease; }
+@keyframes cast {
+  40% { transform: translateY(-10px) scale(1.08); box-shadow: 0 0 34px rgba(245,226,171,.8); }
+  100% { transform: none; }
+}
+
+.actions { display: flex; gap: 10px; justify-content: center; }
+
+/* 手札 */
+.hand { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+.card {
+  aspect-ratio: 3 / 4;
+  border: 1px solid var(--gold-dim);
+  border-radius: 2px;
+  background: linear-gradient(175deg, #f3ecd9, #ded3b7);
+  color: var(--sumi);
+  font-family: var(--f-min);
+  font-size: clamp(26px, 8vw, 36px);
+  line-height: 1;
+  display: grid; place-items: center;
+  padding: 0;
+  transition: transform .14s, box-shadow .2s, opacity .2s;
+}
+.card:hover:not(:disabled) { transform: translateY(-4px); box-shadow: 0 10px 22px -12px var(--gold); }
+.card.used { opacity: .22; pointer-events: none; }
+.card:disabled { cursor: default; }
+
+/* 判定の知らせ */
+.verdict {
+  border-radius: 2px; padding: 14px 16px; text-align: center;
+  display: flex; flex-direction: column; gap: 6px;
+  border: 1px solid;
+}
+.verdict.miss { border-color: var(--crimson); background: rgba(184,70,60,.12); }
+.verdict.hit  { border-color: var(--jade);    background: rgba(91,156,134,.12); }
+.verdict-word { font-family: var(--f-min); font-size: 30px; letter-spacing: .2em; color: var(--gold-lit); margin: 0; }
+.verdict-note { margin: 0; font-size: 13px; color: #c3bca9; }
+.verdict-head { font-size: 12px; letter-spacing: .2em; }
+.verdict.miss .verdict-head { color: var(--crimson); }
+.verdict.hit  .verdict-head { color: var(--jade); }
+
+/* オリジナル発現 */
+.original-bar {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-size: 11px; letter-spacing: .2em; color: var(--gold-dim);
+}
+.original-bar .pip { width: 7px; height: 7px; rotate: 45deg; background: #2a3355; }
+.original-bar .pip.on { background: var(--gold); box-shadow: 0 0 9px var(--gold); }
+.original-bar.ready { color: var(--gold-lit); animation: breathe 2s ease-in-out infinite; }
+@keyframes breathe { 50% { opacity: .55; } }
+
+/* 法術の閃光 */
+.flash {
+  position: fixed; inset: 0; display: grid; place-items: center;
+  pointer-events: none; z-index: 40;
+  background: radial-gradient(50% 40% at 50% 50%, rgba(212,174,87,.22), transparent 70%);
+  opacity: 0;
+}
+.flash.show { animation: flash 1.05s ease-out; }
+.flash span {
+  font-family: var(--f-min);
+  font-size: clamp(54px, 20vw, 108px);
+  letter-spacing: .18em; text-indent: .18em;
+  color: var(--gold-lit);
+  text-shadow: 0 0 40px rgba(245,226,171,.85), 0 0 90px rgba(212,174,87,.5);
+}
+@keyframes flash {
+  0%   { opacity: 0; }
+  18%  { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ─── 決着・ノート ───────────────────────────── */
+.word-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 8px; }
+.word-chip {
+  border: 1px solid var(--gold-dim); border-radius: 2px; padding: 9px 11px;
+  background: rgba(28,39,69,.5);
+  display: flex; flex-direction: column; gap: 1px;
+}
+.word-chip b { font-family: var(--f-min); font-size: 21px; letter-spacing: .12em; font-weight: 400; color: var(--washi); }
+.word-chip span { font-size: 11px; color: var(--gold); letter-spacing: .06em; }
+.word-chip em { font-size: 11px; font-style: normal; color: #8b93aa; }
+.word-chip.sore { border-color: rgba(184,70,60,.55); }
+.word-chip .times { font-size: 10px; color: var(--crimson); font-variant-numeric: tabular-nums; }
+
+.empty-note { color: #8b93aa; font-size: 14px; margin: 0; }
+h2.section { font-family: var(--f-min); font-size: 24px; letter-spacing: .16em; margin: 0; color: var(--gold-lit); text-wrap: balance; }
+.stat-row { display: flex; gap: 22px; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; }
+.stat b { font-family: var(--f-min); font-size: 30px; font-weight: 400; color: var(--gold-lit); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.stat span { font-size: 11px; letter-spacing: .16em; color: #8b93aa; }
+
+@media (max-width: 380px) {
+  .hand { grid-template-columns: repeat(3, 1fr); }
+  .slot { width: 66px; height: 80px; font-size: 38px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+}
