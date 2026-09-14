@@ -89,7 +89,11 @@
         <div class="bar hp"><i></i><b></b></div>
         <div class="e-next"></div>
         <div class="pops"></div>`;
-      card.querySelector('.e-emoji').textContent = e.emoji;
+      const big = B.kind === 'boss' || B.kind === 'elite' || B.enemies.length === 1;
+      card.querySelector('.e-emoji').innerHTML = Sprites.tag(e.id, big ? 3 : 2);
+      card.style.animationDelay = (i * 0.23) + 's';
+      const spr = card.querySelector('.sprite');
+      if (spr) spr.style.animationDelay = (i * 0.23) + 's';
       card.querySelector('.e-name').textContent = e.name;
       card.addEventListener('click', () => {
         if (e.hp <= 0) return;
@@ -128,7 +132,7 @@
         <div class="bar ep"><i></i><b></b></div>
         <div class="p-buff" hidden>⬆こうげき アップ</div>
         <div class="pops"></div>`;
-      card.querySelector('.p-emoji').textContent = a.emoji;
+      card.querySelector('.p-emoji').innerHTML = Sprites.tag(a.id, 3);
       card.querySelector('.p-nm').textContent = a.name;
       card.querySelector('.p-sub').textContent = a.subject;
       el.party.appendChild(card);
@@ -156,8 +160,8 @@
   // つぎに うごく じゅんばんを よそくして ならべる
   function renderOrder() {
     const sim = [].concat(
-      aliveAllies().map(a => ({ av: a.av, spd: a.stats.spd, emoji: a.emoji, name: a.name, side: 'ally', color: a.color })),
-      aliveEnemies().map(e => ({ av: e.av, spd: e.spd, emoji: e.emoji, name: e.name, side: 'enemy', color: '#ff9a76' }))
+      aliveAllies().map(a => ({ av: a.av, spd: a.stats.spd, id: a.id, name: a.name, side: 'ally', color: a.color })),
+      aliveEnemies().map(e => ({ av: e.av, spd: e.spd, id: e.id, name: e.name, side: 'enemy', color: '#ff9a76' }))
     );
     const out = [];
     for (let k = 0; k < 7 && sim.length; k++) {
@@ -169,7 +173,8 @@
       n.av = BASE_AV / n.spd;
     }
     el.order.innerHTML = '<span class="o-label">こうどうじゅん</span>' + out.map((n, i) =>
-      `<span class="o-item ${n.side}${i === 0 ? ' now' : ''}" style="--c:${n.color}" title="${n.name}">${n.emoji}</span>`
+      `<span class="o-item ${n.side}${i === 0 ? ' now' : ''}" style="--c:${n.color}" title="${n.name}">` +
+      Sprites.tag(n.id, 1) + '</span>'
     ).join('<span class="o-arrow">›</span>');
   }
 

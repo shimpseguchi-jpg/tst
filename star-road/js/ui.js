@@ -27,7 +27,7 @@
       const d = E.charDef(p.id), st = E.charStats(run, p.id);
       const pct = Math.max(0, Math.round(p.hp / st.hp * 100));
       return `<div class="hp-mini" style="--c:${d.color}" title="${d.name}">
-        <span class="hm-emoji">${d.emoji}</span>
+        <span class="hm-emoji">${Sprites.tag(d.id, 1)}</span>
         <span class="hm-bar"><i style="width:${pct}%"></i></span>
         <span class="hm-num">${Math.max(0, p.hp)}</span></div>`;
     }).join('');

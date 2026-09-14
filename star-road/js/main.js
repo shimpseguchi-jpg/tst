@@ -60,7 +60,7 @@
   function renderTitleChars() {
     $('title-chars').innerHTML = global.GameData.CHARS.map(c => `
       <div class="tchar" style="--c:${c.color}">
-        <div class="tc-emoji">${c.emoji}</div>
+        <div class="tc-emoji">${Sprites.tag(c.id, 4)}</div>
         <div class="tc-name">${c.name}</div>
         <div class="tc-sub">${c.subject}　${c.role}</div>
         <div class="tc-desc">${c.desc}</div>
