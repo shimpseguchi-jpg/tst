@@ -109,7 +109,7 @@
       el.feedback.classList.toggle('ng', !correct);
       el.fbIcon.textContent = correct ? '⭕' : '❌';
       el.fbText.textContent = correct
-        ? (state.limit && state.speed > 0.6 ? 'せいかい！ はやい！' : 'せいかい！')
+        ? (state.limit && state.speed > 0.5 ? 'せいかい！ はやい！' : 'せいかい！')
         : (idx === -1 ? 'じかん ぎれ…' : 'ざんねん…');
       el.fbNote.textContent = state.q.note + (correct ? '' : `　こたえ：${state.q.choices[state.q.answer]}`);
       el.fbNext.focus({ preventScroll: true });

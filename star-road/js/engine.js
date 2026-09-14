@@ -95,9 +95,12 @@
   }
 
   // ================= ラン（ぼうけん）=================
-  function newRun() {
+  const DIFF_SHIFT = { easy: -1, normal: 0, hard: 1 };
+
+  function newRun(diffMode) {
     const run = {
       act: 1,
+      diffMode: DIFF_SHIFT[diffMode] === undefined ? 'normal' : diffMode,
       map: genMap(),
       current: null,        // いま えらんだ ノードid（ひょうじ よう）
       pos: null,            // さいごに クリアした ノードid（ここから つぎへ すすめる）
@@ -158,7 +161,7 @@
     const act = run.act;
     // ボスは act ごとに べつの てき なので HPは そのまま。ザコ／エリートだけ すこし つよく する。
     const scale = kind === 'boss' ? 1 : 1 + (act - 1) * 0.35;
-    const atkScale = 1.5 * (kind === 'boss' ? 1 : 1 + (act - 1) * 0.45);
+    const atkScale = 1.7 * (kind === 'boss' ? 1 : 1 + (act - 1) * 0.45);
     function inst(src) {
       return {
         id: src.id, name: src.name, emoji: src.emoji,
@@ -192,13 +195,13 @@
 
   // ================= むずかしさ =================
   function difficultyFor(run, kind) {
-    let d = run.act;                 // act1→1, act2→2, act3→3
+    let d = run.act + (DIFF_SHIFT[run.diffMode] || 0);   // act1→1, act2→2, act3→3
     if (kind === 'elite') d += 1;
     if (kind === 'boss') d += 1;
     return Math.max(1, Math.min(3, d));
   }
   function timeLimitFor(run, kind) {
-    const base = kind === 'boss' ? 18 : kind === 'elite' ? 20 : 24;
+    const base = kind === 'boss' ? 20 : kind === 'elite' ? 24 : 28;
     return base + relicSum(run, 'timeBonus');
   }
 
@@ -230,7 +233,7 @@
     NODE_TYPES, FLOORS, COLS,
     genMap, newRun, charDef, partyOf, charStats, relicsOf, relicSum, hasRelic,
     healPct, clampHp, isWipe, rollEnemies, rollRelic, giveRelic,
-    difficultyFor, timeLimitFor, save, load, clearSave, recordAnswer,
+    difficultyFor, timeLimitFor, save, load, clearSave, recordAnswer, DIFF_SHIFT,
     _util: { rnd, pick, shuffle }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

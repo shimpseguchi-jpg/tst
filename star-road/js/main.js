@@ -5,8 +5,24 @@
   const $ = id => document.getElementById(id);
   let run = null;
 
+  const DIFF_KEY = 'manabi-star-road-diff';
+  let diffMode = 'normal';
+
+  function pickDiff(mode) {
+    diffMode = mode;
+    try { localStorage.setItem(DIFF_KEY, mode); } catch (e) { /* むし */ }
+    document.querySelectorAll('#diff-row .dp').forEach(b => {
+      b.classList.toggle('on', b.dataset.d === mode);
+    });
+  }
+
   function boot() {
     renderTitleChars();
+    try { diffMode = localStorage.getItem(DIFF_KEY) || 'normal'; } catch (e) { diffMode = 'normal'; }
+    document.querySelectorAll('#diff-row .dp').forEach(b => {
+      b.addEventListener('click', () => pickDiff(b.dataset.d));
+    });
+    pickDiff(diffMode);
     const saved = E.load();
     $('btn-continue').hidden = !saved;
     $('btn-new').classList.toggle('primary', !saved);
@@ -34,7 +50,7 @@
 
   function newGame() {
     E.clearSave();
-    run = E.newRun();
+    run = E.newRun(diffMode);
     E.save(run);
     global.UI.setRun(run);
     global.UI.show('map');

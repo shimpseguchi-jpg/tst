@@ -284,7 +284,7 @@
     const wrongMult = E.relicSum(B.run, 'wrongDamage') || 0.3;
     const ansMult = res.correct ? 1 : wrongMult;
     let critRate = a.stats.crit + Math.min(25, B.streak * E.relicSum(B.run, 'streakCrit'));
-    const sureCrit = res.correct && B.timeLimit && res.speed > 0.6;
+    const sureCrit = res.correct && B.timeLimit && res.speed > 0.5;
     const isCrit = sureCrit || Math.random() * 100 < critRate;
     let d = atkOf(a) * mult * (DEF_K / (DEF_K + target.def));
     if (isCrit) d *= 1 + a.stats.critDmg / 100;
@@ -335,7 +335,7 @@
 
   function resolveAction(a, kind, act, res, backTo) {
     if (!res.correct) say('まちがえた… こうげきが よわく なった', 'bad');
-    else if (B.timeLimit && res.speed > 0.6) say('はやい せいかい！ かいしん こうげき！', 'good');
+    else if (B.timeLimit && res.speed > 0.5) say('はやい せいかい！ かいしん こうげき！', 'good');
     else say('せいかい！', 'good');
 
     // SP と ひっさつゲージ
@@ -350,7 +350,7 @@
     if (act.mult > 0 && targets) targets.forEach(e => hitEnemy(a, e, act.mult, act.toughness, res));
 
     if (act.heal) {
-      const amt = Math.round((atkOf(a) * act.heal.mult + act.heal.flat) * (res.correct ? 1 : 0.5));
+      const amt = Math.round((atkOf(a) * act.heal.mult + act.heal.flat) * (res.correct ? 1 : 0.35));
       B.allies.forEach(t => healAlly(t, amt));
     }
     if (act.buffAtk && res.correct) {
@@ -362,12 +362,36 @@
     }
 
     renderAll();
+    // まちがえると てきが はんげき してくる（まちがいが そのまま HPの そんに なる）
+    const counterDelay = !res.correct && aliveEnemies().length ? 700 : 0;
+    if (counterDelay) setTimeout(() => counterAttack(a), 500);
     setTimeout(() => {
       if (checkEnd()) return;
-      if (kind === 'ult' && backTo && backTo !== a) { B.actor = backTo; renderAll(); renderActions(backTo); return; }
-      if (kind === 'ult' && backTo === a) { renderActions(a); return; }
+      if (kind === 'ult') {
+        // ひっさつは ターンを つかわない。ばんは もとの キャラに もどる
+        const owner = backTo || a;
+        if (!owner.down) { B.actor = owner; renderAll(); renderActions(owner); return; }
+        endTurn(owner);
+        return;
+      }
       endTurn(a);
-    }, 900);
+    }, 900 + counterDelay);
+  }
+
+  // まちがえた ときの はんげき
+  function counterAttack(a) {
+    const live = aliveEnemies();
+    if (!live.length || a.down) return;
+    const e = live.includes(B.enemies[B.target]) ? B.enemies[B.target] : live[0];
+    flash(enemyCard(e.idx), 'attack');
+    const dmg = Math.max(1, Math.round(e.atk * 0.6 * (DEF_K / (DEF_K + a.stats.def)) * (0.95 + Math.random() * 0.1)));
+    a.hp -= dmg;
+    a.ep = Math.min(100, a.ep + 10);
+    const c = allyCard(a);
+    flash(c, 'hit'); pop(c, dmg, 'dmg');
+    say(`${e.name} の はんげき！`, 'bad');
+    if (a.hp <= 0) { a.hp = 0; a.down = true; say(`${a.name} が たおれた…`, 'bad'); }
+    renderAll();
   }
 
   // ============ てきの ターン ============

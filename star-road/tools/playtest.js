@@ -8,6 +8,11 @@
  *   node tools/playtest.js                    # せいかいりつ 90/70/50/30% を 3かいずつ
  *   node tools/playtest.js --acc 0.5 --runs 6 # せいかいりつ 50% を 6かい
  *   node tools/playtest.js --acc 0.9 --shots  # スクリーンショットも とる
+ *   node tools/playtest.js --think 14         # 1もんに 14びょう かける「ゆっくりな 子」
+ *
+ * --think を つけないと AIは そっこうで こたえるので、いつも「はやい せいかい」に
+ * なって かいしんが かならず でます。じっさいの 子の てごたえに ちかづけたい ときは
+ * --think に 10〜15 くらいを いれて ください（そのぶん テストは ながく かかります）。
  *
  * PW_CHROME=/path/to/chrome で ブラウザの ばしょを していできます。
  */
@@ -26,7 +31,7 @@ function arg(name, dflt) {
 const HAS = name => process.argv.includes('--' + name);
 const CONCURRENCY = parseInt(arg('jobs', '3'), 10);
 
-async function playOnce(acc, shots) {
+async function playOnce(acc, shots, think) {
   const opts = {};
   if (process.env.PW_CHROME) opts.executablePath = process.env.PW_CHROME;
   const browser = await chromium.launch(opts);
@@ -52,13 +57,14 @@ async function playOnce(acc, shots) {
     return r.width > 0 && r.height > 0 && getComputedStyle(e).display !== 'none';
   }, sel);
 
-  const R = { acc, won: false, answered: 0, correct: 0, nodes: 0, stageAnswered: [], errors, result: '' };
+  const R = { acc, think, won: false, answered: 0, correct: 0, nodes: 0, stageAnswered: [], errors, result: '' };
   const done = {};
   let steps = 0;
   while (steps++ < 12000) {
     if (await vis('#quiz')) {
       if (shots && !done.quiz) { done.quiz = 1; await page.screenshot({ path: SHOT_DIR + '/04-quiz.png', fullPage: true }); }
       const a = await page.evaluate(() => window.__lastQ.answer);
+      if (think) await page.waitForTimeout(think * 1000);
       const ok = Math.random() < acc;
       R.answered++; if (ok) R.correct++;
       await page.locator('.q-choice').nth(ok ? a : (a + 1) % 4).click();
@@ -144,10 +150,13 @@ async function pool(tasks, n) {
   const accs = HAS('acc') ? [parseFloat(arg('acc', '0.7'))] : [0.9, 0.7, 0.5, 0.3];
   const runs = parseInt(arg('runs', HAS('acc') ? '4' : '3'), 10);
   const shots = HAS('shots');
+  const think = parseFloat(arg('think', '0')) || 0;
   const tasks = [];
-  accs.forEach(a => { for (let i = 0; i < runs; i++) tasks.push(() => playOnce(a, shots && i === 0 && a === accs[0])); });
+  accs.forEach(a => { for (let i = 0; i < runs; i++) tasks.push(() => playOnce(a, shots && i === 0 && a === accs[0], think)); });
   console.log(`ゲーム：${GAME}`);
-  console.log(`せいかいりつ ${accs.map(a => Math.round(a * 100) + '%').join(' / ')} を ${runs}かいずつ（どうじ ${CONCURRENCY}）…\n`);
+  console.log(`せいかいりつ ${accs.map(a => Math.round(a * 100) + '%').join(' / ')} を ${runs}かいずつ（どうじ ${CONCURRENCY}）`);
+  console.log(think ? `1もん ${think}びょう かけて こたえます` : '1もん そっこうで こたえます（かいしんが かならず でます）');
+  console.log('');
   const res = await pool(tasks, CONCURRENCY);
 
   const rows = accs.map(a => {

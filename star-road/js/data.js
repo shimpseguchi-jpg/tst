@@ -13,12 +13,12 @@
       basic: { name: 'ことばの や', mult: 1.0, target: 'one', toughness: 10, ep: 20 },
       skill: {
         name: 'はげましの うた', sp: 1, mult: 0, target: 'ally-all', toughness: 0, ep: 30,
-        heal: { mult: 0.55, flat: 90 },
+        heal: { mult: 0.42, flat: 80 },
         text: 'みんなの HPを かいふく する'
       },
       ult: {
         name: 'みんなの ものがたり', mult: 0.6, target: 'all', toughness: 10,
-        heal: { mult: 1.0, flat: 200 }, buffAtk: 0.3, buffTurns: 2,
+        heal: { mult: 0.8, flat: 150 }, buffAtk: 0.3, buffTurns: 2,
         text: 'みんなを おおきく かいふく ＋ こうげき アップ'
       }
     },
