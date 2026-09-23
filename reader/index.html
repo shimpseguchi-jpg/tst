@@ -1,0 +1,695 @@
+<title>商店街連作</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;600&family=Noto+Serif+JP:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#e8e9e3; --surface:#f5f5f1; --sunk:#dedfd7;
+  --ink:#191b19; --ink-soft:#4a4f4b; --muted:#71776f;
+  --rule:#cccec4; --rule-soft:#dcded4;
+  --accent:#9c382c; --accent-soft:#b9705f;
+  --mincho:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
+  --body:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;
+  --util:ui-sans-serif,system-ui,"Hiragino Sans","Noto Sans JP",sans-serif;
+  --fs:17px; --lh:1.95;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#131513; --surface:#1b1e1b; --sunk:#0d0f0d;
+    --ink:#dbdcd3; --ink-soft:#b3b6ac; --muted:#858b81;
+    --rule:#2c302c; --rule-soft:#232723;
+    --accent:#c9685a; --accent-soft:#a8564a;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#131513; --surface:#1b1e1b; --sunk:#0d0f0d;
+  --ink:#dbdcd3; --ink-soft:#b3b6ac; --muted:#858b81;
+  --rule:#2c302c; --rule-soft:#232723;
+  --accent:#c9685a; --accent-soft:#a8564a;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:var(--body); -webkit-text-size-adjust:100%;
+}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+.num{font-family:var(--util);font-variant-numeric:tabular-nums}
+
+/* ---------- shell ---------- */
+#app{height:100%;display:flex;flex-direction:column;overflow:hidden}
+#library[hidden],#reader[hidden]{display:none!important}
+
+/* ---------- library ---------- */
+#library{flex:1;overflow-y:auto;overflow-x:hidden}
+.lib-inner{max-width:62rem;margin:0 auto;padding:0 16px;padding-block:clamp(2.5rem,7vw,5rem) 4rem}
+.masthead{border-bottom:1px solid var(--rule);padding-bottom:1.6rem;margin-bottom:.4rem}
+.masthead h1{
+  font-family:var(--mincho);font-weight:600;margin:0;
+  font-size:clamp(2rem,6vw,3.1rem);letter-spacing:.14em;text-wrap:balance;line-height:1.3;
+}
+.masthead .sub{
+  margin:.9rem 0 0;color:var(--muted);font-family:var(--body);
+  font-size:.92rem;line-height:1.9;max-width:34rem;
+}
+.tally{
+  display:flex;flex-wrap:wrap;gap:0 1.6rem;margin-top:1.1rem;
+  font-family:var(--util);font-size:.74rem;letter-spacing:.1em;color:var(--muted);
+}
+.tally b{font-weight:500;color:var(--ink-soft)}
+
+.works{list-style:none;margin:0;padding:0}
+.work{border-bottom:1px solid var(--rule-soft)}
+.work>button{
+  display:grid;grid-template-columns:3.2rem 1fr;gap:0 1.4rem;
+  width:100%;text-align:left;padding:1.7rem 0;align-items:start;
+}
+.work>button:hover .wt,.work>button:focus-visible .wt{color:var(--accent)}
+.wnum{
+  font-family:var(--util);font-size:.78rem;letter-spacing:.08em;color:var(--muted);
+  padding-top:.5rem;font-variant-numeric:tabular-nums;
+}
+.wt{font-family:var(--mincho);font-size:1.45rem;font-weight:600;letter-spacing:.09em;line-height:1.5;transition:color .15s}
+.wgenre{
+  display:inline-block;margin-right:.8rem;font-family:var(--util);
+  font-size:.68rem;letter-spacing:.12em;color:var(--accent);
+  border:1px solid currentColor;border-radius:1px;padding:.2rem .45rem;vertical-align:.18em;
+}
+.wblurb{margin:.7rem 0 0;color:var(--ink-soft);font-size:.9rem;line-height:1.95;max-width:38rem}
+.wmeta{margin-top:.75rem;font-family:var(--util);font-size:.72rem;letter-spacing:.09em;color:var(--muted)}
+.wmeta .dot{margin:0 .55rem;opacity:.5}
+.wmeta .mark{color:var(--accent)}
+.colophon{
+  margin-top:3rem;padding-top:1.4rem;border-top:1px solid var(--rule);
+  font-family:var(--util);font-size:.72rem;line-height:2.1;color:var(--muted);letter-spacing:.06em;
+}
+
+/* ---------- reader ---------- */
+#reader{flex:1;display:flex;flex-direction:column;min-height:0;background:var(--surface)}
+.bar{
+  display:flex;align-items:center;gap:.55rem;
+  padding:.55rem 12px;border-bottom:1px solid var(--rule);
+  background:var(--surface);flex:none;min-height:3rem;
+}
+.bar .spacer{flex:1;min-width:0}
+.crumb{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.crumb .w{font-family:var(--mincho);font-size:.95rem;letter-spacing:.08em;font-weight:600}
+.crumb .c{font-family:var(--util);font-size:.7rem;letter-spacing:.1em;color:var(--muted);margin-left:.7rem}
+.btn{
+  font-family:var(--util);font-size:.72rem;letter-spacing:.1em;color:var(--ink-soft);
+  border:1px solid var(--rule);border-radius:2px;padding:.4rem .6rem;white-space:nowrap;
+  transition:border-color .15s,color .15s;
+}
+.btn:hover{color:var(--accent);border-color:var(--accent-soft)}
+.btn[aria-pressed="true"]{color:var(--accent);border-color:var(--accent-soft);background:var(--sunk)}
+.btn.ghost{border-color:transparent;padding:.4rem .35rem}
+.btn.ghost:hover{border-color:var(--rule)}
+
+/* stage */
+.stage{flex:1;min-height:0;position:relative;overflow:hidden}
+.pane{
+  position:absolute;inset:0;padding:clamp(1.8rem,4vw,3rem) clamp(1rem,4vw,3rem);
+}
+body.tate .pane{
+  writing-mode:vertical-rl;
+  overflow-x:auto;overflow-y:hidden;
+}
+body.yoko .pane{overflow-y:auto;overflow-x:hidden}
+.text{
+  font-size:var(--fs);line-height:var(--lh);letter-spacing:.055em;
+  color:var(--ink);font-feature-settings:"palt" 0;
+}
+body.tate .text{height:100%;max-height:100%}
+body.yoko .text{max-width:36rem;margin:0 auto}
+.text p{margin:0;text-indent:0}
+.chead{font-family:var(--mincho);font-weight:600;letter-spacing:.2em;color:var(--ink)}
+body.tate .chead{
+  font-size:1.25em;margin:0 0 3.2em 0;padding:0 0 0 .2em;
+  border-right:1px solid var(--rule);padding-right:1.4em;
+}
+body.yoko .chead{font-size:1.3em;margin:0 0 2.6em;padding-bottom:.9em;border-bottom:1px solid var(--rule)}
+.scene+.scene{margin:0}
+body.tate .scene+.scene{margin-left:2.6em}
+body.yoko .scene+.scene{margin-top:2.4em}
+body.tate .endmark{margin-left:3em;color:var(--muted);font-size:.8em;letter-spacing:.3em}
+body.yoko .endmark{margin-top:2.4em;color:var(--muted);font-size:.8em;letter-spacing:.3em;text-align:right}
+
+/* footer */
+.foot{
+  display:flex;align-items:center;gap:.5rem;flex:none;
+  padding:.5rem 12px;padding-bottom:calc(.5rem + env(safe-area-inset-bottom,0px));
+  border-top:1px solid var(--rule);background:var(--surface);
+}
+.prog{flex:1;min-width:0;display:flex;align-items:center;gap:.7rem}
+.track{flex:1;height:2px;background:var(--rule);position:relative;overflow:hidden;border-radius:2px}
+.fill{position:absolute;top:0;bottom:0;width:0;background:var(--accent);transition:width .18s}
+body.tate .fill{right:0;left:auto}
+body.yoko .fill{left:0;right:auto}
+body.tate .foot{flex-direction:row-reverse}
+.pct{font-family:var(--util);font-size:.68rem;letter-spacing:.08em;color:var(--muted);font-variant-numeric:tabular-nums;min-width:3.2rem;text-align:right}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:20;animation:fade .18s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.drawer{
+  position:fixed;z-index:21;top:0;bottom:0;right:0;width:min(23rem,88vw);
+  background:var(--surface);border-left:1px solid var(--rule);
+  display:flex;flex-direction:column;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+.dhead{display:flex;align-items:center;gap:.5rem;padding:.9rem 1.1rem;border-bottom:1px solid var(--rule);flex:none}
+.dhead h2{margin:0;font-family:var(--mincho);font-size:1rem;letter-spacing:.16em;font-weight:600;flex:1}
+.dbody{overflow-y:auto;padding:.5rem 0 2rem}
+.dwork{font-family:var(--util);font-size:.68rem;letter-spacing:.14em;color:var(--muted);padding:1.2rem 1.1rem .5rem}
+.chap{
+  display:flex;gap:.85rem;align-items:baseline;width:100%;text-align:left;
+  padding:.62rem 1.1rem;border-left:2px solid transparent;
+}
+.chap:hover{background:var(--sunk)}
+.chap[aria-current="true"]{border-left-color:var(--accent);background:var(--sunk)}
+.chap[aria-current="true"] .ct{color:var(--accent)}
+.ci{font-family:var(--util);font-size:.68rem;color:var(--muted);min-width:1.4rem;font-variant-numeric:tabular-nums}
+.ct{flex:1;font-family:var(--mincho);font-size:.92rem;letter-spacing:.07em;line-height:1.6}
+.cn{font-family:var(--util);font-size:.64rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.backline{padding:.9rem 1.1rem;border-top:1px solid var(--rule);flex:none}
+
+/* zen (fullscreen reading) */
+body.zen .bar,body.zen .foot{display:none}
+body.zen #reader{background:var(--ground)}
+.zenbar{
+  position:absolute;z-index:5;top:0;left:0;right:0;height:2px;background:var(--rule);
+  display:none;
+}
+body.zen .zenbar{display:block}
+.zenbar .fill2{position:absolute;top:0;bottom:0;width:0;background:var(--accent);transition:width .18s}
+body.tate .zenbar .fill2{right:0;left:auto}
+body.yoko .zenbar .fill2{left:0;right:auto}
+.zenout{
+  position:absolute;z-index:6;top:calc(.7rem + env(safe-area-inset-top,0px));right:.8rem;display:none;
+  font-family:var(--util);font-size:.68rem;letter-spacing:.1em;color:var(--muted);
+  border:1px solid var(--rule);border-radius:2px;padding:.35rem .55rem;
+  background:var(--ground);opacity:.5;transition:opacity .15s;
+}
+body.zen .zenout{display:block}
+.zenout:hover,.zenout:focus-visible{opacity:1;color:var(--accent);border-color:var(--accent-soft)}
+
+.loading{
+  position:absolute;inset:0;display:grid;place-items:center;
+  font-family:var(--util);font-size:.75rem;letter-spacing:.2em;color:var(--muted);
+}
+/* ---------- guide ---------- */
+#guide{flex:1;overflow-y:auto;overflow-x:hidden}
+.g-inner{max-width:60rem;margin:0 auto;padding:0 16px;padding-block:2rem 4rem}
+.g-top{display:flex;align-items:baseline;gap:1rem;flex-wrap:wrap;border-bottom:1px solid var(--rule);padding-bottom:1.1rem}
+.g-top h1{font-family:var(--mincho);font-weight:600;font-size:clamp(1.5rem,4vw,2.1rem);letter-spacing:.14em;margin:0;flex:1}
+.tabs{display:flex;gap:.4rem;margin:1.4rem 0 .4rem;flex-wrap:wrap}
+.tab{
+  font-family:var(--util);font-size:.74rem;letter-spacing:.12em;color:var(--muted);
+  border:1px solid var(--rule);border-radius:2px;padding:.45rem .85rem;
+}
+.tab[aria-selected="true"]{color:var(--accent);border-color:var(--accent-soft);background:var(--surface)}
+.gsec{padding-top:1.4rem}
+.gsec h2{
+  font-family:var(--util);font-size:.7rem;letter-spacing:.2em;color:var(--muted);font-weight:400;
+  margin:2.2rem 0 .2rem;padding-bottom:.5rem;border-bottom:1px solid var(--rule-soft);
+}
+.gsec h2:first-child{margin-top:.6rem}
+.chips{display:inline-flex;gap:.25rem;vertical-align:.1em}
+.chip{
+  font-family:var(--util);font-size:.6rem;letter-spacing:.04em;line-height:1;
+  border:1px solid var(--rule);color:var(--muted);border-radius:1px;padding:.22rem .3rem;
+  font-variant-numeric:tabular-nums;
+}
+.chip.lead{border-color:var(--accent);color:var(--accent)}
+.ent{padding:1.15rem 0;border-bottom:1px solid var(--rule-soft)}
+.ent .hd{display:flex;align-items:baseline;gap:.6rem;flex-wrap:wrap}
+.ent .nm{font-family:var(--mincho);font-size:1.12rem;font-weight:600;letter-spacing:.09em}
+.ent .yo{font-family:var(--util);font-size:.68rem;color:var(--muted);letter-spacing:.06em}
+.ent .rl{font-family:var(--util);font-size:.7rem;color:var(--ink-soft);letter-spacing:.06em}
+.ent .ag{font-family:var(--util);font-size:.68rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.ent .ds{margin:.6rem 0 0;font-size:.88rem;line-height:1.95;color:var(--ink-soft);max-width:44rem}
+.ent .nt{
+  margin:.55rem 0 0;font-size:.79rem;line-height:1.9;color:var(--muted);max-width:44rem;
+  padding-left:.8rem;border-left:2px solid var(--rule);
+}
+.shoprow{display:grid;grid-template-columns:2.2rem 1fr;gap:0 1rem;padding:1.05rem 0;border-bottom:1px solid var(--rule-soft)}
+.shoprow .pin{font-family:var(--util);font-size:.68rem;color:var(--muted);padding-top:.35rem;font-variant-numeric:tabular-nums}
+.shoprow .st{font-family:var(--util);font-size:.68rem;letter-spacing:.06em;color:var(--muted)}
+.shoprow .st.gone{color:var(--accent)}
+.yr{margin-top:2.4rem}
+.yr>h3{
+  font-family:var(--mincho);font-size:1.35rem;font-weight:600;letter-spacing:.18em;margin:0 0 .3rem;
+  padding-bottom:.5rem;border-bottom:1px solid var(--rule);
+}
+.evt{display:grid;grid-template-columns:6.5rem 2.4rem 1fr;gap:0 .9rem;padding:.7rem 0;border-bottom:1px solid var(--rule-soft);align-items:baseline}
+.evt .mo{font-family:var(--util);font-size:.72rem;color:var(--muted);letter-spacing:.05em}
+.evt .tx{font-size:.88rem;line-height:1.85;color:var(--ink-soft)}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:0 1.8rem;margin-top:.4rem}
+.fact{display:flex;justify-content:space-between;gap:1rem;padding:.6rem 0;border-bottom:1px solid var(--rule-soft);font-size:.84rem}
+.fact b{font-weight:400;color:var(--muted);font-family:var(--util);font-size:.72rem;letter-spacing:.08em;white-space:nowrap}
+.fact span{color:var(--ink-soft);text-align:right}
+.spoil{
+  margin:1rem 0 0;font-family:var(--util);font-size:.7rem;letter-spacing:.08em;
+  color:var(--muted);border-left:2px solid var(--accent);padding-left:.8rem;line-height:1.9;
+}
+@media (max-width:560px){
+  .evt{grid-template-columns:5.2rem 2.2rem 1fr;gap:0 .6rem}
+  .shoprow{grid-template-columns:1.8rem 1fr;gap:0 .7rem}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+@media (max-width:560px){
+  .work>button{grid-template-columns:2.4rem 1fr;gap:0 .9rem}
+  .wt{font-size:1.28rem}
+  .hide-sm{display:none}
+  .btn{padding:.4rem .45rem}
+}
+</style>
+
+<div id="app">
+  <div id="library">
+    <div class="lib-inner">
+      <header class="masthead">
+        <h1>商店街連作</h1>
+        <p class="sub">新潟の羽室銀座と、広島の柏尾銀天街。二つのアーケード街を舞台に、二〇二六年から二〇三〇年までを共有する七篇。どこから読んでも、続けて読んでも成立します。</p>
+        <div class="tally">
+          <span><b class="num" id="t-works">—</b> 篇</span>
+          <span><b class="num" id="t-chaps">—</b> 章</span>
+          <span><b class="num" id="t-chars">—</b> 字</span>
+        </div>
+      </header>
+      <ul class="works" id="works"></ul>
+      <div class="colophon">
+        <p style="margin:0 0 1.1rem"><button class="btn" id="toGuide">人物・店・年表の資料を見る</button></p>
+        本文は縦書きで表示しています。横組みに切り替えることもできます。<br>
+        字数は見出しと空白を除いた本文の文字数です。<br>
+        読んだ位置はこの端末に記憶され、次に開いたときに続きから始まります。
+      </div>
+    </div>
+  </div>
+
+  <div id="guide" hidden>
+    <div class="g-inner">
+      <div class="g-top">
+        <h1>資料</h1>
+        <button class="btn" id="gBack">作品一覧へ</button>
+      </div>
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" data-tab="people" aria-selected="true">人物</button>
+        <button class="tab" role="tab" data-tab="shops" aria-selected="false">店</button>
+        <button class="tab" role="tab" data-tab="years" aria-selected="false">年表</button>
+      </div>
+      <div class="gsec" id="gsec"></div>
+    </div>
+  </div>
+
+  <div id="reader" hidden>
+    <div class="bar">
+      <button class="btn ghost" id="toLib" title="作品一覧へ">一覧</button>
+      <div class="crumb"><span class="w" id="cw"></span><span class="c hide-sm" id="cc"></span></div>
+      <span class="spacer"></span>
+      <button class="btn hide-sm" id="tateBtn" aria-pressed="true">縦</button>
+      <button class="btn hide-sm" id="fsBtn">字</button>
+      <button class="btn" id="zenBtn" title="全画面">全画面</button>
+      <button class="btn" id="tocBtn">目次</button>
+    </div>
+    <div class="stage">
+      <div class="zenbar"><div class="fill2" id="fill2"></div></div>
+      <div class="pane" id="pane" tabindex="0"></div>
+      <button class="zenout" id="zenout">全画面を終える</button>
+      <div class="loading" id="loading" hidden>読み込み中</div>
+    </div>
+    <div class="foot">
+      <button class="btn" id="prevCh">前の章</button>
+      <div class="prog">
+        <div class="track"><div class="fill" id="fill"></div></div>
+        <span class="pct" id="pct">0%</span>
+      </div>
+      <button class="btn" id="nextCh">次の章</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var KAN = "〇一二三四五六七八九十";
+  function kan(n){
+    if(n<=10) return n===10?"十":KAN[n];
+    if(n<20) return "十"+KAN[n-10];
+    var t=Math.floor(n/10), o=n%10;
+    return KAN[t]+"十"+(o?KAN[o]:"");
+  }
+  function comma(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,","); }
+
+  var store = {
+    get:function(k,d){ try{ var v=localStorage.getItem("shotengai:"+k); return v===null?d:JSON.parse(v);}catch(e){return d;} },
+    set:function(k,v){ try{ localStorage.setItem("shotengai:"+k,JSON.stringify(v)); }catch(e){} }
+  };
+
+  var $ = function(id){ return document.getElementById(id); };
+  var index=[], cache={}, cur=null, curCh=0, drawer=null;
+  var SIZES=[15,17,19,22], sizeIdx=store.get("size",1);
+  var tate=store.get("tate",true);
+
+  function applyMode(){
+    document.body.classList.toggle("tate",tate);
+    document.body.classList.toggle("yoko",!tate);
+    $("tateBtn").textContent = tate?"縦":"横";
+    $("tateBtn").setAttribute("aria-pressed", tate?"true":"false");
+    document.documentElement.style.setProperty("--fs", SIZES[sizeIdx]+"px");
+  }
+
+  /* ---------- library ---------- */
+  function renderLibrary(){
+    var chaps=0, chars=0;
+    var ul=$("works"); ul.textContent="";
+    index.forEach(function(w,i){
+      chaps+=w.count; chars+=w.chars;
+      var pos=store.get("pos:"+w.num,null);
+      var li=document.createElement("li"); li.className="work";
+      var b=document.createElement("button");
+      b.innerHTML =
+        '<span class="wnum">'+w.num+'</span>'+
+        '<span><span class="wt">'+w.title+'</span><br>'+
+        '<span class="wgenre">'+w.genre+'</span>'+
+        '<span class="wblurb">'+w.blurb+'</span>'+
+        '<span class="wmeta"><span class="num">'+w.count+'</span>章'+
+        '<span class="dot">／</span><span class="num">'+comma(w.chars)+'</span>字'+
+        (pos?'<span class="dot">／</span><span class="mark">第'+kan(pos.ch+1)+'章まで読了</span>':'')+
+        '</span></span>';
+      b.addEventListener("click",function(){ open(w.num, pos?pos.ch:0); });
+      li.appendChild(b); ul.appendChild(li);
+    });
+    $("t-works").textContent=index.length;
+    $("t-chaps").textContent=chaps;
+    $("t-chars").textContent=comma(chars);
+  }
+
+  /* ---------- scroll helpers (vertical-rl safe) ---------- */
+  /* In writing-mode:vertical-rl the first column sits at the right edge.
+     Browsers report that origin either as scrollLeft 0 (going negative toward
+     the end) or as scrollLeft max. Probe once; never during a scroll. */
+  var NEG=null;
+  function originNeg(el){
+    if(NEG===null){
+      var prev=el.scrollLeft; el.scrollLeft=-1;
+      NEG=el.scrollLeft<0; el.scrollLeft=prev;
+    }
+    return NEG;
+  }
+  function begin(el){
+    return originNeg(el) ? 0 : (el.scrollWidth-el.clientWidth);
+  }
+  function toStart(el){
+    if(tate) el.scrollLeft=begin(el); else el.scrollTop=0;
+  }
+  function progress(el){
+    var span = tate ? (el.scrollWidth-el.clientWidth) : (el.scrollHeight-el.clientHeight);
+    if(span<=0) return 0;
+    var p = tate ? (begin(el)-el.scrollLeft)/span : el.scrollTop/span;
+    return Math.max(0,Math.min(1,p));
+  }
+  function page(dir){ /* dir:1 forward, -1 back */
+    var el=$("pane");
+    if(tate) el.scrollBy({left: -dir*(el.clientWidth-40), behavior:"smooth"});
+    else el.scrollBy({top: dir*(el.clientHeight-60), behavior:"smooth"});
+  }
+
+  /* ---------- reader ---------- */
+  function open(num, ch){
+    $("library").hidden=true; $("guide").hidden=true; $("reader").hidden=false;
+    if(cache[num]){ show(cache[num],ch); return; }
+    $("loading").hidden=false; $("pane").textContent="";
+    fetch("data/"+num+".json").then(function(r){ return r.json(); }).then(function(w){
+      cache[num]=w; $("loading").hidden=true; show(w,ch);
+    }).catch(function(){
+      $("loading").textContent="本文を読み込めませんでした";
+    });
+  }
+
+  function show(w, ch){
+    cur=w; curCh=Math.max(0,Math.min(w.chapters.length-1, ch||0));
+    var c=w.chapters[curCh];
+    $("cw").textContent=w.title;
+    $("cc").textContent="第"+kan(curCh+1)+"章 ／ 全"+kan(w.chapters.length)+"章";
+
+    var pane=$("pane"); pane.textContent="";
+    var text=document.createElement("div"); text.className="text";
+    var h=document.createElement("p"); h.className="chead"; h.textContent=c.title;
+    text.appendChild(h);
+    c.scenes.forEach(function(sc){
+      var d=document.createElement("div"); d.className="scene";
+      sc.forEach(function(p){ var el=document.createElement("p"); el.textContent=p; d.appendChild(el); });
+      text.appendChild(d);
+    });
+    var end=document.createElement("p"); end.className="endmark";
+    end.textContent = (curCh+1===w.chapters.length) ? "［了］" : "＊";
+    text.appendChild(end);
+    pane.appendChild(text);
+
+    $("prevCh").disabled = curCh===0;
+    $("nextCh").disabled = curCh===w.chapters.length-1;
+    $("prevCh").style.opacity = curCh===0?".35":"1";
+    $("nextCh").style.opacity = (curCh===w.chapters.length-1)?".35":"1";
+
+    requestAnimationFrame(function(){ toStart(pane); tick(); });
+    store.set("pos:"+w.num,{ch:curCh});
+    store.set("last",{num:w.num,ch:curCh});
+    if(drawer) buildDrawer();
+    pane.focus({preventScroll:true});
+  }
+
+  function tick(){
+    var p=progress($("pane"));
+    var w=(p*100).toFixed(1)+"%";
+    $("fill").style.width=w;
+    $("fill2").style.width=w;
+    $("pct").textContent=Math.round(p*100)+"%";
+  }
+
+  /* ---------- zen / fullscreen ---------- */
+  var zen=false;
+  function setZen(on){
+    zen=on; document.body.classList.toggle("zen",on);
+    requestAnimationFrame(function(){ tick(); $("pane").focus({preventScroll:true}); });
+  }
+  function toggleZen(){
+    var want=!zen;
+    setZen(want);
+    try{
+      if(want){
+        var el=document.documentElement;
+        var r=el.requestFullscreen||el.webkitRequestFullscreen;
+        if(r) Promise.resolve(r.call(el)).catch(function(){});
+      }else if(document.fullscreenElement||document.webkitFullscreenElement){
+        var x=document.exitFullscreen||document.webkitExitFullscreen;
+        if(x) Promise.resolve(x.call(document)).catch(function(){});
+      }
+    }catch(e){}
+  }
+  document.addEventListener("fullscreenchange",function(){
+    /* leaving fullscreen by Esc or the browser chrome also leaves zen */
+    if(!document.fullscreenElement && zen) setZen(false);
+  });
+
+  /* ---------- guide ---------- */
+  var guide=null, gtab="people";
+  function chips(w){
+    var out='<span class="chips">';
+    (w.lead||[]).forEach(function(n){ out+='<span class="chip lead">'+n+'</span>'; });
+    (w.in||[]).forEach(function(n){ out+='<span class="chip">'+n+'</span>'; });
+    return out+'</span>';
+  }
+  function esc(t){ return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+
+  function renderGuide(){
+    var box=$("gsec"); box.textContent="";
+    if(!guide){ box.innerHTML='<p class="ds">読み込み中</p>'; return; }
+    var h="";
+    if(gtab==="people"){
+      var groups=[["cross","連作をまたぐ人"]];
+      guide.works.slice().sort(function(a,b){return a.num<b.num?-1:1;}).forEach(function(w){
+        groups.push([w.num, w.num+"　"+w.title]);
+      });
+      groups.forEach(function(g){
+        var list=guide.people.filter(function(p){ return p.g===g[0]; });
+        if(!list.length) return;
+        h+='<h2>'+g[1]+'</h2>';
+        list.forEach(function(p){
+          h+='<div class="ent"><div class="hd"><span class="nm">'+esc(p.name)+'</span>'+
+             '<span class="yo">'+esc(p.yomi)+'</span>'+
+             '<span class="ag">'+esc(p.age)+'</span>'+
+             '<span class="rl">'+esc(p.role)+'</span>'+chips(p)+'</div>'+
+             '<p class="ds">'+esc(p.desc)+'</p>'+
+             (p.note?'<p class="nt">'+esc(p.note)+'</p>':'')+'</div>';
+        });
+      });
+      h+='<p class="spoil">数字つきの札は、その人が出てくる作品です。色のついた札は、その作品の視点人物であることを表します。</p>';
+    }
+    else if(gtab==="shops"){
+      h+='<p class="spoil">左の数字は南（駅側）から北への並び順です。番地はおおむねそれに沿いますが、北の抜けだけが十一番地の枝番で、十二番地（柏湯）より北にあります。</p>';
+      [["kashio","柏尾銀天街　南（駅側）から北へ"],["hamuro","羽室銀座（新潟）"],["other","町の外"]].forEach(function(a){
+        var list=guide.shops.filter(function(x){ return x.a===a[0]; });
+        if(!list.length) return;
+        h+='<h2>'+a[1]+'</h2>';
+        list.forEach(function(x){
+          var gone=/閉店|解体/.test(x.state);
+          h+='<div class="shoprow"><span class="pin">'+x.pos+'</span><div>'+
+             '<div class="hd"><span class="nm">'+esc(x.name)+'</span>'+
+             '<span class="rl">'+esc(x.trade)+'</span>'+
+             (x.chi!=="—"?'<span class="yo">'+esc(x.chi)+'</span>':'')+
+             (x.since!=="—"?'<span class="yo">'+esc(x.since)+'</span>':'')+
+             '<span class="st'+(gone?" gone":"")+'">'+esc(x.state)+'</span>'+chips({in:x.w})+'</div>'+
+             '<p class="ds">'+esc(x.note)+'</p></div></div>';
+        });
+      });
+      h+='<h2>アーケードの数字（作品07時点）</h2><div class="facts">';
+      guide.facts.forEach(function(f){
+        h+='<div class="fact"><b>'+esc(f.k)+'</b><span>'+esc(f.v)+'</span></div>';
+      });
+      h+='</div>';
+    }
+    else {
+      h+='<p class="spoil">各作品の出来事を時系列に並べたものです。結末に触れる行があります。</p>';
+      var byNum={}; guide.works.forEach(function(w){ byNum[w.num]=w.title; });
+      h+='<h2>作品の時期</h2>';
+      guide.works.forEach(function(w){
+        var y0=(w.period.match(/^[〇一二三四五六七八九]+年/)||[""])[0];
+        h+='<div class="evt"><span class="mo">'+esc(y0)+'</span>'+
+           '<span class="chips"><span class="chip lead">'+w.num+'</span></span>'+
+           '<span class="tx">『'+esc(w.title)+'』　'+esc(w.period)+'　'+esc(w.place)+'</span></div>';
+      });
+      guide.years.forEach(function(y){
+        h+='<div class="yr"><h3>'+esc(y.y)+'</h3>';
+        y.rows.forEach(function(r){
+          h+='<div class="evt"><span class="mo">'+esc(r.m)+'</span>'+
+             '<span class="chips"><span class="chip">'+r.w+'</span></span>'+
+             '<span class="tx">'+esc(r.t)+'</span></div>';
+        });
+        h+='</div>';
+      });
+    }
+    box.innerHTML=h;
+  }
+
+  function openGuide(){
+    $("library").hidden=true; $("reader").hidden=true; $("guide").hidden=false;
+    closeDrawer();
+    if(guide){ renderGuide(); return; }
+    renderGuide();
+    fetch("data/guide.json").then(function(r){ return r.json(); }).then(function(d){
+      guide=d; renderGuide();
+    }).catch(function(){ $("gsec").innerHTML='<p class="ds">資料を読み込めませんでした。</p>'; });
+  }
+
+  function goCh(d){
+    if(!cur) return;
+    var n=curCh+d;
+    if(n<0||n>=cur.chapters.length) return;
+    show(cur,n);
+  }
+
+  function toLibrary(){
+    setZen(false);
+    $("reader").hidden=true; $("guide").hidden=true; $("library").hidden=false;
+    renderLibrary(); closeDrawer();
+  }
+
+  /* ---------- drawer ---------- */
+  function buildDrawer(){
+    var body=drawer.querySelector(".dbody"); body.textContent="";
+    index.forEach(function(w){
+      var head=document.createElement("div"); head.className="dwork";
+      head.textContent=w.num+"　"+w.title;
+      body.appendChild(head);
+      w.chapters.forEach(function(t,i){
+        var b=document.createElement("button"); b.className="chap";
+        if(cur && w.num===cur.num && i===curCh) b.setAttribute("aria-current","true");
+        b.innerHTML='<span class="ci">'+(i+1)+'</span><span class="ct">'+t.replace(/^第[^　]+章　?/,"")+'</span>';
+        b.addEventListener("click",function(){ closeDrawer(); open(w.num,i); });
+        body.appendChild(b);
+      });
+    });
+  }
+  function openDrawer(){
+    if(drawer) return;
+    var scrim=document.createElement("div"); scrim.className="scrim";
+    scrim.addEventListener("click",closeDrawer);
+    drawer=document.createElement("div"); drawer.className="drawer";
+    drawer.setAttribute("role","dialog"); drawer.setAttribute("aria-label","目次");
+    drawer.innerHTML='<div class="dhead"><h2>目次</h2><button class="btn ghost" data-close>閉じる</button></div>'+
+      '<div class="dbody"></div>'+
+      '<div class="backline"><button class="btn" data-lib>作品一覧</button> <button class="btn" data-guide>資料</button></div>';
+    document.body.appendChild(scrim); document.body.appendChild(drawer);
+    drawer.querySelector("[data-close]").addEventListener("click",closeDrawer);
+    drawer.querySelector("[data-lib]").addEventListener("click",function(){ closeDrawer(); toLibrary(); });
+    drawer.querySelector("[data-guide]").addEventListener("click",function(){ closeDrawer(); openGuide(); });
+    drawer._scrim=scrim;
+    buildDrawer();
+    var act=drawer.querySelector('[aria-current="true"]');
+    if(act) act.scrollIntoView({block:"center"});
+    drawer.querySelector("[data-close]").focus();
+  }
+  function closeDrawer(){
+    if(!drawer) return;
+    drawer._scrim.remove(); drawer.remove(); drawer=null;
+  }
+
+  /* ---------- wire ---------- */
+  $("toLib").addEventListener("click",toLibrary);
+  $("toGuide").addEventListener("click",openGuide);
+  $("gBack").addEventListener("click",toLibrary);
+  $("zenBtn").addEventListener("click",toggleZen);
+  $("zenout").addEventListener("click",function(){ toggleZen(); });
+  Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(t){
+    t.addEventListener("click",function(){
+      gtab=t.dataset.tab;
+      Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(o){
+        o.setAttribute("aria-selected", o===t ? "true" : "false");
+      });
+      renderGuide(); $("guide").scrollTop=0;
+    });
+  });
+  $("tocBtn").addEventListener("click",function(){ drawer?closeDrawer():openDrawer(); });
+  $("prevCh").addEventListener("click",function(){ goCh(-1); });
+  $("nextCh").addEventListener("click",function(){ goCh(1); });
+  $("tateBtn").addEventListener("click",function(){
+    tate=!tate; store.set("tate",tate); applyMode();
+    requestAnimationFrame(function(){ toStart($("pane")); tick(); });
+  });
+  $("fsBtn").addEventListener("click",function(){
+    sizeIdx=(sizeIdx+1)%SIZES.length; store.set("size",sizeIdx); applyMode();
+    requestAnimationFrame(tick);
+  });
+  $("pane").addEventListener("scroll",tick,{passive:true});
+  window.addEventListener("resize",function(){ requestAnimationFrame(tick); });
+  document.addEventListener("keydown",function(e){
+    if($("reader").hidden) return;
+    if(e.key==="Escape"){
+      if(drawer){ closeDrawer(); return; }
+      if(zen){ toggleZen(); return; }
+    }
+    if(e.target.closest(".drawer")) return;
+    if(e.key==="ArrowLeft"){ e.preventDefault(); page(tate?1:-1); }
+    else if(e.key==="ArrowRight"){ e.preventDefault(); page(tate?-1:1); }
+    else if(e.key===" "){ e.preventDefault(); page(e.shiftKey?-1:1); }
+    else if(e.key==="ArrowDown"&&!tate){ return; }
+  });
+
+  applyMode();
+  fetch("data/index.json").then(function(r){ return r.json(); }).then(function(d){
+    index=d; renderLibrary();
+    var last=store.get("last",null);
+    var hash=(location.hash||"").replace("#","");
+    if(hash==="guide"){ openGuide(); }
+    else if(/^w[0-7]\d?$/.test(hash)){ open(hash.slice(1,3),0); }
+    else if(last){ /* stay on library; the row shows the bookmark */ }
+  }).catch(function(){
+    $("works").innerHTML='<li class="work" style="padding:2rem 0;color:var(--muted)">本文を読み込めませんでした。</li>';
+  });
+})();
+</script>
