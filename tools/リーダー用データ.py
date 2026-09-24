@@ -12,6 +12,7 @@ META = {
  "06": ("月水金",         "短編・るり視点",       "友達になってひと月後、初めて二人で出かけた日の回想から。意外なことに、るりのほうも。"),
  "07": ("赤いバツ",       "半クロスオーバー長編", "商店街振興組合の事務員は、頼まれてもいないものを三つ預かっている。屋根が外れるまでの一年。"),
  "08": ("十四番地",       "明るいガール・ミーツ・ガール", "屋根の外れた商店街で、七年空いていた店が開く。看板を手で書く人と、百枚刷れる人。"),
+ "i1": ("三十七円五十銭", "幕間・あんず視点", "名刺を作りに行く三日間。名前を入れないと決めたのは、あんずだった。"),
  "09": ("一人前",         "続編・十八歳の一年",   "パン屋の娘と中華屋の娘の高校三年。週百二十個の注文が来て、ラベルの製造者欄が一つしかないと分かる。"),
 }
 
@@ -20,8 +21,10 @@ def count(s):
     return len(re.sub(r'\s', '', s))
 
 index = []
-for d in sorted(glob.glob(os.path.join(ROOT, "作品0*"))):
-    num = os.path.basename(d)[2:4]
+dirs = sorted(glob.glob(os.path.join(ROOT, "作品0*"))) + sorted(glob.glob(os.path.join(ROOT, "幕間*")))
+for d in dirs:
+    base = os.path.basename(d)
+    num = base[2:4] if base.startswith("作品") else "i" + str(int(base[2:4]))
     title, genre, blurb = META[num]
     chapters = []
     total = 0

@@ -549,7 +549,8 @@ body.zen .zenout{display:block}
     if(gtab==="people"){
       var groups=[["cross","連作をまたぐ人"]];
       guide.works.slice().sort(function(a,b){return a.num<b.num?-1:1;}).forEach(function(w){
-        groups.push([w.num, w.num+"　"+w.title]);
+        var lbl = w.num.charAt(0)==="i" ? "幕間　"+w.title : w.num+"　"+w.title;
+        groups.push([w.num, lbl]);
       });
       groups.forEach(function(g){
         var list=guide.people.filter(function(p){ return p.g===g[0]; });
