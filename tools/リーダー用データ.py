@@ -15,6 +15,7 @@ META = {
  "i1": ("三十七円五十銭", "幕間・あんず視点", "名刺を作りに行く三日間。名前を入れないと決めたのは、あんずだった。"),
  "i2": ("五十八分四十秒", "幕間・夢", "森岡が机で一時間眠る。屋根が戻っていて、閉めた店が全部開いていて、通りは北で羽室につながっている。"),
  "09": ("一人前",         "続編・十八歳の一年",   "パン屋の娘と中華屋の娘の高校三年。週百二十個の注文が来て、ラベルの製造者欄が一つしかないと分かる。"),
+ "10": ("逆さに彫る",     "夜の一年",             "借りたいのは店ではなく住所だった。開かない店の一年と、二十二時から四時まで印を彫る人。"),
 }
 
 def count(s):
@@ -22,7 +23,7 @@ def count(s):
     return len(re.sub(r'\s', '', s))
 
 index = []
-dirs = sorted(glob.glob(os.path.join(ROOT, "作品0*"))) + sorted(glob.glob(os.path.join(ROOT, "幕間*")))
+dirs = sorted(glob.glob(os.path.join(ROOT, "作品[0-9][0-9]_*"))) + sorted(glob.glob(os.path.join(ROOT, "幕間*")))
 for d in dirs:
     base = os.path.basename(d)
     num = base[2:4] if base.startswith("作品") else "i" + str(int(base[2:4]))
