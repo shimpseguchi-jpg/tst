@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import json
+import json, os, re
 
 W = {  # 作品番号 → 表示名と時期
  "01":"灯を消さない家","02":"銀星座の二本立て","03":"読まない人",
@@ -219,3 +219,77 @@ json.dump({"works":works_period,"people":people,"shops":shops,"years":years,"fac
   open("reader/data/guide.json","w",encoding="utf-8"),
   ensure_ascii=False, separators=(",",":"))
 print("people",len(people),"shops",len(shops),"years",sum(len(y["rows"]) for y in years))
+
+
+# ---------------- 森岡レポート ----------------
+import html as _html
+
+def _inline(t):
+    t = _html.escape(t, quote=False)
+    t = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', t)
+    t = re.sub(r'&lt;br&gt;', '<br>', t)
+    t = re.sub(r'(https?://[^\s<]+)', r'<a href="\1" target="_blank" rel="noopener">\1</a>', t)
+    return t
+
+def md_to_html(md):
+    lines = md.split("\n")
+    out, i = [], 0
+    while i < len(lines):
+        ln = lines[i]
+        s = ln.strip()
+        if not s:
+            i += 1; continue
+        if s.startswith("---"):
+            out.append("<hr>"); i += 1; continue
+        m = re.match(r'^(#{1,4})\s+(.*)$', s)
+        if m:
+            lv = len(m.group(1))
+            out.append(f"<h{lv}>{_inline(m.group(2))}</h{lv}>"); i += 1; continue
+        if s.startswith("|") and i + 1 < len(lines) and re.match(r'^\|[\s:\-|]+\|$', lines[i+1].strip()):
+            head = [c.strip() for c in s.strip("|").split("|")]
+            i += 2
+            rows = []
+            while i < len(lines) and lines[i].strip().startswith("|"):
+                rows.append([c.strip() for c in lines[i].strip().strip("|").split("|")])
+                i += 1
+            t = ["<div class='tw'><table><thead><tr>"]
+            t += [f"<th>{_inline(c)}</th>" for c in head]
+            t.append("</tr></thead><tbody>")
+            for r in rows:
+                t.append("<tr>" + "".join(f"<td>{_inline(c)}</td>" for c in r) + "</tr>")
+            t.append("</tbody></table></div>")
+            out.append("".join(t)); continue
+        if re.match(r'^[-*]\s+', s):
+            items = []
+            while i < len(lines) and re.match(r'^[-*]\s+', lines[i].strip()):
+                items.append(re.sub(r'^[-*]\s+', '', lines[i].strip())); i += 1
+            out.append("<ul>" + "".join(f"<li>{_inline(x)}</li>" for x in items) + "</ul>"); continue
+        if re.match(r'^\d+\.\s+', s):
+            items = []
+            while i < len(lines) and re.match(r'^\d+\.\s+', lines[i].strip()):
+                items.append(re.sub(r'^\d+\.\s+', '', lines[i].strip())); i += 1
+            out.append("<ol>" + "".join(f"<li>{_inline(x)}</li>" for x in items) + "</ol>"); continue
+        if s.startswith(">"):
+            q = []
+            while i < len(lines) and lines[i].strip().startswith(">"):
+                q.append(lines[i].strip().lstrip("> ")); i += 1
+            out.append("<blockquote>" + "<br>".join(_inline(x) for x in q) + "</blockquote>"); continue
+        para = []
+        while i < len(lines) and lines[i].strip() and not re.match(r'^(#{1,4}\s|\||[-*]\s|\d+\.\s|>|---)', lines[i].strip()):
+            para.append(lines[i].strip()); i += 1
+        out.append("<p>" + "<br>".join(_inline(x) for x in para) + "</p>")
+    return "".join(out)
+
+src = open("資料/森岡レポート_商店街の存続について.md", encoding="utf-8").read()
+# 一行目の見出しと、宛先・日付・差出の前書きは meta として別に持つので本文から外す
+body = src.split("\n", 1)[1]
+body = body.split("---", 1)[1]
+json.dump({
+    "title": "商店街の存続に関する調査報告",
+    "to": "柏尾銀天街振興組合　理事会　御中",
+    "date": "二〇三二年四月十二日",
+    "from": "事務局　森岡　佑",
+    "note": "作中の事務局文書の形式で、実在の統計・事例・制度をまとめたもの。数字と出典は現実のものである。",
+    "html": md_to_html(body),
+}, open("reader/data/report.json", "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+print("report.json", len(md_to_html(body)), "bytes")
