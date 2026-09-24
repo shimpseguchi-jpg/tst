@@ -7,7 +7,7 @@
   --ground:#e8e9e3; --surface:#f5f5f1; --sunk:#dedfd7;
   --ink:#191b19; --ink-soft:#4a4f4b; --muted:#71776f;
   --rule:#cccec4; --rule-soft:#dcded4;
-  --accent:#9c382c; --accent-soft:#b9705f;
+  --accent:#9c382c; --accent-soft:#b9705f; --mark:#e4dcc8;
   --mincho:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
   --body:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;
   --util:ui-sans-serif,system-ui,"Hiragino Sans","Noto Sans JP",sans-serif;
@@ -19,7 +19,7 @@
     --ground:#131513; --surface:#1b1e1b; --sunk:#0d0f0d;
     --ink:#dbdcd3; --ink-soft:#b3b6ac; --muted:#858b81;
     --rule:#2c302c; --rule-soft:#232723;
-    --accent:#c9685a; --accent-soft:#a8564a;
+    --accent:#c9685a; --accent-soft:#a8564a; --mark:#3a3324;
     color-scheme:dark;
   }
 }
@@ -27,7 +27,7 @@
   --ground:#131513; --surface:#1b1e1b; --sunk:#0d0f0d;
   --ink:#dbdcd3; --ink-soft:#b3b6ac; --muted:#858b81;
   --rule:#2c302c; --rule-soft:#232723;
-  --accent:#c9685a; --accent-soft:#a8564a;
+  --accent:#c9685a; --accent-soft:#a8564a; --mark:#3a3324;
   color-scheme:dark;
 }
 html,body{height:100%}
@@ -256,7 +256,42 @@ body.zen .zenout{display:block}
   margin:1rem 0 0;font-family:var(--util);font-size:.7rem;letter-spacing:.08em;
   color:var(--muted);border-left:2px solid var(--accent);padding-left:.8rem;line-height:1.9;
 }
+/* 報告書 */
+.doc{max-width:44rem;margin:0 auto;padding-top:1rem}
+.doc-head{border:1px solid var(--rule);background:var(--surface);padding:1.3rem 1.4rem;margin-bottom:2.2rem}
+.doc-head .t{font-family:var(--mincho);font-size:1.35rem;font-weight:600;letter-spacing:.12em;line-height:1.5;margin:0 0 1rem;text-wrap:balance}
+.doc-head dl{display:grid;grid-template-columns:4.5rem 1fr;gap:.35rem .9rem;margin:0;
+  font-family:var(--util);font-size:.76rem;line-height:1.8;color:var(--ink-soft)}
+.doc-head dt{color:var(--muted);letter-spacing:.14em}
+.doc-head dd{margin:0}
+.doc-note{margin:1rem 0 0;padding-top:.9rem;border-top:1px solid var(--rule-soft);
+  font-family:var(--util);font-size:.72rem;line-height:1.95;color:var(--muted)}
+.doc h2{font-family:var(--mincho);font-size:1.18rem;font-weight:600;letter-spacing:.1em;color:var(--ink);
+  margin:3rem 0 .2rem;padding-bottom:.6rem;border-bottom:1px solid var(--rule);text-transform:none}
+.doc h2:first-child{margin-top:0}
+.doc h3{font-family:var(--mincho);font-size:1rem;font-weight:600;letter-spacing:.09em;color:var(--ink);
+  margin:2.1rem 0 .1rem;padding-left:.7rem;border-left:3px solid var(--accent)}
+.doc h4{font-family:var(--util);font-size:.78rem;letter-spacing:.14em;color:var(--muted);margin:1.6rem 0 0}
+.doc p{margin:1.05rem 0 0;font-size:.92rem;line-height:2.05;color:var(--ink-soft)}
+.doc strong{font-weight:500;color:var(--ink);background:linear-gradient(transparent 62%,var(--mark) 62%)}
+.doc ul,.doc ol{margin:1rem 0 0;padding-left:1.3rem}
+.doc li{font-size:.9rem;line-height:1.95;color:var(--ink-soft);margin-bottom:.45rem}
+.doc a{color:var(--accent);text-decoration:none;border-bottom:1px solid var(--rule);word-break:break-all;font-size:.82em}
+.doc a:hover{border-bottom-color:var(--accent)}
+.doc hr{border:0;border-top:1px solid var(--rule-soft);margin:2.6rem 0 0}
+.doc .tw{overflow-x:auto;margin:1.3rem 0 .3rem;border:1px solid var(--rule)}
+.doc table{border-collapse:collapse;width:100%;font-size:.84rem;background:var(--surface)}
+.doc th,.doc td{padding:.6rem .8rem;text-align:left;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+.doc th{font-family:var(--util);font-size:.72rem;letter-spacing:.08em;color:var(--muted);font-weight:400;
+  background:var(--sunk);white-space:nowrap}
+.doc td{color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.doc tbody tr:last-child td{border-bottom:0}
+.doc td strong{background:none;color:var(--accent);font-weight:500}
+
 @media (max-width:560px){
+  .doc-head{padding:1.1rem}
+  .doc-head dl{grid-template-columns:3.8rem 1fr}
+  .doc h2{font-size:1.08rem}
   .evt{grid-template-columns:5.2rem 2.2rem 1fr;gap:0 .6rem}
   .shoprow{grid-template-columns:1.8rem 1fr;gap:0 .7rem}
 }
@@ -283,7 +318,7 @@ body.zen .zenout{display:block}
       </header>
       <ul class="works" id="works"></ul>
       <div class="colophon">
-        <p style="margin:0 0 1.1rem"><button class="btn" id="toGuide">人物・店・年表の資料を見る</button></p>
+        <p style="margin:0 0 1.1rem"><button class="btn" id="toGuide">人物・店・年表の資料を見る</button> <button class="btn" id="toReport">森岡レポート</button></p>
         本文は縦書きで表示しています。横組みに切り替えることもできます。<br>
         字数は見出しと空白を除いた本文の文字数です。<br>
         読んだ位置はこの端末に記憶され、次に開いたときに続きから始まります。
@@ -301,6 +336,7 @@ body.zen .zenout{display:block}
         <button class="tab" role="tab" data-tab="people" aria-selected="true">人物</button>
         <button class="tab" role="tab" data-tab="shops" aria-selected="false">店</button>
         <button class="tab" role="tab" data-tab="years" aria-selected="false">年表</button>
+        <button class="tab" role="tab" data-tab="report" aria-selected="false">報告</button>
       </div>
       <div class="gsec" id="gsec"></div>
     </div>
@@ -497,7 +533,7 @@ body.zen .zenout{display:block}
   });
 
   /* ---------- guide ---------- */
-  var guide=null, gtab="people";
+  var guide=null, report=null, gtab="people";
   function chips(w){
     var out='<span class="chips">';
     (w.lead||[]).forEach(function(n){ out+='<span class="chip lead">'+n+'</span>'; });
@@ -552,6 +588,25 @@ body.zen .zenout{display:block}
         h+='<div class="fact"><b>'+esc(f.k)+'</b><span>'+esc(f.v)+'</span></div>';
       });
       h+='</div>';
+    }
+    else if(gtab==="report"){
+      if(!report){
+        box.innerHTML='<p class="ds">読み込み中</p>';
+        fetch("data/report.json").then(function(r){ return r.json(); }).then(function(d){
+          report=d; if(gtab==="report") renderGuide();
+        }).catch(function(){ $("gsec").innerHTML='<p class="ds">報告書を読み込めませんでした。</p>'; });
+        return;
+      }
+      var d=report;
+      box.innerHTML=
+        '<div class="doc"><div class="doc-head">'+
+        '<p class="t">'+esc(d.title)+'</p>'+
+        '<dl><dt>宛先</dt><dd>'+esc(d.to)+'</dd>'+
+        '<dt>日付</dt><dd>'+esc(d.date)+'</dd>'+
+        '<dt>作成</dt><dd>'+esc(d.from)+'</dd></dl>'+
+        '<p class="doc-note">'+esc(d.note)+'</p></div>'+
+        d.html+'</div>';
+      return;
     }
     else {
       h+='<p class="spoil">各作品の出来事を時系列に並べたものです。結末に触れる行があります。</p>';
@@ -641,16 +696,19 @@ body.zen .zenout{display:block}
 
   /* ---------- wire ---------- */
   $("toLib").addEventListener("click",toLibrary);
-  $("toGuide").addEventListener("click",openGuide);
+  $("toGuide").addEventListener("click",function(){ gtab="people"; syncTabs(); openGuide(); });
+  $("toReport").addEventListener("click",function(){ gtab="report"; syncTabs(); openGuide(); });
+  function syncTabs(){
+    Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(o){
+      o.setAttribute("aria-selected", o.dataset.tab===gtab ? "true" : "false");
+    });
+  }
   $("gBack").addEventListener("click",toLibrary);
   $("zenBtn").addEventListener("click",toggleZen);
   $("zenout").addEventListener("click",function(){ toggleZen(); });
   Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(t){
     t.addEventListener("click",function(){
-      gtab=t.dataset.tab;
-      Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(o){
-        o.setAttribute("aria-selected", o===t ? "true" : "false");
-      });
+      gtab=t.dataset.tab; syncTabs();
       renderGuide(); $("guide").scrollTop=0;
     });
   });
@@ -685,7 +743,8 @@ body.zen .zenout{display:block}
     index=d; renderLibrary();
     var last=store.get("last",null);
     var hash=(location.hash||"").replace("#","");
-    if(hash==="guide"){ openGuide(); }
+    if(hash==="report"){ gtab="report"; syncTabs(); openGuide(); }
+    else if(hash==="guide"){ openGuide(); }
     else if(/^w[0-7]\d?$/.test(hash)){ open(hash.slice(1,3),0); }
     else if(last){ /* stay on library; the row shows the bookmark */ }
   }).catch(function(){
