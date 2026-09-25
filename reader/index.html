@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>商店街連作</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -256,6 +258,57 @@ body.zen .zenout{display:block}
   margin:1rem 0 0;font-family:var(--util);font-size:.7rem;letter-spacing:.08em;
   color:var(--muted);border-left:2px solid var(--accent);padding-left:.8rem;line-height:1.9;
 }
+/* 人物のサムネと詳細 */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(9.5rem,1fr));gap:.7rem;margin:.5rem 0 .2rem}
+.pcard{
+  display:flex;flex-direction:column;gap:.45rem;text-align:left;width:100%;
+  padding:.85rem .85rem .9rem;border:1px solid var(--rule);background:var(--surface);
+  cursor:pointer;transition:border-color .15s,transform .15s;
+}
+.pcard:hover{border-color:var(--accent)}
+.pcard:active{transform:scale(.985)}
+.pcard .gl{
+  font-family:var(--mincho);font-size:2rem;line-height:1;font-weight:600;
+  color:var(--ink);opacity:.9;letter-spacing:0;
+}
+.pcard .pn{font-family:var(--mincho);font-size:.98rem;font-weight:600;letter-spacing:.06em;line-height:1.4}
+.pcard .py{font-family:var(--util);font-size:.63rem;color:var(--muted);letter-spacing:.05em}
+.pcard .pr{font-family:var(--util);font-size:.66rem;color:var(--ink-soft);line-height:1.6}
+.pcard .chips{margin-top:.15rem}
+.pcard.isLead .gl{color:var(--accent)}
+/* 詳細 */
+.psheet{
+  position:fixed;z-index:31;inset:0;display:flex;justify-content:center;
+  padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);
+  pointer-events:none;
+}
+.psheet .pbox{
+  pointer-events:auto;width:min(42rem,100%);background:var(--surface);
+  border-left:1px solid var(--rule);border-right:1px solid var(--rule);
+  display:flex;flex-direction:column;animation:pup .2s ease;
+}
+@keyframes pup{from{opacity:0;transform:translateY(1.2rem)}to{opacity:1;transform:none}}
+.phead{display:flex;align-items:center;gap:.6rem;padding:.9rem 1.2rem;border-bottom:1px solid var(--rule);flex:none}
+.phead .t{font-family:var(--mincho);font-size:1.05rem;font-weight:600;letter-spacing:.1em;flex:1}
+.pbody{overflow-y:auto;padding:1.4rem 1.2rem 3rem}
+.pbody .big{font-family:var(--mincho);font-size:1.75rem;font-weight:600;letter-spacing:.12em;line-height:1.4;margin:0}
+.pbody .sub{font-family:var(--util);font-size:.72rem;color:var(--muted);letter-spacing:.06em;margin:.35rem 0 0;line-height:1.9}
+.pbody .rl2{font-family:var(--util);font-size:.76rem;color:var(--ink-soft);letter-spacing:.05em;margin:.15rem 0 .7rem}
+.pfield{margin-top:1.5rem}
+.pfield>h4{
+  margin:0 0 .4rem;font-family:var(--util);font-size:.66rem;letter-spacing:.2em;font-weight:400;
+  color:var(--muted);border-bottom:1px solid var(--rule-soft);padding-bottom:.35rem;
+}
+.pfield>p{margin:0;font-size:.88rem;line-height:1.95;color:var(--ink-soft)}
+.psee{padding:.55rem 0;border-bottom:1px solid var(--rule-soft)}
+.psee .who{font-family:var(--mincho);font-size:.85rem;letter-spacing:.06em;color:var(--ink);background:none;border:0;padding:0;cursor:pointer}
+.psee .who.link{color:var(--accent);text-decoration:underline;text-underline-offset:.2em}
+.psee p{margin:.25rem 0 0;font-size:.85rem;line-height:1.9;color:var(--ink-soft)}
+.pseed{
+  margin-top:1.6rem;padding:.9rem 1rem;border:1px dashed var(--rule);background:var(--sunk);
+}
+.pseed h4{margin:0 0 .4rem;font-family:var(--util);font-size:.66rem;letter-spacing:.2em;font-weight:400;color:var(--accent)}
+.pseed p{margin:0;font-size:.84rem;line-height:1.95;color:var(--ink-soft)}
 /* 報告書 */
 .doc{max-width:44rem;margin:0 auto;padding-top:1rem}
 .doc-head{border:1px solid var(--rule);background:var(--surface);padding:1.3rem 1.4rem;margin-bottom:2.2rem}
@@ -309,7 +362,7 @@ body.zen .zenout{display:block}
     <div class="lib-inner">
       <header class="masthead">
         <h1>商店街連作</h1>
-        <p class="sub">新潟の羽室銀座と、広島の柏尾銀天街。二つのアーケード街を舞台に、二〇二六年から二〇三〇年までを共有する七篇。どこから読んでも、続けて読んでも成立します。</p>
+        <p class="sub">新潟の羽室銀座と、広島の柏尾銀天街。二つのアーケード街を舞台に、二〇二六年から二〇三三年までを共有する十一篇と、三つの幕間。どこから読んでも、続けて読んでも成立します。</p>
         <div class="tally">
           <span><b class="num" id="t-works">—</b> 篇</span>
           <span><b class="num" id="t-chaps">—</b> 章</span>
@@ -555,17 +608,20 @@ body.zen .zenout{display:block}
       groups.forEach(function(g){
         var list=guide.people.filter(function(p){ return p.g===g[0]; });
         if(!list.length) return;
-        h+='<h2>'+g[1]+'</h2>';
+        h+='<h2>'+g[1]+'</h2><div class="pgrid">';
         list.forEach(function(p){
-          h+='<div class="ent"><div class="hd"><span class="nm">'+esc(p.name)+'</span>'+
-             '<span class="yo">'+esc(p.yomi)+'</span>'+
-             '<span class="ag">'+esc(p.age)+'</span>'+
-             '<span class="rl">'+esc(p.role)+'</span>'+chips(p)+'</div>'+
-             '<p class="ds">'+esc(p.desc)+'</p>'+
-             (p.note?'<p class="nt">'+esc(p.note)+'</p>':'')+'</div>';
+          var i=guide.people.indexOf(p);
+          var nm=String(p.name).split(/\s+/);
+          var gl=(nm[1]||nm[0]).charAt(0);
+          h+='<button class="pcard'+((p.lead||[]).length?" isLead":"")+'" data-p="'+i+'">'+
+             '<span class="gl">'+esc(gl)+'</span>'+
+             '<span class="pn">'+esc(p.name)+'</span>'+
+             '<span class="py">'+esc(p.yomi)+'</span>'+
+             '<span class="pr">'+esc(p.role)+'</span>'+chips(p)+'</button>';
         });
+        h+='</div>';
       });
-      h+='<p class="spoil">数字つきの札は、その人が出てくる作品です。色のついた札は、その作品の視点人物であることを表します。</p>';
+      h+='<p class="spoil">札をおすと、その人の詳しいところが出ます。数字つきの札は出てくる作品で、色のついた札はその作品の視点人物です。詳細には、本文に書いていないことも入っています。</p>';
     }
     else if(gtab==="shops"){
       h+='<p class="spoil">左の数字は南（駅側）から北への並び順です。番地はおおむねそれに沿いますが、北の抜けだけが十一番地の枝番で、十二番地（柏湯）より北にあります。</p>';
@@ -630,7 +686,64 @@ body.zen .zenout{display:block}
       });
     }
     box.innerHTML=h;
+    Array.prototype.forEach.call(box.querySelectorAll("[data-p]"),function(b){
+      b.addEventListener("click",function(){ openPerson(+b.getAttribute("data-p")); });
+    });
   }
+
+  /* ---------- 人物の詳細 ---------- */
+  var psheet=null;
+  var PF=[["full","本名と、名前の出どころ"],["born","生まれ"],["desc","この人"],
+          ["look","見た目"],["body","身体"],["mind","心"],["voice","喋り方"],["habit","癖"]];
+
+  function openPerson(i){
+    var p=guide.people[i]; if(!p) return;
+    closePerson();
+    var nm=String(p.name).split(/\s+/);
+    var b='<p class="big">'+esc(p.name)+'</p>'+
+          '<p class="sub">'+esc(p.yomi)+'　'+esc(p.age)+'</p>'+
+          '<p class="rl2">'+esc(p.role)+'</p>'+chips(p);
+    PF.forEach(function(f){
+      if(!p[f[0]]) return;
+      b+='<div class="pfield"><h4>'+f[1]+'</h4><p>'+esc(p[f[0]])+'</p></div>';
+    });
+    if(p.sees&&p.sees.length){
+      b+='<div class="pfield"><h4>この人から見て</h4>';
+      p.sees.forEach(function(r){
+        var j=-1;
+        guide.people.forEach(function(q,k){ if(q.name===r[0]) j=k; });
+        b+='<div class="psee">'+
+           (j>=0?'<button class="who link" data-jump="'+j+'">'+esc(r[0])+'</button>'
+                :'<span class="who">'+esc(r[0])+'</span>')+
+           '<p>'+esc(r[1])+'</p></div>';
+      });
+      b+='</div>';
+    }
+    if(p.note) b+='<div class="pfield"><h4>書くときの約束</h4><p>'+esc(p.note)+'</p></div>';
+    if(p.seed) b+='<div class="pseed"><h4>まだ書いていないこと</h4><p>'+esc(p.seed)+'</p></div>';
+
+    var scrim=document.createElement("div"); scrim.className="scrim"; scrim.style.zIndex=30;
+    psheet=document.createElement("div"); psheet.className="psheet";
+    psheet.setAttribute("role","dialog"); psheet.setAttribute("aria-label",p.name);
+    psheet.innerHTML='<div class="pbox"><div class="phead"><span class="t">人物</span>'+
+      '<button class="btn ghost" data-close>閉じる</button></div>'+
+      '<div class="pbody">'+b+'</div></div>';
+    document.body.appendChild(scrim); document.body.appendChild(psheet);
+    psheet._scrim=scrim;
+    scrim.addEventListener("click",closePerson);
+    psheet.querySelector("[data-close]").addEventListener("click",closePerson);
+    Array.prototype.forEach.call(psheet.querySelectorAll("[data-jump]"),function(x){
+      x.addEventListener("click",function(){ openPerson(+x.getAttribute("data-jump")); });
+    });
+    psheet.querySelector("[data-close]").focus();
+  }
+  function closePerson(){
+    if(!psheet) return;
+    psheet._scrim.remove(); psheet.remove(); psheet=null;
+  }
+  document.addEventListener("keydown",function(e){
+    if(e.key==="Escape"&&psheet){ e.preventDefault(); closePerson(); }
+  });
 
   function openGuide(){
     $("library").hidden=true; $("reader").hidden=true; $("guide").hidden=false;
