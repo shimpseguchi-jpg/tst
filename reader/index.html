@@ -294,6 +294,7 @@ body.zen .zenout{display:block}
 .pbody .big{font-family:var(--mincho);font-size:1.75rem;font-weight:600;letter-spacing:.12em;line-height:1.4;margin:0}
 .pbody .sub{font-family:var(--util);font-size:.72rem;color:var(--muted);letter-spacing:.06em;margin:.35rem 0 0;line-height:1.9}
 .pbody .rl2{font-family:var(--util);font-size:.76rem;color:var(--ink-soft);letter-spacing:.05em;margin:.15rem 0 .7rem}
+.pbody .rl2.gone{color:var(--accent)}
 .pfield{margin-top:1.5rem}
 .pfield>h4{
   margin:0 0 .4rem;font-family:var(--util);font-size:.66rem;letter-spacing:.2em;font-weight:400;
@@ -309,6 +310,18 @@ body.zen .zenout{display:block}
 }
 .pseed h4{margin:0 0 .4rem;font-family:var(--util);font-size:.66rem;letter-spacing:.2em;font-weight:400;color:var(--accent)}
 .pseed p{margin:0;font-size:.84rem;line-height:1.95;color:var(--ink-soft)}
+.pcard .pin2{
+  font-family:var(--util);font-size:.63rem;color:var(--muted);letter-spacing:.08em;
+  font-variant-numeric:tabular-nums;
+}
+.pcard .pst{font-family:var(--util);font-size:.63rem;color:var(--muted);letter-spacing:.05em;line-height:1.5}
+.pcard .pst.gone{color:var(--accent)}
+.pcard.isGone .gl{opacity:.38}
+.pmenu{margin-top:.1rem}
+.mrow{display:grid;grid-template-columns:1fr auto;gap:.2rem .9rem;padding:.6rem 0;border-bottom:1px solid var(--rule-soft)}
+.mrow .mn{font-family:var(--mincho);font-size:.92rem;letter-spacing:.04em}
+.mrow .mp{font-family:var(--util);font-size:.78rem;color:var(--accent);font-variant-numeric:tabular-nums;white-space:nowrap}
+.mrow .mc{grid-column:1/-1;margin:0;font-size:.8rem;line-height:1.85;color:var(--muted)}
 /* 報告書 */
 .doc{max-width:44rem;margin:0 auto;padding-top:1rem}
 .doc-head{border:1px solid var(--rule);background:var(--surface);padding:1.3rem 1.4rem;margin-bottom:2.2rem}
@@ -624,21 +637,23 @@ body.zen .zenout{display:block}
       h+='<p class="spoil">札をおすと、その人の詳しいところが出ます。数字つきの札は出てくる作品で、色のついた札はその作品の視点人物です。詳細には、本文に書いていないことも入っています。</p>';
     }
     else if(gtab==="shops"){
-      h+='<p class="spoil">左の数字は南（駅側）から北への並び順です。番地はおおむねそれに沿いますが、北の抜けだけが十一番地の枝番で、十二番地（柏湯）より北にあります。</p>';
+      h+='<p class="spoil">札をおすと、その店の詳しいところが出ます。看板、創業、中のようす、売れるもの、通りの人たちの口コミ。「通り」の数字は南（駅側）から北への並び順です。番地はおおむねそれに沿いますが、北の抜けだけが十一番地の枝番で、十二番地（柏湯）より北にあります。</p>';
       [["kashio","柏尾銀天街　南（駅側）から北へ"],["hamuro","羽室銀座（新潟）"],["other","町の外"]].forEach(function(a){
         var list=guide.shops.filter(function(x){ return x.a===a[0]; });
         if(!list.length) return;
-        h+='<h2>'+a[1]+'</h2>';
+        h+='<h2>'+a[1]+'</h2><div class="pgrid">';
         list.forEach(function(x){
+          var i=guide.shops.indexOf(x);
           var gone=/閉店|解体/.test(x.state);
-          h+='<div class="shoprow"><span class="pin">'+x.pos+'</span><div>'+
-             '<div class="hd"><span class="nm">'+esc(x.name)+'</span>'+
-             '<span class="rl">'+esc(x.trade)+'</span>'+
-             (x.chi!=="—"?'<span class="yo">'+esc(x.chi)+'</span>':'')+
-             (x.since!=="—"?'<span class="yo">'+esc(x.since)+'</span>':'')+
-             '<span class="st'+(gone?" gone":"")+'">'+esc(x.state)+'</span>'+chips({in:x.w})+'</div>'+
-             '<p class="ds">'+esc(x.note)+'</p></div></div>';
+          h+='<button class="pcard'+(gone?" isGone":"")+'" data-s="'+i+'">'+
+             '<span class="pin2">'+(a[0]==="kashio"?"通り "+x.pos:esc(x.trade))+'</span>'+
+             '<span class="gl">'+esc(shopGlyph(x.name))+'</span>'+
+             '<span class="pn">'+esc(x.name)+'</span>'+
+             (x.chi!=="—"?'<span class="py">'+esc(x.chi)+'</span>':'')+
+             '<span class="pst'+(gone?" gone":"")+'">'+esc(x.state)+'</span>'+
+             chips({in:x.w})+'</button>';
         });
+        h+='</div>';
       });
       h+='<h2>アーケードの数字（作品07時点）</h2><div class="facts">';
       guide.facts.forEach(function(f){
@@ -689,6 +704,19 @@ body.zen .zenout{display:block}
     Array.prototype.forEach.call(box.querySelectorAll("[data-p]"),function(b){
       b.addEventListener("click",function(){ openPerson(+b.getAttribute("data-p")); });
     });
+    Array.prototype.forEach.call(box.querySelectorAll("[data-s]"),function(b){
+      b.addEventListener("click",function(){ openShop(+b.getAttribute("data-s")); });
+    });
+  }
+
+  var SHOP_PRE=["理容室","古書店 ","古書店","中華 ","中華","時計・メガネ ","時計・メガネ","喫茶","国道沿いの"];
+  function shopGlyph(n){
+    var t=String(n);
+    for(var i=0;i<SHOP_PRE.length;i++){
+      if(t.indexOf(SHOP_PRE[i])===0){ t=t.slice(SHOP_PRE[i].length); break; }
+    }
+    t=t.replace(/^\s+/,"");
+    return t.charAt(0)||String(n).charAt(0);
   }
 
   /* ---------- 人物の詳細 ---------- */
@@ -722,10 +750,53 @@ body.zen .zenout{display:block}
     if(p.note) b+='<div class="pfield"><h4>書くときの約束</h4><p>'+esc(p.note)+'</p></div>';
     if(p.seed) b+='<div class="pseed"><h4>まだ書いていないこと</h4><p>'+esc(p.seed)+'</p></div>';
 
+    mountSheet("人物", p.name, b);
+  }
+  var SF=[["full","看板"],["born","創業"],["who","店にいる人"],["hours","開けている時間"],
+          ["inside","中のようす"],["note","おぼえがき"]];
+
+  function openShop(i){
+    var x=guide.shops[i]; if(!x) return;
+    closePerson();
+    var gone=/閉店|解体/.test(x.state);
+    var b='<p class="big">'+esc(x.name)+'</p>'+
+          '<p class="sub">'+esc(x.trade)+(x.chi!=="—"?'　'+esc(x.chi):'')+
+          (x.since!=="—"?'　'+esc(x.since):'')+'</p>'+
+          '<p class="rl2'+(gone?" gone":"")+'">'+esc(x.state)+'</p>'+chips({in:x.w});
+    SF.forEach(function(f){
+      if(!x[f[0]]) return;
+      b+='<div class="pfield"><h4>'+f[1]+'</h4><p>'+esc(x[f[0]])+'</p></div>';
+    });
+    if(x.menu&&x.menu.length){
+      b+='<div class="pfield"><h4>売れるもの</h4><div class="pmenu">';
+      x.menu.forEach(function(r){
+        b+='<div class="mrow"><span class="mn">'+esc(r[0])+'</span>'+
+           '<span class="mp">'+esc(r[1])+'</span>'+
+           (r[2]?'<p class="mc">'+esc(r[2])+'</p>':'')+'</div>';
+      });
+      b+='</div></div>';
+    }
+    if(x.voices&&x.voices.length){
+      b+='<div class="pfield"><h4>通りの人の口コミ</h4>';
+      x.voices.forEach(function(r){
+        var j=-1, who=String(r[0]).replace(/（.*$/,"");
+        guide.people.forEach(function(q,k){ if(q.name===who) j=k; });
+        b+='<div class="psee">'+
+           (j>=0?'<button class="who link" data-jump="'+j+'">'+esc(r[0])+'</button>'
+                :'<span class="who">'+esc(r[0])+'</span>')+
+           '<p>'+esc(r[1])+'</p></div>';
+      });
+      b+='</div>';
+    }
+    if(x.seed) b+='<div class="pseed"><h4>まだ書いていないこと</h4><p>'+esc(x.seed)+'</p></div>';
+    mountSheet("店", x.name, b);
+  }
+
+  function mountSheet(kind, label, b){
     var scrim=document.createElement("div"); scrim.className="scrim"; scrim.style.zIndex=30;
     psheet=document.createElement("div"); psheet.className="psheet";
-    psheet.setAttribute("role","dialog"); psheet.setAttribute("aria-label",p.name);
-    psheet.innerHTML='<div class="pbox"><div class="phead"><span class="t">人物</span>'+
+    psheet.setAttribute("role","dialog"); psheet.setAttribute("aria-label",label);
+    psheet.innerHTML='<div class="pbox"><div class="phead"><span class="t">'+kind+'</span>'+
       '<button class="btn ghost" data-close>閉じる</button></div>'+
       '<div class="pbody">'+b+'</div></div>';
     document.body.appendChild(scrim); document.body.appendChild(psheet);
@@ -737,6 +808,7 @@ body.zen .zenout{display:block}
     });
     psheet.querySelector("[data-close]").focus();
   }
+
   function closePerson(){
     if(!psheet) return;
     psheet._scrim.remove(); psheet.remove(); psheet=null;

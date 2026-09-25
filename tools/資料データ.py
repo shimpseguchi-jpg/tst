@@ -164,6 +164,8 @@ shops = [
   "w":["01"],"note":"商店街の突き当たりを右に入った角。二代で七十年。修理控が十六冊残っている。四十年分の一行記録――日付、品名、客名、症状、処置。"},
  {"a":"hamuro","pos":2,"chi":"—","name":"羽室銀座","trade":"アーケード商店街","since":"—","state":"営業は半分以下",
   "w":["01"],"note":"照明は半分が切れていて、明るいところと暗いところが交互に並ぶ。消えた店――書店、写真屋、時計屋。残っているもの――クリーニング店、理容店、薬局、仏具店。映画館はない。"},
+ {"a":"other","pos":2,"chi":"市外の国道沿い","name":"国道沿いの定食屋","trade":"定食","since":"—","state":"営業（四時開店）",
+  "w":["10","11","i3"],"note":"市場に行く人のための店。朝定食が四百八十円で、鯖の塩焼きと味噌汁とごはんと漬物。客は作業着が多く、誰も喋らない。二〇三三年一月二十四日の朝、三人が居合わせている。"},
  {"a":"other","pos":1,"chi":"東京・秋葉原の裏","name":"須永ラヂオ商会","trade":"真空管・製造終了部品","since":"—","state":"通販のみ",
   "w":["01","02"],"note":"燈子が6AR5を取り寄せたのも、銀星座がアンプの球を買うのも、ここ。二つの作品が同じ一軒に注文している。"},
 ]
@@ -284,6 +286,20 @@ facts = [
 _order = ["二〇二六年","二〇二七年","二〇二八年","二〇二九年","二〇三〇年",
           "二〇三〇年〜三一年","二〇三一年〜三二年","二〇三二年","二〇三二年〜三三年"]
 years.sort(key=lambda y: _order.index(y["y"]) if y["y"] in _order else 99)
+
+# ---- 店の詳細を混ぜる ----
+import importlib.util as _iu2
+_sp2 = _iu2.spec_from_file_location("店詳細", os.path.join(os.path.dirname(os.path.abspath(__file__)), "店詳細.py"))
+_m2 = _iu2.module_from_spec(_sp2); _sp2.loader.exec_module(_m2)
+_miss2 = []
+for _x in shops:
+    _d = _m2.S.get(_x["name"])
+    if _d:
+        _x.update({k: v for k, v in _d.items() if v and v != "—"})
+    else:
+        _miss2.append(_x["name"])
+if _miss2:
+    print("店の詳細なし:", "、".join(_miss2))
 
 # ---- 人物の詳細を混ぜる ----
 import importlib.util as _iu
