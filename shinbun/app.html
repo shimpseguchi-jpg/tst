@@ -197,6 +197,11 @@ button{ font:inherit; cursor:pointer; border-radius:4px; }
 .checks{ background:var(--ui-warn-bg); color:var(--ui-warn-text); border-radius:4px; padding:10px 12px; font-size:13px; }
 .checks b{ display:block; margin-bottom:2px; }
 .checks ul{ margin:0; padding-left:1.2em; }
+.sources{ border:1px solid var(--ui-line); border-radius:4px; padding:10px 12px; font-size:12px; }
+.sources b{ display:block; margin-bottom:4px; font-size:13px; }
+.sources ol{ margin:0; padding-left:1.4em; display:grid; gap:3px; }
+.sources a{ color:var(--ui-accent); word-break:break-all; }
+.sources .note{ color:var(--ui-muted); margin:6px 0 0; }
 
 details{ border-top:1px solid var(--ui-line); padding-top:10px; }
 summary{ cursor:pointer; font-weight:700; font-size:13px; }
@@ -272,6 +277,12 @@ details .grid{ display:grid; gap:10px; }
     <div class="field">
       <label for="in-world">② 世の中のニュース <small>空らんなら季節の話題にします</small></label>
       <textarea id="in-world" rows="3" placeholder="例）今夜は十五夜。でも満月は2日後の27日らしい（仙台市天文台）"></textarea>
+      <div class="row2">
+        <div class="field"><label for="in-research">Webで調べる</label>
+          <select id="in-research"><option value="on">調べて深掘りする</option><option value="off">調べない（メモだけで書く）</option></select></div>
+        <div class="field"><label for="in-top">トップ記事（大きい記事）</label>
+          <select id="in-top"><option value="school">① 学校のこと</option><option value="world">② 世の中のニュース</option></select></div>
+      </div>
     </div>
     <div class="field">
       <label for="in-other">③ その他 <small>コラム・予定・クイズなど</small></label>
@@ -291,6 +302,7 @@ details .grid{ display:grid; gap:10px; }
     <p class="status" id="status" role="status" aria-live="polite"></p>
 
     <div class="checks" id="checks" hidden></div>
+    <div class="sources" id="sources" hidden></div>
 
     <div class="field" id="revise-box" hidden>
       <label for="in-revise">直したいこと <small>例）見出しをもっと元気に／2年生向けに</small></label>
@@ -506,7 +518,7 @@ details .grid{ display:grid; gap:10px; }
   // 保存：Claude のアカウントに保存して、どのブラウザで開いても同じ内容にする
   //（アカウントに保存できないときは、このブラウザにだけ保存）
   // ---------------------------------------------------------------------------
-  const SETTING_IDS = ['s-title','s-title-en','s-class','s-grade','s-grade-max','s-issue','s-publisher','s-colname'];   // 発行日は保存せず、開いた日にする
+  const SETTING_IDS = ['s-title','s-title-en','s-class','s-grade','s-grade-max','s-issue','s-publisher','s-colname','in-research','in-top'];   // 発行日は保存せず、開いた日にする
   const DRAFT_IDS = ['in-school','in-world','in-other'];
   const SHARED_IDS = QUESTIONS.filter(g => g.shared).flatMap(g => g.items.map(it => it.id));
   const CLASS_IDS = () => [...SETTING_IDS, ...DRAFT_IDS, ...PROFILE_IDS.filter(id => !SHARED_IDS.includes(id))];
@@ -542,14 +554,15 @@ details .grid{ display:grid; gap:10px; }
   // state → 画面
   function show(){
     const c = cur();
-    for (const id of CLASS_IDS()) $(id).value = c.fields?.[id] ?? (id === 's-grade' || id === 's-grade-max' ? '1' : '');
+    const DEFAULTS = { 's-grade': '1', 's-grade-max': '1', 'in-research': 'on', 'in-top': 'school' };
+    for (const id of CLASS_IDS()) $(id).value = c.fields?.[id] || DEFAULTS[id] || '';
     for (const id of SHARED_IDS) $(id).value = state.shared?.[id] ?? '';
     $('s-date').value = todayJa();
     if (!$('s-issue').value) $('s-issue').value = '1';
     rubyFrom = c.rubyFrom ?? 3;
     $('ruby-from').value = String(rubyFrom);
     if (c.article){ article = c.article; isSample = false; } else { article = SAMPLE; isSample = true; }
-    showChecks([]); $('revise-box').hidden = isSample;
+    showChecks([]); showSources(isSample ? null : article._research); $('revise-box').hidden = isSample;
     $('cls').innerHTML = state.classes.map(k => `<option value="${k.id}"${k.id === c.id ? ' selected' : ''}>${esc(k.name)}</option>`).join('');
     $('cls-del').disabled = state.classes.length < 2;
     profileCount();
@@ -661,6 +674,8 @@ details .grid{ display:grid; gap:10px; }
     date: $('s-date').value.trim() || todayJa(),
     publisher: $('s-publisher').value.trim(),
     colname: $('s-colname').value.trim() || 'コラム',
+    research: $('in-research').value !== 'off',
+    top: $('in-top').value === 'world' ? 'world' : 'school',
   });
 
   // ---------------------------------------------------------------------------
@@ -707,7 +722,11 @@ details .grid{ display:grid; gap:10px; }
       if (b.answer) inner += `<div><span class="answer"${E}>こたえ：${fmt(b.answer)}</span></div>`;
       return `<section class="box" data-fit-box>${inner}</section>`;
     }).join('');
-    const pic = photo ? `<img src="${photo}" alt="">` : esc(s.emoji || '📰');
+    const topIsWorld = a.top === 'world';
+    const L = topIsWorld ? w : s, R = topIsWorld ? s : w;
+    // 出典とことばメモ（あれば本文のあとに）
+    const extras = o => `${o.source ? `<p class="source"${E}><span class="ja">${fmt(o.source)}</span></p>` : ''}${o.memo && (o.memo.body || []).length ? `<aside class="memo"><span class="label">${fmt(o.memo.label || 'ことばメモ')}</span>${paras(o.memo.body)}</aside>` : ''}`;
+    const pic = photo ? `<img src="${photo}" alt="">` : esc(L.emoji || '📰');
 
     page.innerHTML = `
       <header class="mast">
@@ -722,28 +741,24 @@ details .grid{ display:grid; gap:10px; }
           <span class="ja">${fmt(st.klass ? st.klass + ' 学級新聞' : '')}${st.publisher ? '　発行：' + fmt(st.publisher) : ''}</span>
         </div>
       </header>
-      <article class="lead" aria-label="学校のこと">
-        ${kick('School', s.kicker || '学校のできごと')}
-        <h2${E}>${fmt(s.headline)}</h2>
-        ${s.subhead ? `<p class="deck"${E}>${fmt(s.subhead)}</p>` : ''}
+      <article class="lead" aria-label="${topIsWorld ? '世の中のニュース' : '学校のこと'}">
+        ${topIsWorld ? kick('World', w.kicker || '世の中のニュース') : kick('School', s.kicker || '学校のできごと')}
+        <h2${E}>${fmt(L.headline)}</h2>
+        ${L.subhead ? `<p class="deck"${E}>${fmt(L.subhead)}</p>` : ''}
         <div class="lead-body">
-          <div class="cols dropcap" data-fit="lead">${paras(s.body)}</div>
+          <div class="cols dropcap" data-fit="lead">${paras(L.body)}${extras(L)}</div>
           <aside class="side">
-            <figure class="photo"><div class="pic"${photo ? '' : ' aria-hidden="true"'}>${pic}</div>${s.caption ? `<figcaption${E}>${fmt(s.caption)}</figcaption>` : ''}</figure>
-            ${s.quote ? `<blockquote class="pull"${E}>${fmt(s.quote)}</blockquote>` : ''}
+            <figure class="photo"><div class="pic"${photo ? '' : ' aria-hidden="true"'}>${pic}</div>${L.caption ? `<figcaption${E}>${fmt(L.caption)}</figcaption>` : ''}</figure>
+            ${L.quote ? `<blockquote class="pull"${E}>${fmt(L.quote)}</blockquote>` : ''}
           </aside>
         </div>
       </article>
       <section class="second">
-        <article class="world" aria-label="世の中のニュース">
-          ${kick('World', w.kicker || '世の中のニュース')}
-          <h2${E}>${fmt(w.headline)}</h2>
-          ${w.subhead ? `<p class="deck"${E}>${fmt(w.subhead)}</p>` : ''}
-          <div class="cols dropcap" data-fit="world">
-            ${paras(w.body)}
-            ${w.source ? `<p class="source"${E}><span class="ja">${fmt(w.source)}</span></p>` : ''}
-            ${w.memo && (w.memo.body || []).length ? `<aside class="memo"><span class="label">${fmt(w.memo.label || 'ことばメモ')}</span>${paras(w.memo.body)}</aside>` : ''}
-          </div>
+        <article class="world" aria-label="${topIsWorld ? '学校のこと' : '世の中のニュース'}">
+          ${topIsWorld ? kick('School', s.kicker || '学校のできごと') : kick('World', w.kicker || '世の中のニュース')}
+          <h2${E}>${fmt(R.headline)}</h2>
+          ${R.subhead ? `<p class="deck"${E}>${fmt(R.subhead)}</p>` : ''}
+          <div class="cols dropcap" data-fit="world">${paras(R.body)}${extras(R)}</div>
         </article>
         <article class="opinion" aria-label="コラム">
           ${kick('Opinion', st.colname)}
@@ -819,15 +834,18 @@ details .grid{ display:grid; gap:10px; }
   // AI にたのむ
   // ---------------------------------------------------------------------------
   const gradeText = st => st.gradeMax > st.grade ? `${st.grade}〜${st.gradeMax}年生` : `${st.grade}年生`;
-  const RULES = (st) => `あなたは小学校の担任の先生の代わりに、${gradeText(st)}の児童が読む学級新聞の記事を書く編集者です。${st.gradeMax > st.grade ? `\n${st.grade}〜${st.gradeMax}年生がいっしょに読む異学年の新聞なので、いちばん下の${st.grade}年生にも分かる言葉で書き、上の学年も楽しめる中身にする（上の学年への呼びかけや、ちょっと考えるクイズなど）。` : ''}
+  const RULES = (st, research) => `あなたは小学校の担任の先生の代わりに、${gradeText(st)}の児童が読む学級新聞の記事を書く編集者です。${st.gradeMax > st.grade ? `\n${st.grade}〜${st.gradeMax}年生がいっしょに読む異学年の新聞なので、いちばん下の${st.grade}年生にも分かる言葉で書き、上の学年も楽しめる中身にする（上の学年への呼びかけや、ちょっと考えるクイズなど）。` : ''}
 先生が送ってきたメモ（散文・箇条書き・話し言葉）をもとに、紙面用の記事を JSON で書いてください。
 
 # 書き方のきまり
 - 事実を足さず、ことばを足す。
   - 学校のこと：メモにない出来事・人数・記録・日付・子どものせりふを作らない。足してよいのは、様子がうかぶ言いかえ、なぜ大事かの説明、読み手への問いかけ・よびかけ。
   - quote（大きく引用される言葉）は、メモにある子どもの言葉だけ。なければ空文字にする。
-  - 世の中のニュース：日付・数字・固有名詞はメモに書かれたものだけ使う。一般的な背景説明（行事の由来、しくみ）は足してよい。自信のない事実は書かず、checks に書く。
-  - 世の中のメモが空なら、発行日の季節の行事や自然の話題（暦・天体・生き物など、日付に左右されない一般的な知識）で書き、最近の出来事は書かない。checks に「話題はAIが選びました」と書く。
+${research ? `  - 世の中のニュース：下の「取材メモ（Webで調べたこと）」と先生のメモにある事実だけを使う。日付・数字・固有名詞は取材メモのとおりに書き、取材メモにない最近の出来事は書かない。一般的な背景説明（しくみ・由来）は足してよい。
+  - 深掘りする：何が起きたか だけでなく、「なぜ？」「どうやって？」「わたしたちのくらしとどうつながる？」まで、子どもが自分ごととして考えられるように書く。数字は身近なものにたとえる（例：東京ドーム〇こ分、教室〇こ分）。最後は読み手が考えたくなる問いかけで終える。
+  - source には取材メモの主な情報源の名前を短く書く（例：「（JAXA、気象庁の発表より）」）。
+  - 取材メモの情報どうしが食いちがうときや、子どもに伝えるには注意がいるときは checks に書く。` : `  - 世の中のニュース：日付・数字・固有名詞はメモに書かれたものだけ使う。一般的な背景説明（行事の由来、しくみ）は足してよい。自信のない事実は書かず、checks に書く。
+  - 世の中のメモが空なら、発行日の季節の行事や自然の話題（暦・天体・生き物など、日付に左右されない一般的な知識）で書き、最近の出来事は書かない。checks に「話題はAIが選びました」と書く。`}
   - 事件・事故・災害・戦争など、子どもがこわがる話題はメモで明示されたときだけ、落ち着いて書く。
   - コラム：担任の一人称で、最後は読み手へのよびかけや問いで終える。メモになければ、季節や他の記事につながるテーマで書く。
 - 「クラスの基礎知識」があれば参考にする。学級目標・係や活動の名前・行事の日付・学習中の単元は、そこに書かれたとおりに使ってよく、記事やクイズを授業や学級目標とつなげられるときは一言つなげる。ただし、基礎知識から今回の出来事を作らない（今回の出来事はメモに書かれたことだけ）。口調・読む人・使わない言葉の希望があれば必ず守る。
@@ -838,25 +856,26 @@ details .grid{ display:grid; gap:10px; }
 - 数字は半角。予定の items は「9/28（月）｜全校朝会」のように、日付と内容を全角の｜で区切る。
 
 # 分量（A4 1枚に収めるため、守ってください）
-- school.headline 18字以内 / school.subhead 15字以内 / school.body 3段落で合計350〜420字
-- world.headline 14字以内 / world.subhead 15字以内 / world.body 2〜3段落で合計260〜320字 / world.memo.body 1つで50字以内（むずかしい言葉がなければ空配列）
+${st.top === 'world' ? `- トップ記事は「世の中のニュース」。world.headline 18字以内 / world.subhead 15字以内 / world.body 3〜4段落で合計380〜450字 / world.memo.body 1つで50字以内（むずかしい言葉がなければ空配列）
+- world.emoji は記事に合う絵文字1つ、world.caption は25字以内、world.quote は記事のいちばん大事な一文を25字以内で（取材メモにある人の言葉なら「」つき）
+- school.headline 14字以内 / school.subhead 15字以内 / school.body 2〜3段落で合計240〜300字 / school.emoji・caption・quote は空文字でよい` : `- school.headline 18字以内 / school.subhead 15字以内 / school.body 3段落で合計350〜420字
+- world.headline 14字以内 / world.subhead 15字以内 / world.body 2〜3段落で合計260〜320字 / world.memo.body 1つで50字以内（むずかしい言葉がなければ空配列）`}
 - column.headline 12字以内 / column.body 2段落で合計200〜240字
 - note.text 30字以内（きょうのひとこと）
 - boxes は2つ（メモに予定があれば「来週の予定」、なければ別の囲み。もう1つはクイズなど）。各60字以内、予定は4行まで。
-- school.emoji は記事に合う絵文字1つ、school.caption は25字以内。
-
+${st.top === 'world' ? '' : '- school.emoji は記事に合う絵文字1つ、school.caption は25字以内。\n'}
 # 返す JSON の形（これだけを返す）
 {
   "title_en": "新聞の名前をもとにした英語の題字（例：The Nakayoshi Times）",
   "note": {"label": "きょうのひとこと", "text": ""},
   "school": {"kicker": "学校のできごと", "headline": "", "subhead": "", "body": ["", "", ""], "emoji": "", "caption": "", "quote": ""},
-  "world": {"kicker": "世の中のニュース", "headline": "", "subhead": "", "body": ["", ""], "memo": {"label": "ことばメモ", "body": [""]}, "source": "（〇〇の発表より）※メモに出典があるときだけ。なければ空文字"},
+  "world": {"kicker": "世の中のニュース", "headline": "", "subhead": "", "body": ["", ""], "memo": {"label": "ことばメモ", "body": [""]}, "source": "（〇〇の発表より）※出典があるときだけ。なければ空文字"${st.top === 'world' ? ', "emoji": "", "caption": "", "quote": ""' : ''}},
   "column": {"headline": "", "body": ["", ""], "byline": "（担任より）"},
   "boxes": [{"title": "来週の予定", "items": ["9/28（月）｜全校朝会"]}, {"title": "きょうのクイズ", "body": "", "answer": ""}],
   "checks": ["先生に確かめてほしいこと（事実があやしい所、AIが選んだ話題、メモが足りなかった所など）。なければ空配列"]
 }`;
 
-  const inputBlock = st => `${profileBlock() ? '# クラスの基礎知識（先生が前もって書いたもの）\n' + profileBlock() + '\n\n' : ''}# 新聞の情報
+  const inputBlock = (st, research) => `${profileBlock() ? '# クラスの基礎知識（先生が前もって書いたもの）\n' + profileBlock() + '\n\n' : ''}# 新聞の情報
 - 新聞の名前：${st.title}
 - クラス：${st.klass}（${gradeText(st)}）
 - 発行日：${st.date}
@@ -870,7 +889,10 @@ ${$('in-school').value.trim() || '（なし）'}
 ${$('in-world').value.trim() || '（なし）'}
 
 ## ③ その他
-${$('in-other').value.trim() || '（なし）'}`;
+${$('in-other').value.trim() || '（なし）'}${research ? `
+
+# 取材メモ（Webで調べたこと。世の中のニュースはここにある事実で書く）
+${JSON.stringify(research)}` : ''}`;
 
   let samplePromise = null, ctl = null;
   function getSample(){ return samplePromise ??= (window.claude?.use ? window.claude.use('sample') : Promise.resolve(null)); }
@@ -892,6 +914,7 @@ ${$('in-other').value.trim() || '（なし）'}`;
   const SKIP_KEYS = new Set(['emoji', 'title_en', 'label']);
   function stripRuby(obj){ return JSON.parse(JSON.stringify(obj).replace(/\{([^|{}]+)\|[^{}]+\}/g, '$1')); }
   function eachString(obj, fn, key){
+    if (key === '_research') return obj;      // 取材メモは紙面に出さないので、ふりがなもつけない
     if (typeof obj === 'string') return SKIP_KEYS.has(key) ? obj : fn(obj);
     if (Array.isArray(obj)) return obj.map(v => eachString(v, fn, key));
     if (obj && typeof obj === 'object'){ const o = {}; for (const k in obj) o[k] = eachString(obj[k], fn, k); return o; }
@@ -935,25 +958,135 @@ ${list}`, { signal, modelTier: 'default', cache: false });
     }));
   }
 
+  // ---------------------------------------------------------------------------
+  // 世の中のニュースの取材：Web 検索コネクタ（Parallel Search）で調べてもらう
+  // ---------------------------------------------------------------------------
+  const SEARCH_SERVER = 'Parallel Search';
+  let mcpPromise = null;
+  const getMcp = () => mcpPromise ??= (window.claude?.use ? window.claude.use('mcp') : Promise.resolve(null)).catch(() => null);
+  const clip = (t, n) => String(t ?? '').replace(/\s+/g, ' ').trim().slice(0, n);
+  // 検索結果は Claude にわたす前に小さくする（ラウンドごとに読み直すため）
+  function slim(payload, perText){
+    const rs = (payload && Array.isArray(payload.results)) ? payload.results : [];
+    return rs.slice(0, 6).map(r => ({
+      title: clip(r.title, 120), url: String(r.url || ''), date: clip(r.publish_date, 20),
+      text: clip(Array.isArray(r.excerpts) ? r.excerpts.join(' … ') : (r.excerpts || r.full_content || ''), perText),
+    }));
+  }
+  async function doResearch(sample, st, signal){
+    const mcp = await getMcp();
+    if (!mcp) throw { code: 'no_mcp' };
+    const lim = await sample.limits().catch(() => null);
+    if (lim && !lim.tools) throw { code: 'tools_unavailable' };
+    const seen = new Map();      // 実際に検索結果に出てきた URL → タイトル
+    let mcpError = null;
+    const call = async (tool, input, perText) => {
+      try {
+        const r = await mcp.callTool(SEARCH_SERVER, tool, input, { signal });
+        const out = slim(r.payload, perText);
+        out.forEach(o => o.url && seen.set(o.url, o.title));
+        return out;
+      } catch(e){ mcpError = e; throw new Error('検索できませんでした（' + (e?.code || 'error') + '）'); }
+    };
+    const tools = [
+      { name: 'web_search',
+        description: 'Web を検索する。objective に何を知りたいか、search_queries に3〜6語のキーワード検索を2〜3個（日本語でよい）。結果は title, url, date, text の一覧。',
+        inputSchema: { type: 'object', properties: { objective: { type: 'string' }, search_queries: { type: 'array', items: { type: 'string' }, maxItems: 3 } }, required: ['objective', 'search_queries'] },
+        execute: ({ objective, search_queries }) => {
+          const qs = (Array.isArray(search_queries) ? search_queries : [String(search_queries || '')]).slice(0, 3).map(q => clip(q, 100)).filter(Boolean);
+          setStatus('Webで調べています：' + qs.join('、'));
+          return call('web_search', { objective: clip(objective, 300), search_queries: qs }, 700);
+        } },
+      { name: 'web_fetch',
+        description: 'ページの中身を読む。urls に1〜3個の URL、objective に知りたいこと（200字まで）。',
+        inputSchema: { type: 'object', properties: { urls: { type: 'array', items: { type: 'string' }, maxItems: 3 }, objective: { type: 'string' } }, required: ['urls'] },
+        execute: ({ urls, objective }) => {
+          setStatus('記事を読んでいます…');
+          return call('web_fetch', { urls: (Array.isArray(urls) ? urls : [urls]).filter(Boolean).slice(0, 3), objective: clip(objective, 200) }, 2500);
+        } },
+    ];
+    const memo = $('in-world').value.trim();
+    const prompt = `あなたは小学生向け新聞の記者です。学級新聞の「世の中のニュース」欄のために取材をします。読むのは${gradeText(st)}です。
+発行日：${st.date}
+
+# 取材するテーマ
+${memo ? `先生のメモ：${memo}\nこのテーマについて、最新の正確な事実と、子どもが「なるほど」と思える深掘りの材料を集める。` : `先生のメモはありません。発行日の前後1週間に報じられたニュースから、子どもに伝えたいものを1つ選ぶ（科学・宇宙・自然・生き物・スポーツ・文化・くらし・発明など。事件・事故・災害・政治の争い・戦争はさける）。`}
+${profileBlock() ? `\n# クラスの基礎知識（学習中の単元とつながる話題だとよい）\n${profileBlock()}\n` : ''}
+# 手順
+- web_search で調べ、必要なら web_fetch で信頼できる記事（報道機関・公的機関・研究機関・公式サイト）を読む。ツールは合わせて5回まで。
+- 日付・数字・固有名詞は、検索結果に書かれていたものだけを使う。検索結果にないことは書かない。
+
+# 最後に返す JSON（これだけを返す）
+{"topic": "テーマ（15字以内）",
+ "summary": "何が起きたかを2〜3文で",
+ "facts": [{"fact": "日付・数字・固有名詞をふくむ具体的な事実", "source": "情報源の名前", "url": "見た記事のURL"}],
+ "background": ["しくみ・理由・歴史・くらべる数字など、深掘りの材料"],
+ "connection": "子どものくらしや学習とのつながり",
+ "words": [{"word": "むずかしい言葉", "meaning": "やさしい説明"}],
+ "quiz": {"q": "クイズ", "a": "こたえ"},
+ "cautions": ["情報の食いちがい・不確かな点・子どもに伝えるときの注意"],
+ "sources": [{"title": "記事のタイトル", "url": "実際に見たURL"}]}
+facts は5〜8個、background は3〜5個。`;
+    let res;
+    try {
+      res = await sample.json(prompt, { signal, modelTier: 'default', tools });
+    } catch(e){ throw (mcpError && !seen.size) ? mcpError : e; }
+    if (!seen.size) throw mcpError || { code: 'no_results' };
+    // 情報源は、実際に検索結果に出てきた URL だけを残す
+    let sources = (Array.isArray(res?.sources) ? res.sources : []).filter(x => x && seen.has(x.url)).map(x => ({ title: clip(x.title || seen.get(x.url), 120), url: x.url }));
+    if (!sources.length) sources = [...seen].slice(0, 6).map(([url, title]) => ({ title, url }));
+    return { ...res, sources };
+  }
+  const RESEARCH_ERR = {
+    server_not_connected: 'Webで調べるには、claude.ai の「設定 → コネクタ」で「Parallel Search」を追加してください（無料・登録不要）。今回はメモだけで書きました。',
+    selection_required: '「Parallel Search」がいくつか登録されています。画面の案内でどれを使うか選んでください。今回はメモだけで書きました。',
+    not_in_manifest: 'このページで「Parallel Search」を使うことが許可されていません。今回はメモだけで書きました。',
+    needs_reauth: 'claude.ai の「設定 → コネクタ」で「Parallel Search」をつなぎ直してください。今回はメモだけで書きました。',
+    blocked_by_policy: '組織の設定で Web 検索が使えないため、メモだけで書きました。',
+    tools_unavailable: 'この画面では Web 検索が使えないため、メモだけで書きました。',
+    no_mcp: 'この画面では Web 検索が使えないため、メモだけで書きました。',
+    no_results: 'Webで調べても情報が見つからなかったため、メモだけで書きました。',
+  };
+  function showSources(r){
+    const list = r?.sources || [];
+    $('sources').hidden = !list.length;
+    $('sources').innerHTML = list.length ? `<b>世の中のニュースで調べた情報源</b><ol>${list.map(x => `<li><a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title || x.url)}</a></li>`).join('')}</ol><p class="note">大事な数字や日付は、配る前に情報源で確かめてください。</p>` : '';
+  }
+
   async function ask(extra){
     const sample = await getSample();
     if (!sample){ setStatus('AIの機能は、claude.ai でこのページを開いたときに使えます。', true); return; }
     const st = settings();
     if (!extra && !$('in-school').value.trim()){ setStatus('① 学校のこと を書いてください（ここはAIが作り話にできないため）。', true); $('in-school').focus(); return; }
-    let prompt = RULES(st) + '\n\n' + inputBlock(st);
-    if (extra) prompt += `\n\n# いまの紙面（JSON）\n${JSON.stringify(stripRuby(article))}\n\n# 先生からの直してほしいこと\n${extra}\n\n直してほしいことを反映した JSON 全体を、同じ形で返してください。言われていない所はなるべく変えないでください。`;
-
     ctl = new AbortController();
     busy(true);
-    setStatus('考え中…（30秒〜1分ほどかかります）');
+    let research = null, researchNote = '';
+    if (st.research){
+      if (extra) research = article?._research || null;       // 手直しのときは前の取材メモを使う
+      else {
+        setStatus('Webで調べています…（1〜2分ほどかかります）');
+        try { research = await doResearch(sample, st, ctl.signal); }
+        catch(e){
+          if (e?.code === 'cancelled'){ setStatus(ERR.cancelled); busy(false); return; }
+          researchNote = RESEARCH_ERR[e?.code] || `Webで調べられませんでした（${e?.code || e?.message || 'エラー'}）。今回はメモだけで書きました。`;
+        }
+      }
+    }
+    const { _research, ...current } = article || {};
+    let prompt = RULES(st, research) + '\n\n' + inputBlock(st, research);
+    if (extra) prompt += `\n\n# いまの紙面（JSON）\n${JSON.stringify(stripRuby(current))}\n\n# 先生からの直してほしいこと\n${extra}\n\n直してほしいことを反映した JSON 全体を、同じ形で返してください。言われていない所はなるべく変えないでください。`;
+
+    setStatus('記事を書いています…（30秒〜1分ほどかかります）');
     try {
       const data = await sample.json(prompt, {
         signal: ctl.signal, modelTier: 'default', cache: false,
         onText: ({ text }) => setStatus(`書いています…（${text.length}字）`),
       });
       if (!data || !data.school) throw { code: 'parse_error' };
-      const checks = data.checks || [];
+      const checks = [...(researchNote ? [researchNote] : []), ...(Array.isArray(research?.cautions) ? research.cautions : []), ...(data.checks || [])];
       delete data.checks;
+      data.top = st.top;
+      data._research = research;
       article = data; isSample = false;
       render(); persist();
 
@@ -969,6 +1102,7 @@ ${list}`, { signal, modelTier: 'default', cache: false });
       const data2 = article;
       const missing = rubyFrom ? missingRuby({ note: data2.note, school: data2.school, world: data2.world, column: data2.column, boxes: data2.boxes }) : [];
       showChecks([...checks, ...(missing.length ? [`ふりがながついていない漢字があります：${missing.join('、')}（紙面で直すか、「直したいこと」に「ふりがなをつけて」と書いてください）`] : [])]);
+      showSources(research);
       $('revise-box').hidden = false;
       setStatus('できました。紙面を確かめて、よければ「印刷用ファイルを保存」を押してください。');
     } catch(e){
@@ -1008,6 +1142,7 @@ ${list}`, { signal, modelTier: 'default', cache: false });
   $('photo-clear').addEventListener('click', () => { photo = null; $('in-photo').value = ''; $('photo-clear').hidden = true; render(); });
 
   // ふりがな（選びなおしたら組みなおす）
+  $('in-top').addEventListener('change', () => { if (!isSample){ article.top = $('in-top').value; render(); } });
   $('ruby-from').addEventListener('change', () => { rubyFrom = Number($('ruby-from').value); render(); persist(); });
 
   // ---------------------------------------------------------------------------
