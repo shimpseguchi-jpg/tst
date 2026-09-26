@@ -294,8 +294,15 @@ body.zen .zenout{display:block}
 .pcard .pic .gl{font-size:2.6rem;opacity:.75}
 .pcard .pimg{
   position:absolute;inset:0;width:100%;height:100%;
-  object-fit:cover;object-position:50% 20%;
+  object-fit:cover;object-position:50% 50%;
 }
+/* 鉛筆画は紙が白い。暗いほうでそのまま出すと浮くので、少し落とす */
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .pimg,
+  :root:not([data-theme="light"]) .pshot img{filter:brightness(.8) contrast(1.06)}
+}
+:root[data-theme="dark"] .pimg,
+:root[data-theme="dark"] .pshot img{filter:brightness(.8) contrast(1.06)}
 .pcard .pimg.dead{display:none}
 /* 詳細 */
 .psheet{
