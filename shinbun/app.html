@@ -1,0 +1,709 @@
+<title>学級新聞メーカー</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Shippori+Mincho+B1:wght@500;700;800&family=BIZ+UDPMincho:wght@400;700&family=BIZ+UDPGothic:wght@400;700&display=swap">
+<style id="paper-css">
+.page{
+  --paper:#f7f5f0;
+  --ink:#151412;
+  --ink-soft:#4d4a44;
+  --rule:#151412;
+  --tint:#e8e4da;       /* 囲みの地色 */
+  --desk:#cfccc5;       /* 画面で見るときの机の色 */
+  --blackletter:"UnifrakturMaguntia","Old English Text MT",serif;
+  --latin:"Playfair Display","Times New Roman",serif;
+  --head:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho","IPAMincho","Noto Serif JP",serif;
+  --body:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho","IPAMincho","Noto Serif JP",serif;
+}
+/* ---------- 紙面 ---------- */
+.page{
+  width:210mm; height:297mm; background:var(--paper); padding:9mm 10mm 8mm;
+  display:grid; grid-template-rows:auto minmax(0,1fr) 82mm 31mm; grid-template-columns:minmax(0,1fr); gap:3.2mm;
+  box-shadow:0 2px 14px rgb(0 0 0 / .2); overflow:hidden;
+}
+
+/* 題字 */
+.mast{ display:grid; grid-template-columns:38mm minmax(0,1fr) 38mm; align-items:center; column-gap:4mm; }
+.ear{
+  border:.6pt solid var(--rule); padding:1.6mm 2.2mm; font-size:7.4pt; line-height:1.45; align-self:center;
+}
+.ear .label{ display:block; font-family:var(--latin); font-style:italic; font-weight:700; font-size:7.6pt; margin-bottom:.6mm; }
+.ear.right{ text-align:center; }
+.ear.right .num{ font-family:var(--latin); font-weight:900; font-size:15pt; line-height:1.1; font-variant-numeric:lining-nums; }
+.name-block{ text-align:center; }
+.name{
+  font-family:var(--blackletter); font-weight:400; font-size:40pt; line-height:1; margin:0; letter-spacing:.005em;
+  white-space:nowrap;
+}
+.name.ja{ font-family:var(--head); font-weight:800; font-size:34pt; letter-spacing:.12em; }
+.name-sub{ font-family:var(--head); font-weight:700; font-size:9pt; letter-spacing:.5em; margin-top:1.4mm; padding-left:.5em; }
+.dateline{
+  grid-column:1 / -1; margin-top:2.4mm;
+  border-top:.6pt solid var(--rule); border-bottom:.6pt solid var(--rule);
+  box-shadow:0 -1.2mm 0 -1mm var(--rule), 0 1.2mm 0 -1mm var(--rule); /* 二重罫 */
+  display:flex; justify-content:space-between; gap:4mm; padding:1.1mm .5mm;
+  font-family:var(--latin); font-size:7.6pt; letter-spacing:.14em; text-transform:uppercase; font-variant-numeric:lining-nums;
+}
+.dateline .ja{ font-family:var(--body); letter-spacing:.06em; text-transform:none; }
+
+/* 記事の共通部品 */
+.kicker{
+  display:flex; align-items:baseline; gap:2mm; font-size:7.6pt; margin-bottom:1.2mm;
+  border-top:2.4pt solid var(--rule); padding-top:1.2mm;
+}
+.kicker .en{ font-family:var(--latin); font-weight:900; letter-spacing:.24em; text-transform:uppercase; }
+.kicker .ja{ font-family:var(--head); font-weight:700; color:var(--ink-soft); letter-spacing:.1em; }
+h2{ font-family:var(--head); font-weight:800; line-height:1.22; margin:0; text-wrap:balance; letter-spacing:.01em; }
+.deck{ font-family:var(--head); font-weight:500; color:var(--ink-soft); margin:1.2mm 0 0; line-height:1.4; text-wrap:balance; }
+.cols{
+  column-gap:5mm; column-rule:.5pt solid var(--rule); column-fill:balance;
+  min-height:0; overflow:hidden; text-align:justify; line-height:1.75; font-size:10.5pt; line-break:strict;
+}
+.cols p{ margin:0; text-indent:1em; }
+.dropcap > p:first-child{ text-indent:0; }
+.dropcap > p:first-child::first-letter{
+  float:left; font-family:var(--head); font-weight:800; font-size:3.35em; line-height:1; margin:.04em .12em 0 0;
+}
+.source, .byline{ font-family:var(--latin); font-style:italic; font-size:.85em; color:var(--ink-soft); text-align:right; text-indent:0 !important; margin-top:.4em !important; }
+.source .ja, .byline{ font-family:var(--body); font-style:normal; }
+
+/* トップ記事（学校） */
+.lead{ display:flex; flex-direction:column; min-height:0; }
+.lead h2{ font-size:25pt; }
+.lead .deck{ font-size:11pt; }
+.lead-body{ flex:1; min-height:0; display:grid; grid-template-columns:minmax(0,1fr) 52mm; gap:5mm; margin-top:3mm; }
+.lead-body .cols{ column-count:2; height:100%; }
+.side{ display:flex; flex-direction:column; gap:2.4mm; min-height:0; border-left:.5pt solid var(--rule); padding-left:5mm; }
+.photo{ margin:0; display:flex; flex-direction:column; gap:1.2mm; flex:1; min-height:0; }
+.photo .pic{
+  flex:1; min-height:24mm; background:var(--tint); display:grid; place-items:center;
+  font-size:54pt; line-height:1; border:.5pt solid var(--rule);
+}
+.photo figcaption{ font-size:7.4pt; line-height:1.5; color:var(--ink-soft); }
+.photo figcaption::before{ content:"▲ "; }
+.pull{
+  margin:0; padding:2mm 0; border-top:1.4pt solid var(--rule); border-bottom:.5pt solid var(--rule);
+  font-family:var(--head); font-weight:700; font-size:11.5pt; line-height:1.45; text-align:center;
+}
+.pull::before{ content:"“"; display:block; font-family:var(--latin); font-weight:900; font-size:26pt; line-height:.6; margin-top:1.5mm; }
+
+/* 2段目：世の中＋コラム */
+.second{ display:grid; grid-template-columns:minmax(0,1.85fr) minmax(0,1fr); gap:5mm; min-height:0; }
+.world, .opinion{ display:flex; flex-direction:column; min-height:0; }
+.world h2{ font-size:17pt; }
+.world .deck{ font-size:9.5pt; }
+.world .cols{ column-count:2; flex:1; margin-top:2.4mm; }
+.memo{
+  break-inside:avoid; background:var(--tint); padding:1.8mm 2.4mm; margin-top:1.6mm;
+  font-size:.86em; line-height:1.6; text-align:left;
+}
+.memo .label{ font-family:var(--head); font-weight:800; display:block; }
+.memo p{ text-indent:0; }
+.opinion{ border-left:.5pt solid var(--rule); padding-left:5mm; }
+.opinion .kicker .en{ font-style:italic; }
+.opinion h2{ font-size:14pt; font-weight:700; }
+.opinion .colname{ font-family:var(--head); font-weight:800; font-size:8pt; letter-spacing:.3em; margin-bottom:1mm; }
+.opinion .cols{ column-count:1; flex:1; margin-top:2.4mm; }
+
+/* 3段目：囲み */
+.notices{ display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); border-top:2.4pt solid var(--rule); min-height:0; }
+.box{ padding:1.8mm 4mm 0; font-size:8.6pt; line-height:1.5; min-height:0; overflow:hidden; }
+.box + .box{ border-left:.5pt solid var(--rule); }
+.box:first-child{ padding-left:0; }
+.box .label{ display:block; font-family:var(--head); font-weight:800; font-size:1.08em; margin-bottom:1mm; }
+.box ul{ margin:0; padding:0; list-style:none; display:grid; gap:.3mm; }
+.box li{ display:grid; grid-template-columns:auto 1fr; gap:2.4mm; }
+.box li b{ font-family:var(--latin); font-weight:700; font-variant-numeric:lining-nums tabular-nums; }
+.box p{ margin:0; }
+.box .answer{ display:inline-block; margin-top:1mm; font-size:.88em; color:var(--ink-soft); transform:rotate(180deg); }
+
+/* 文字の飾り */
+em.bouten{ font-style:normal; font-weight:700; text-emphasis:sesame; -webkit-text-emphasis:sesame; }
+h2 em.bouten, .deck em.bouten, .box em.bouten, .ear em.bouten{ text-emphasis:none; -webkit-text-emphasis:none; font-weight:inherit; }
+ruby rt{ font-size:.5em; font-weight:400; font-family:var(--body); }
+.no-ruby ruby rt{ display:none; }
+
+
+.photo .pic img{ width:100%; height:100%; object-fit:cover; display:block; }
+.page [contenteditable]:hover{ outline:1px dashed rgb(0 0 0 / .25); outline-offset:1px; }
+.page [contenteditable]:focus{ outline:1.5px solid #2f6f8f; outline-offset:1px; background:rgb(47 111 143 / .06); }
+</style>
+<style>
+/* ---------- アプリの画面（紙面の外側） ---------- */
+:root{
+  --ui-bg:#e9e7e1;
+  --ui-panel:#fbfaf7;
+  --ui-text:#1d1c1a;
+  --ui-muted:#66625a;
+  --ui-line:#d3cfc6;
+  --ui-field:#ffffff;
+  --ui-accent:#2f6f8f;      /* 青インク */
+  --ui-accent-text:#ffffff;
+  --ui-warn-bg:#fff4d6;
+  --ui-warn-text:#6b4d00;
+  --ui-font:"BIZ UDPGothic","Hiragino Sans","Yu Gothic","Noto Sans JP",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ui-bg:#1b1c1e; --ui-panel:#25272a; --ui-text:#ecebe7; --ui-muted:#a7a49c; --ui-line:#3a3d41;
+    --ui-field:#1e2023; --ui-accent:#7fb6d1; --ui-accent-text:#10202a; --ui-warn-bg:#3a3220; --ui-warn-text:#f0d9a0;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --ui-bg:#1b1c1e; --ui-panel:#25272a; --ui-text:#ecebe7; --ui-muted:#a7a49c; --ui-line:#3a3d41;
+  --ui-field:#1e2023; --ui-accent:#7fb6d1; --ui-accent-text:#10202a; --ui-warn-bg:#3a3220; --ui-warn-text:#f0d9a0;
+  color-scheme:dark;
+}
+*{ box-sizing:border-box; }
+[hidden]{ display:none !important; }
+body{ margin:0; background:var(--ui-bg); color:var(--ui-text); font-family:var(--ui-font); font-size:14px; line-height:1.6; }
+.app{
+  display:grid; grid-template-columns:minmax(0,380px) minmax(0,1fr); gap:20px;
+  max-width:1280px; margin:0 auto; padding-inline:16px; padding-block:16px 32px; align-items:start;
+}
+@media (max-width:860px){ .app{ grid-template-columns:minmax(0,1fr); } }
+
+.panel{ background:var(--ui-panel); border:1px solid var(--ui-line); border-radius:6px; padding:16px; display:grid; gap:14px; }
+.brand{ display:flex; align-items:baseline; gap:10px; }
+.brand h1{ margin:0; font-size:18px; font-weight:700; }
+.brand span{ color:var(--ui-muted); font-size:12px; }
+.lede{ margin:0; color:var(--ui-muted); font-size:13px; }
+
+.field{ display:grid; gap:4px; }
+.field label{ font-weight:700; font-size:13px; display:flex; justify-content:space-between; gap:8px; }
+.field label small{ font-weight:400; color:var(--ui-muted); }
+textarea, input[type=text], input[type=number], select{
+  width:100%; font:inherit; color:var(--ui-text); background:var(--ui-field);
+  border:1px solid var(--ui-line); border-radius:4px; padding:8px 10px;
+}
+textarea{ resize:vertical; min-height:84px; }
+textarea:focus, input:focus, select:focus{ outline:2px solid var(--ui-accent); outline-offset:0; border-color:transparent; }
+.row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+button{ font:inherit; cursor:pointer; border-radius:4px; }
+.btn{ padding:9px 14px; border:1px solid var(--ui-line); background:var(--ui-field); color:var(--ui-text); font-weight:700; }
+.btn.primary{ background:var(--ui-accent); color:var(--ui-accent-text); border-color:var(--ui-accent); font-size:15px; padding:11px 16px; }
+.btn:disabled{ opacity:.5; cursor:default; }
+.btn:focus-visible{ outline:2px solid var(--ui-accent); outline-offset:2px; }
+.actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.actions .primary{ flex:1; }
+.status{ font-size:13px; color:var(--ui-muted); min-height:1.6em; margin:0; }
+.status.error{ color:#b3261e; }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .status.error{ color:#ff8a80; } }
+:root[data-theme="dark"] .status.error{ color:#ff8a80; }
+
+.checks{ background:var(--ui-warn-bg); color:var(--ui-warn-text); border-radius:4px; padding:10px 12px; font-size:13px; }
+.checks b{ display:block; margin-bottom:2px; }
+.checks ul{ margin:0; padding-left:1.2em; }
+
+details{ border-top:1px solid var(--ui-line); padding-top:10px; }
+summary{ cursor:pointer; font-weight:700; font-size:13px; }
+details[open] summary{ margin-bottom:10px; }
+details .grid{ display:grid; gap:10px; }
+
+.photo-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:13px; }
+.photo-row input[type=file]{ font-size:12px; max-width:100%; }
+
+/* プレビュー */
+.preview{ display:grid; gap:10px; min-width:0; position:sticky; top:calc(env(safe-area-inset-top, 0px) + 12px); }
+@media (max-width:860px){ .preview{ position:static; } }
+.pbar{ display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; font-size:13px; }
+.pbar .seg{ display:inline-flex; border:1px solid var(--ui-line); border-radius:4px; overflow:hidden; }
+.pbar .seg button{ border:0; border-radius:0; padding:5px 10px; background:var(--ui-field); color:var(--ui-text); }
+.pbar .seg button[aria-pressed="true"]{ background:var(--ui-text); color:var(--ui-panel); }
+.pbar .spacer{ flex:1; }
+.pnote{ margin:0; font-size:12px; color:var(--ui-muted); }
+.stage{ overflow:hidden; max-width:100%; }
+.stage-inner{ transform-origin:top left; width:210mm; }
+.sample-flag{
+  display:inline-block; font-size:11px; font-weight:700; letter-spacing:.08em; padding:2px 8px; border-radius:99px;
+  background:var(--ui-text); color:var(--ui-panel);
+}
+@media (prefers-reduced-motion:reduce){ *{ transition:none !important; animation:none !important; } }
+</style>
+
+<div class="app">
+  <form class="panel" id="form" autocomplete="off">
+    <div class="brand"><h1>学級新聞メーカー</h1><span>メモを書くだけで学級新聞に</span></div>
+    <p class="lede">思いついたことを、話すように書いてください。箇条書きでもかまいません。AIが子ども向けの記事にして、右の紙面に組みます。</p>
+
+    <div class="field">
+      <label for="in-school">① 学校のこと <small>いちばん大きな記事になります</small></label>
+      <textarea id="in-school" rows="5" placeholder="例）きょうから運動会のリレー練習。はじめバトンを落としてたけど、声をかけあったらうまくいくようになった。「声を出すと見なくても分かる」と言ってた子がいた。"></textarea>
+    </div>
+    <div class="field">
+      <label for="in-world">② 世の中のニュース <small>空らんなら季節の話題にします</small></label>
+      <textarea id="in-world" rows="3" placeholder="例）今夜は十五夜。でも満月は2日後の27日らしい（仙台市天文台）"></textarea>
+    </div>
+    <div class="field">
+      <label for="in-other">③ その他 <small>コラム・予定・クイズなど</small></label>
+      <textarea id="in-other" rows="4" placeholder="例）空を見上げる時間って大事、みたいなコラム。来週の予定：28日全校朝会、30日リレー練習、2日係決め。クイズは秋の七草。"></textarea>
+    </div>
+
+    <div class="photo-row">
+      <label for="in-photo"><b>写真</b>（なくてもよい）</label>
+      <input type="file" id="in-photo" accept="image/*">
+      <button type="button" class="btn" id="photo-clear" hidden>写真を外す</button>
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btn primary" id="go">AIで新聞にする</button>
+      <button type="button" class="btn" id="stop" hidden>止める</button>
+    </div>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+
+    <div class="checks" id="checks" hidden></div>
+
+    <div class="field" id="revise-box" hidden>
+      <label for="in-revise">直したいこと <small>例）見出しをもっと元気に／2年生向けに</small></label>
+      <div class="actions">
+        <input type="text" id="in-revise" placeholder="ひとことで伝えてください">
+        <button type="button" class="btn" id="revise">AIで直す</button>
+      </div>
+    </div>
+
+    <details id="settings">
+      <summary>新聞の設定（名前・学年・号数・日付）</summary>
+      <div class="grid">
+        <div class="row2">
+          <div class="field"><label for="s-title">新聞の名前</label><input type="text" id="s-title" value="なかよし新聞"></div>
+          <div class="field"><label for="s-title-en">英語の題字 <small>空らんならAIが考えます</small></label><input type="text" id="s-title-en" value="The Nakayoshi Times"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label for="s-class">クラス</label><input type="text" id="s-class" value="4年1組"></div>
+          <div class="field"><label for="s-grade">学年（漢字とふりがなの目安）</label>
+            <select id="s-grade"><option value="1">1年生</option><option value="2">2年生</option><option value="3">3年生</option><option value="4" selected>4年生</option><option value="5">5年生</option><option value="6">6年生</option></select>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field"><label for="s-issue">号</label><input type="number" id="s-issue" value="1" min="1"></div>
+          <div class="field"><label for="s-date">発行日</label><input type="text" id="s-date" value=""></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label for="s-publisher">発行</label><input type="text" id="s-publisher" value="4年1組 担任"></div>
+          <div class="field"><label for="s-colname">コラムの名前</label><input type="text" id="s-colname" value="先生のまど"></div>
+        </div>
+      </div>
+    </details>
+  </form>
+
+  <section class="preview" aria-label="紙面">
+    <div class="pbar">
+      <span class="sample-flag" id="sample-flag">見本</span>
+      <span>ふりがな</span>
+      <span class="seg"><button type="button" id="ruby-on" aria-pressed="true">あり</button><button type="button" id="ruby-off" aria-pressed="false">なし</button></span>
+      <span class="spacer"></span>
+      <button type="button" class="btn primary" id="save">印刷用ファイルを保存</button>
+    </div>
+    <p class="pnote" id="pnote">紙面の文字はクリックして直接なおせます。保存したファイルを開くと印刷画面が出るので、プリンターか「PDFに保存」を選んでください。</p>
+    <div class="stage" id="stage"><div class="stage-inner" id="stage-inner"><main class="page" id="page"></main></div></div>
+  </section>
+</div>
+
+<script>
+(function(){
+  // ---------------------------------------------------------------------------
+  // 見本の号（はじめに開いたとき紙面に出しておく）
+  // ---------------------------------------------------------------------------
+  const SAMPLE = {
+    note: { label: "きょうのひとこと", text: "こんやは十五夜。帰り道に、東の空を見上げてみよう。" },
+    school: {
+      kicker: "学校のできごと", headline: "リレー練習、バトンが**つながった**！", subhead: "運動会まであと2週間",
+      body: [
+        "10月9日の運動会に向けて、4年生のリレー練習が本格的に始まりました。今週は、バトンの受けわたしを中心に練習しました。",
+        "はじめはバトンを落としてしまうチームもありましたが、「はい！」と声をかけ合うようにしたところ、少しずつなめらかにつながるようになりました。走る前の人が手を後ろにのばして待つ形も、みんなで何度もたしかめました。",
+        "練習のあと、あるチームの人は「声を出すと、うしろを見なくても分かる」と話していました。**速く走ること**だけでなく、**仲間を信じてバトンをわたすこと**が、リレーの大切なところです。本番まで、あと少し。チームの力を合わせて、がんばりましょう。"
+      ],
+      emoji: "🏃", caption: "声をかけ合って、バトンパスの練習をしました", quote: "声を出すと、うしろを見なくても分かる"
+    },
+    world: {
+      kicker: "世の中のニュース", headline: "今夜は「中秋の名月」", subhead: "満月は2日後の27日",
+      body: [
+        "きょう9月25日は、「{中秋|ちゅうしゅう}の{名月|めいげつ}」、または「十五夜」とよばれる日です。むかしのこよみ（{旧暦|きゅうれき}）で8月15日にあたる夜の月のことで、昔から、すすきやだんごをかざってお月見をする習わしがあります。",
+        "ところが、ことしの十五夜の月は、まんまるではありません。{天文台|てんもんだい}によると、月がいちばんまるくなる満月は、2日後の27日です。十五夜と満月がこれほどずれるのは、9年ぶりだそうです。",
+        "こよみの日付と、月の動きは、ぴったり同じにはならないのですね。今夜と27日、2回月を見くらべてみると、ちがいが分かるかもしれません。"
+      ],
+      memo: { label: "ことばメモ", body: ["{旧暦|きゅうれき}　月の満ち欠けをもとにした、むかしのこよみ。明治のはじめまで使われていました。"] },
+      source: "（仙台市天文台の発表より）"
+    },
+    column: {
+      headline: "「見上げる」時間",
+      body: [
+        "みなさんは、さいごに空をじっくり見上げたのはいつですか。毎日いそがしくしていると、空を見る時間は、意外と少ないものです。",
+        "月は、見るたびに形がかわります。きのうとちがう今日を、いちばん分かりやすく教えてくれるのが、月なのかもしれません。今夜、家の人といっしょに、少しだけ空を見上げてみてください。どんな形に見えたか、あした教えてくださいね。"
+      ],
+      byline: "（担任より）"
+    },
+    boxes: [
+      { title: "来週の予定", items: ["9/28（月）｜全校朝会", "9/30（水）｜リレー練習（校庭）", "10/2（金）｜運動会の係決め"] },
+      { title: "きょうのクイズ", body: "お月見でかざる「秋の七草」。すすき以外に、いくつ言えるかな？", answer: "はぎ・くず・なでしこ・おみなえし・ふじばかま・ききょう" }
+    ]
+  };
+  const $ = id => document.getElementById(id);
+  const page = $('page');
+  let article = SAMPLE;          // いま紙面に出している記事（AI が返したもの）
+  let isSample = true;
+  let photo = null;              // 写真（data URL）。保存はしない
+  let ruby = true;
+
+  // ---------------------------------------------------------------------------
+  // 設定とメモの下書きは、このブラウザにだけ覚えておく
+  // ---------------------------------------------------------------------------
+  const SETTING_IDS = ['s-title','s-title-en','s-class','s-grade','s-issue','s-publisher','s-colname'];
+  const DRAFT_IDS = ['in-school','in-world','in-other'];
+  function load(){
+    try {
+      const saved = JSON.parse(localStorage.getItem('shinbun-app') || '{}');
+      for (const id of [...SETTING_IDS, ...DRAFT_IDS]) if (saved[id] != null) $(id).value = saved[id];
+      if (saved.article){ article = saved.article; isSample = false; }
+      if (saved.ruby === false) ruby = false;
+    } catch(e){}
+    if (!$('s-date').value) $('s-date').value = todayJa();
+  }
+  function persist(){
+    try {
+      const o = {};
+      for (const id of [...SETTING_IDS, ...DRAFT_IDS]) o[id] = $(id).value;
+      if (!isSample) o.article = article;
+      o.ruby = ruby;
+      localStorage.setItem('shinbun-app', JSON.stringify(o));
+    } catch(e){}
+  }
+  function todayJa(){
+    const d = new Date();
+    return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日（${'日月火水木金土'[d.getDay()]}）`;
+  }
+  const settings = () => ({
+    title: $('s-title').value.trim() || '学級新聞',
+    title_en: $('s-title-en').value.trim(),
+    klass: $('s-class').value.trim(),
+    grade: Number($('s-grade').value) || 4,
+    issue: Number($('s-issue').value) || 1,
+    date: $('s-date').value.trim() || todayJa(),
+    publisher: $('s-publisher').value.trim(),
+    colname: $('s-colname').value.trim() || 'コラム',
+  });
+
+  // ---------------------------------------------------------------------------
+  // 紙面を組む
+  // ---------------------------------------------------------------------------
+  function esc(s){ return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+  function fmt(s){
+    return esc(s).replace(/\{([^|{}]+)\|([^{}]+)\}/g, '<ruby>$1<rt>$2</rt></ruby>').replace(/\*\*(.+?)\*\*/g, '<em class="bouten">$1</em>');
+  }
+  const E = ' contenteditable="true" spellcheck="false"';
+  const paras = arr => (Array.isArray(arr) ? arr : [arr]).filter(Boolean).map(t => `<p${E}>${fmt(t)}</p>`).join('');
+  const toRoman = n => { const m = [[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']]; let r = ''; for (const [v, k] of m) while (n >= v){ r += k; n -= v; } return r; };
+
+  function render(){
+    const st = settings(), a = article, s = a.school || {}, w = a.world || {}, c = a.column || {};
+    const titleEn = st.title_en || a.title_en || '';
+    const kick = (en, ja) => `<div class="kicker"><span class="en">${esc(en)}</span><span class="ja">${fmt(ja)}</span></div>`;
+    const boxes = (a.boxes || []).slice(0, 3).map(b => {
+      let inner = `<span class="label"${E}>${fmt(b.title)}</span>`;
+      if (b.items) inner += '<ul>' + b.items.map(it => {
+        const [k, ...rest] = String(it).split('｜');
+        return rest.length ? `<li><b${E}>${fmt(k)}</b><span${E}>${fmt(rest.join('｜'))}</span></li>` : `<li><span></span><span${E}>${fmt(k)}</span></li>`;
+      }).join('') + '</ul>';
+      if (b.body) inner += paras(b.body);
+      if (b.answer) inner += `<div><span class="answer"${E}>こたえ：${fmt(b.answer)}</span></div>`;
+      return `<section class="box" data-fit-box>${inner}</section>`;
+    }).join('');
+    const pic = photo ? `<img src="${photo}" alt="">` : esc(s.emoji || '📰');
+
+    page.innerHTML = `
+      <header class="mast">
+        <div class="ear left">${a.note ? `<span class="label">${fmt(a.note.label || 'きょうのひとこと')}</span><span${E}>${fmt(a.note.text)}</span>` : ''}</div>
+        <div class="name-block">
+          ${titleEn ? `<h1 class="name">${esc(titleEn)}</h1><div class="name-sub">${fmt(st.title)}</div>` : `<h1 class="name ja">${fmt(st.title)}</h1>`}
+        </div>
+        <div class="ear right"><span class="label">No.</span><div class="num">${esc(st.issue)}</div>第${esc(st.issue)}号</div>
+        <div class="dateline">
+          <span>Vol. ${toRoman(1)} · No. ${esc(st.issue)}</span>
+          <span class="ja">${fmt(st.date)}</span>
+          <span class="ja">${fmt(st.klass ? st.klass + ' 学級新聞' : '')}${st.publisher ? '　発行：' + fmt(st.publisher) : ''}</span>
+        </div>
+      </header>
+      <article class="lead" aria-label="学校のこと">
+        ${kick('School', s.kicker || '学校のできごと')}
+        <h2${E}>${fmt(s.headline)}</h2>
+        ${s.subhead ? `<p class="deck"${E}>${fmt(s.subhead)}</p>` : ''}
+        <div class="lead-body">
+          <div class="cols dropcap" data-fit="lead">${paras(s.body)}</div>
+          <aside class="side">
+            <figure class="photo"><div class="pic"${photo ? '' : ' aria-hidden="true"'}>${pic}</div>${s.caption ? `<figcaption${E}>${fmt(s.caption)}</figcaption>` : ''}</figure>
+            ${s.quote ? `<blockquote class="pull"${E}>${fmt(s.quote)}</blockquote>` : ''}
+          </aside>
+        </div>
+      </article>
+      <section class="second">
+        <article class="world" aria-label="世の中のニュース">
+          ${kick('World', w.kicker || '世の中のニュース')}
+          <h2${E}>${fmt(w.headline)}</h2>
+          ${w.subhead ? `<p class="deck"${E}>${fmt(w.subhead)}</p>` : ''}
+          <div class="cols dropcap" data-fit="world">
+            ${paras(w.body)}
+            ${w.source ? `<p class="source"${E}><span class="ja">${fmt(w.source)}</span></p>` : ''}
+            ${w.memo && (w.memo.body || []).length ? `<aside class="memo"><span class="label">${fmt(w.memo.label || 'ことばメモ')}</span>${paras(w.memo.body)}</aside>` : ''}
+          </div>
+        </article>
+        <article class="opinion" aria-label="コラム">
+          ${kick('Opinion', st.colname)}
+          ${c.headline ? `<h2${E}>${fmt(c.headline)}</h2>` : ''}
+          <div class="cols" data-fit="column">${paras(c.body)}${c.byline ? `<p class="byline"${E}>${fmt(c.byline)}</p>` : ''}</div>
+        </article>
+      </section>
+      <section class="notices" aria-label="おしらせ">${boxes}</section>`;
+
+    page.querySelectorAll('.dropcap').forEach(el => {
+      const first = el.querySelector('p')?.textContent.trim()[0] || '';
+      if (!/[ぁ-ヿ一-鿿]/.test(first)) el.classList.remove('dropcap');
+    });
+    $('sample-flag').hidden = !isSample;
+    fitAll();
+    scaleToScreen();
+  }
+
+  // 文字の大きさを、枠からあふれない範囲でいちばん大きくする
+  function fit(el, min, max){
+    const overflows = () => {
+      const box = el.getBoundingClientRect();
+      for (const child of el.children) for (const r of child.getClientRects()){
+        if (r.width === 0 && r.height === 0) continue;
+        if (r.left < box.left - 1 || r.right > box.right + 1 || r.top < box.top - 1 || r.bottom > box.bottom + 1) return true;
+      }
+      return false;
+    };
+    let lo = min, hi = max;
+    for (let i = 0; i < 12; i++){
+      const mid = (lo + hi) / 2;
+      el.style.fontSize = mid + 'pt';
+      if (overflows()) hi = mid; else lo = mid;
+    }
+    el.style.fontSize = lo + 'pt';
+    return lo <= min + 0.05 && overflows();
+  }
+  function fitName(){
+    const name = page.querySelector('.name');
+    if (!name) return;
+    name.style.fontSize = '';
+    const room = name.parentElement.clientWidth;
+    let size = parseFloat(getComputedStyle(name).fontSize);
+    while (name.scrollWidth > room && size > 12){ size -= 1; name.style.fontSize = size + 'px'; }
+  }
+  function fitAll(){
+    document.body.classList.toggle('no-ruby', !ruby);
+    // 縮小表示のままだと測りまちがえるので、いったん等倍にもどして測る
+    const inner = $('stage-inner'), prev = inner.style.transform;
+    inner.style.transform = 'none';
+    fitName();
+    let over = false;
+    page.querySelectorAll('[data-fit]').forEach(el => { over = fit(el, 8, el.dataset.fit === 'lead' ? 14 : 12.5) || over; });
+    page.querySelectorAll('[data-fit-box]').forEach(el => { over = fit(el, 6.5, 9.5) || over; });
+    inner.style.transform = prev;
+    $('pnote').textContent = over
+      ? '文章が長くて、はみ出している記事があります。紙面で直接けずるか、「直したいこと」に「全体を短く」と書いてください。'
+      : '紙面の文字はクリックして直接なおせます。保存したファイルを開くと印刷画面が出るので、プリンターか「PDFに保存」を選んでください。';
+  }
+
+  const stage = $('stage'), stageInner = $('stage-inner');
+  function scaleToScreen(){
+    const k = Math.min(1, stage.parentElement.clientWidth / page.offsetWidth);
+    stageInner.style.transform = 'scale(' + k + ')';
+    stage.style.height = page.offsetHeight * k + 'px';
+  }
+  window.addEventListener('resize', scaleToScreen);
+
+  // 直接なおしたら、文字の大きさを合わせなおす
+  page.addEventListener('focusout', e => { if (e.target.isContentEditable) fitAll(); });
+  page.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.isContentEditable && !e.shiftKey && e.target.tagName !== 'P') { e.preventDefault(); e.target.blur(); } });
+
+  // ---------------------------------------------------------------------------
+  // AI にたのむ
+  // ---------------------------------------------------------------------------
+  const RULES = (st) => `あなたは小学校の担任の先生の代わりに、${st.grade}年生の児童が読む学級新聞の記事を書く編集者です。
+先生が送ってきたメモ（散文・箇条書き・話し言葉）をもとに、紙面用の記事を JSON で書いてください。
+
+# 書き方のきまり
+- 事実を足さず、ことばを足す。
+  - 学校のこと：メモにない出来事・人数・記録・日付・子どものせりふを作らない。足してよいのは、様子がうかぶ言いかえ、なぜ大事かの説明、読み手への問いかけ・よびかけ。
+  - quote（大きく引用される言葉）は、メモにある子どもの言葉だけ。なければ空文字にする。
+  - 世の中のニュース：日付・数字・固有名詞はメモに書かれたものだけ使う。一般的な背景説明（行事の由来、しくみ）は足してよい。自信のない事実は書かず、checks に書く。
+  - 世の中のメモが空なら、発行日の季節の行事や自然の話題（暦・天体・生き物など、日付に左右されない一般的な知識）で書き、最近の出来事は書かない。checks に「話題はAIが選びました」と書く。
+  - 事件・事故・災害・戦争など、子どもがこわがる話題はメモで明示されたときだけ、落ち着いて書く。
+  - コラム：担任の一人称で、最後は読み手へのよびかけや問いで終える。メモになければ、季節や他の記事につながるテーマで書く。
+- 子どもの名前はフルネームで書かない（メモにあっても「〇〇さん」までか「ある人」にする）。
+- 「です・ます」。一文は40字くらいまで。
+- ${st.grade}年生までに習わない漢字は、ひらがなにするか {漢字|かんじ} の形でふりがなをつける。${st.grade <= 2 ? 'ひらがなを多めにし、全体を2〜3割短くする。' : ''}
+- 大事なところは **ことば** で傍点をつける（1記事に1〜2か所まで）。
+- 数字は半角。予定の items は「9/28（月）｜全校朝会」のように、日付と内容を全角の｜で区切る。
+
+# 分量（A4 1枚に収めるため、守ってください）
+- school.headline 18字以内 / school.subhead 15字以内 / school.body 3段落で合計350〜420字
+- world.headline 14字以内 / world.subhead 15字以内 / world.body 2〜3段落で合計260〜320字 / world.memo.body 1つで50字以内（むずかしい言葉がなければ空配列）
+- column.headline 12字以内 / column.body 2段落で合計200〜240字
+- note.text 30字以内（きょうのひとこと）
+- boxes は2つ（メモに予定があれば「来週の予定」、なければ別の囲み。もう1つはクイズなど）。各60字以内、予定は4行まで。
+- school.emoji は記事に合う絵文字1つ、school.caption は25字以内。
+
+# 返す JSON の形（これだけを返す）
+{
+  "title_en": "新聞の名前をもとにした英語の題字（例：The Nakayoshi Times）",
+  "note": {"label": "きょうのひとこと", "text": ""},
+  "school": {"kicker": "学校のできごと", "headline": "", "subhead": "", "body": ["", "", ""], "emoji": "", "caption": "", "quote": ""},
+  "world": {"kicker": "世の中のニュース", "headline": "", "subhead": "", "body": ["", ""], "memo": {"label": "ことばメモ", "body": [""]}, "source": "（〇〇の発表より）※メモに出典があるときだけ。なければ空文字"},
+  "column": {"headline": "", "body": ["", ""], "byline": "（担任より）"},
+  "boxes": [{"title": "来週の予定", "items": ["9/28（月）｜全校朝会"]}, {"title": "きょうのクイズ", "body": "", "answer": ""}],
+  "checks": ["先生に確かめてほしいこと（事実があやしい所、AIが選んだ話題、メモが足りなかった所など）。なければ空配列"]
+}`;
+
+  const inputBlock = st => `# 新聞の情報
+- 新聞の名前：${st.title}
+- クラス：${st.klass}（${st.grade}年生）
+- 発行日：${st.date}
+- コラムの名前：${st.colname}
+
+# 先生のメモ
+## ① 学校のこと
+${$('in-school').value.trim() || '（なし）'}
+
+## ② 世の中のニュース
+${$('in-world').value.trim() || '（なし）'}
+
+## ③ その他
+${$('in-other').value.trim() || '（なし）'}`;
+
+  let samplePromise = null, ctl = null;
+  function getSample(){ return samplePromise ??= (window.claude?.use ? window.claude.use('sample') : Promise.resolve(null)); }
+
+  const ERR = {
+    not_granted: 'AIの利用が許可されませんでした。もう一度ボタンを押すと、許可をたずねる画面が出ます（ページを開き直した場合）。',
+    rate_limited: '少し混み合っています。1分ほど待ってからもう一度押してください。',
+    cancelled: '止めました。',
+    parse_error: 'AIの答えをうまく読み取れませんでした。もう一度押してください。',
+  };
+  const setStatus = (t, err) => { $('status').textContent = t; $('status').classList.toggle('error', !!err); };
+
+  async function ask(extra){
+    const sample = await getSample();
+    if (!sample){ setStatus('AIの機能は、claude.ai でこのページを開いたときに使えます。', true); return; }
+    const st = settings();
+    if (!extra && !$('in-school').value.trim()){ setStatus('① 学校のこと を書いてください（ここはAIが作り話にできないため）。', true); $('in-school').focus(); return; }
+    let prompt = RULES(st) + '\n\n' + inputBlock(st);
+    if (extra) prompt += `\n\n# いまの紙面（JSON）\n${JSON.stringify(article)}\n\n# 先生からの直してほしいこと\n${extra}\n\n直してほしいことを反映した JSON 全体を、同じ形で返してください。言われていない所はなるべく変えないでください。`;
+
+    ctl = new AbortController();
+    busy(true);
+    setStatus('考え中…（30秒〜1分ほどかかります）');
+    try {
+      const data = await sample.json(prompt, {
+        signal: ctl.signal, modelTier: 'default', cache: false,
+        onText: ({ text }) => setStatus(`書いています…（${text.length}字）`),
+      });
+      if (!data || !data.school) throw { code: 'parse_error' };
+      article = data; isSample = false;
+      render(); persist();
+      showChecks(data.checks);
+      $('revise-box').hidden = false;
+      setStatus('できました。紙面を確かめて、よければ「印刷用ファイルを保存」を押してください。');
+    } catch(e){
+      setStatus(ERR[e?.code] || ('うまくいきませんでした（' + (e?.message || e?.code || 'エラー') + '）。もう一度押してください。'), e?.code !== 'cancelled');
+    } finally {
+      busy(false);
+    }
+  }
+  function busy(on){
+    $('go').disabled = on; $('revise').disabled = on; $('stop').hidden = !on;
+  }
+  function showChecks(list){
+    const items = (list || []).filter(Boolean);
+    $('checks').hidden = !items.length;
+    $('checks').innerHTML = items.length ? '<b>確かめてほしいこと</b><ul>' + items.map(t => '<li>' + fmt(t) + '</li>').join('') + '</ul>' : '';
+  }
+
+  $('form').addEventListener('submit', e => { e.preventDefault(); ask(); });
+  $('revise').addEventListener('click', () => { const t = $('in-revise').value.trim(); if (t) ask(t); else $('in-revise').focus(); });
+  $('in-revise').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); $('revise').click(); } });
+  $('stop').addEventListener('click', () => ctl?.abort());
+
+  // 設定を変えたらすぐ紙面に反映（下書きは覚えておくだけ）
+  for (const id of SETTING_IDS) $(id).addEventListener('change', () => { render(); persist(); });
+  $('s-date').addEventListener('change', render);
+  for (const id of DRAFT_IDS) $(id).addEventListener('input', persist);
+
+  // 写真
+  $('in-photo').addEventListener('change', () => {
+    const f = $('in-photo').files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => { photo = r.result; $('photo-clear').hidden = false; render(); };
+    r.readAsDataURL(f);
+  });
+  $('photo-clear').addEventListener('click', () => { photo = null; $('in-photo').value = ''; $('photo-clear').hidden = true; render(); });
+
+  // ふりがな
+  function setRuby(on){
+    ruby = on;
+    $('ruby-on').setAttribute('aria-pressed', on);
+    $('ruby-off').setAttribute('aria-pressed', !on);
+    fitAll(); persist();
+  }
+  $('ruby-on').addEventListener('click', () => setRuby(true));
+  $('ruby-off').addEventListener('click', () => setRuby(false));
+
+  // ---------------------------------------------------------------------------
+  // 印刷用ファイル：開くと自動で印刷画面が出る HTML
+  // ---------------------------------------------------------------------------
+  function exportHtml(){
+    const clone = page.cloneNode(true);
+    clone.querySelectorAll('[contenteditable]').forEach(el => { el.removeAttribute('contenteditable'); el.removeAttribute('spellcheck'); });
+    const css = $('paper-css').textContent;
+    const fonts = document.querySelector('link[rel=stylesheet]').outerHTML;
+    const st = settings();
+    const title = `${st.title} 第${st.issue}号`;
+    return `<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${esc(title)}</title>
+${fonts}
+<style>${css}
+@page{ size:A4 portrait; margin:0; }
+html,body{ margin:0; }
+body{ background:#9a978f; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+.page{ margin:16px auto; }
+@media print{ body{ background:none; } .page{ margin:0; box-shadow:none; } }
+</style></head>
+<body class="${ruby ? '' : 'no-ruby'}">
+<main class="page">${clone.innerHTML}</main>
+<script>
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(function(){ setTimeout(function(){ window.print(); }, 400); });
+<\/script>
+</body></html>`;
+  }
+  $('save').addEventListener('click', async () => {
+    const btn = $('save');
+    let downloads = null;
+    try { downloads = window.claude?.use ? await window.claude.use('downloads') : null; } catch(e){}
+    if (!downloads){ setStatus('このページではファイルを保存できません。claude.ai で開いてください。', true); return; }
+    const st = settings();
+    const name = `${st.title}_第${st.issue}号.html`.replace(/[\\/:*?"<>|]/g, '');
+    btn.disabled = true;
+    try {
+      await downloads.save({ filename: name, data: exportHtml() });
+      setStatus('保存しました。ファイルを開くと印刷画面が出ます（用紙はA4、余白なし・背景のグラフィックをオンにするときれいです）。');
+    } catch(e){
+      if (e?.code === 'declined') setStatus('保存をやめました。');
+      else if (e?.code === 'rate_limited') setStatus('少し待ってからもう一度押してください。', true);
+      else setStatus('保存できませんでした（' + (e?.code || 'エラー') + '）。', true);
+    } finally { btn.disabled = false; }
+  });
+
+  // ---------------------------------------------------------------------------
+  load();
+  $('ruby-on').setAttribute('aria-pressed', ruby);
+  $('ruby-off').setAttribute('aria-pressed', !ruby);
+  render();
+  if (document.fonts) document.fonts.ready.then(render);
+})();
+</script>
