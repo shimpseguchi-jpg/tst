@@ -215,6 +215,7 @@ body.zen .zenout{display:block}
 /* ---------- guide ---------- */
 #guide{flex:1;overflow-y:auto;overflow-x:hidden}
 .g-inner{max-width:60rem;margin:0 auto;padding:0 16px;padding-block:2rem 4rem}
+.g-inner.wide{max-width:90rem}
 .g-top{display:flex;align-items:baseline;gap:1rem;flex-wrap:wrap;border-bottom:1px solid var(--rule);padding-bottom:1.1rem}
 .g-top h1{font-family:var(--mincho);font-weight:600;font-size:clamp(1.5rem,4vw,2.1rem);letter-spacing:.14em;margin:0;flex:1}
 .tabs{display:flex;gap:.4rem;margin:1.4rem 0 .4rem;flex-wrap:wrap}
@@ -357,6 +358,68 @@ body.zen .zenout{display:block}
 .mrow .mn{font-family:var(--mincho);font-size:.92rem;letter-spacing:.04em}
 .mrow .mp{font-family:var(--util);font-size:.78rem;color:var(--accent);font-variant-numeric:tabular-nums;white-space:nowrap}
 .mrow .mc{grid-column:1/-1;margin:0;font-size:.8rem;line-height:1.85;color:var(--muted)}
+/* 紙面 */
+.paperwrap{margin:1rem 0 0;overflow:hidden}
+.paper{
+  width:1400px;height:2000px;position:relative;transform-origin:top left;
+  background:#f3f1e9;color:#1b1a16;border:1px solid #c9c6b8;
+  font-family:var(--mincho);
+}
+.paper *{box-sizing:border-box}
+.paper .tate{writing-mode:vertical-rl;font-feature-settings:"palt" 0}
+.phead{position:absolute;left:0;right:0;top:0;height:60px;border-bottom:3px double #1b1a16;
+  display:flex;align-items:center;gap:18px;padding:0 18px}
+.phead .pno{font-family:var(--util);font-size:22px;font-weight:600;letter-spacing:.05em}
+.phead .psec{font-size:20px;letter-spacing:.35em;border-left:1px solid #1b1a16;padding-left:16px}
+.phead .sp{flex:1}
+.phead .pdate{font-family:var(--util);font-size:15px;letter-spacing:.06em}
+.phead .ptitle{font-size:26px;letter-spacing:.4em;font-weight:600}
+
+.plead{position:absolute;right:18px;top:78px;width:880px;height:1560px}
+.phcol{position:absolute;right:0;top:0;width:152px;height:1560px;
+  writing-mode:vertical-rl;border-left:1px solid #b9b6a8;padding-left:14px}
+.phcol .ser{font-size:17px;letter-spacing:.3em;color:#7a2018;margin-left:14px}
+.phcol .big{font-size:46px;font-weight:600;letter-spacing:.22em;line-height:1.18;margin-left:16px}
+.phcol .sub2{font-size:18px;letter-spacing:.2em;color:#3d3b33;margin-left:10px;
+  border-right:1px solid #b9b6a8;padding-right:12px}
+.ptext{position:absolute;right:164px;top:322px;width:716px;height:1238px;
+  writing-mode:vertical-rl;font-size:13px;line-height:1.95;letter-spacing:.02em;
+  overflow:hidden}
+.ptext p{margin:0;text-indent:1em}
+.ptext .by{margin-right:1.6em;color:#3d3b33}
+.pphoto{position:absolute;right:164px;top:0;width:716px;height:302px;
+  display:flex;flex-direction:column}
+.pphoto .fr{flex:1;border:1px solid #b9b6a8;background:#e7e4da;overflow:hidden}
+.pphoto .cap{font-size:13px;letter-spacing:.03em;padding-top:5px;color:#3d3b33}
+
+.pside{position:absolute;left:18px;top:78px;width:462px;height:1560px}
+.pnews{position:relative;height:300px;border-bottom:1px solid #b9b6a8;padding-bottom:10px;margin-bottom:10px}
+.pnews:last-of-type{border-bottom:0}
+.pnews .h{position:absolute;right:0;top:0;width:86px;height:285px;writing-mode:vertical-rl;
+  font-size:25px;font-weight:600;letter-spacing:.14em;line-height:1.25}
+.pnews .h .s{font-size:15px;font-weight:400;letter-spacing:.1em;color:#3d3b33}
+.pnews .b{position:absolute;right:92px;top:0;width:368px;height:285px;writing-mode:vertical-rl;
+  font-size:13px;line-height:1.85;letter-spacing:.01em;overflow:hidden}
+.pnews .b p{margin:0;text-indent:1em}
+
+.pbox{border:1px solid #b9b6a8;padding:9px 11px;margin-bottom:10px;background:#efece2}
+.pbox .t{font-size:15px;letter-spacing:.22em;border-bottom:1px solid #c9c6b8;padding-bottom:5px;margin-bottom:7px}
+.pwx{display:flex;align-items:center;gap:14px;font-family:var(--util);font-size:14px;line-height:1.7}
+.pwx .tm{font-size:26px;letter-spacing:.02em}
+.pwx .hi{color:#7a2018}
+.pobit{font-size:12px;line-height:1.75;margin:0 0 6px;text-indent:-1em;padding-left:1em}
+
+.pads{position:absolute;left:18px;right:18px;bottom:16px;height:330px}
+.padrow{display:flex;flex-direction:row-reverse;gap:10px;height:160px}
+.pad{border:1px solid #9d9a8c;background:#eeebe1;padding:10px 12px;flex:1;
+  display:flex;flex-direction:column;justify-content:center;text-align:center}
+.pad.wide{flex:none;width:100%;margin-top:10px}
+.pad .m{font-size:27px;font-weight:600;letter-spacing:.1em;line-height:1.25}
+.pad.small .m{font-size:21px}
+.pad .s{font-size:15px;letter-spacing:.06em;margin-top:6px;color:#7a2018}
+.pad .x{font-family:var(--util);font-size:12px;letter-spacing:.04em;margin-top:7px;color:#4a4840;line-height:1.7}
+.pad .ad{font-family:var(--util);font-size:10px;letter-spacing:.3em;color:#8b8878;margin-bottom:5px}
+.paperbar{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:.2rem 0 0}
 /* 報告書 */
 .doc{max-width:44rem;margin:0 auto;padding-top:1rem}
 .doc-head{border:1px solid var(--rule);background:var(--surface);padding:1.3rem 1.4rem;margin-bottom:2.2rem}
@@ -419,7 +482,7 @@ body.zen .zenout{display:block}
       </header>
       <ul class="works" id="works"></ul>
       <div class="colophon">
-        <p style="margin:0 0 1.1rem"><button class="btn" id="toGuide">人物・店・年表の資料を見る</button> <button class="btn" id="toReport">森岡レポート</button> <button class="btn" id="installBtn" hidden>ホーム画面に追加</button></p>
+        <p style="margin:0 0 1.1rem"><button class="btn" id="toGuide">人物・店・年表の資料を見る</button> <button class="btn" id="toReport">森岡レポート</button> <button class="btn" id="toPaper">備陽新報の紙面</button> <button class="btn" id="installBtn" hidden>ホーム画面に追加</button></p>
         本文は縦書きで表示しています。横組みに切り替えることもできます。<br>
         字数は見出しと空白を除いた本文の文字数です。<br>
         読んだ位置はこの端末に記憶され、次に開いたときに続きから始まります。<br>
@@ -438,6 +501,7 @@ body.zen .zenout{display:block}
         <button class="tab" role="tab" data-tab="people" aria-selected="true">人物</button>
         <button class="tab" role="tab" data-tab="shops" aria-selected="false">店</button>
         <button class="tab" role="tab" data-tab="years" aria-selected="false">年表</button>
+        <button class="tab" role="tab" data-tab="paper" aria-selected="false">紙面</button>
         <button class="tab" role="tab" data-tab="report" aria-selected="false">報告</button>
       </div>
       <div class="gsec" id="gsec"></div>
@@ -635,7 +699,7 @@ body.zen .zenout{display:block}
   });
 
   /* ---------- guide ---------- */
-  var guide=null, report=null, gtab="people";
+  var guide=null, report=null, paper=null, paperIdx=0, gtab="people";
   function chips(w){
     var out='<span class="chips">';
     (w.lead||[]).forEach(function(n){ out+='<span class="chip lead">'+n+'</span>'; });
@@ -646,6 +710,7 @@ body.zen .zenout{display:block}
 
   function renderGuide(){
     var box=$("gsec"); box.textContent="";
+    if(gtab!=="paper") document.querySelector(".g-inner").classList.remove("wide");
     if(!guide){ box.innerHTML='<p class="ds">読み込み中</p>'; return; }
     var h="";
     if(gtab==="people"){
@@ -698,6 +763,23 @@ body.zen .zenout{display:block}
         h+='<div class="fact"><b>'+esc(f.k)+'</b><span>'+esc(f.v)+'</span></div>';
       });
       h+='</div>';
+    }
+    else if(gtab==="paper"){
+      if(!paper){
+        box.innerHTML='<p class="ds">読み込み中</p>';
+        fetch("data/paper.json").then(function(r){ return r.json(); }).then(function(d){
+          paper=d; if(gtab==="paper") renderGuide();
+        }).catch(function(){ $("gsec").innerHTML='<p class="ds">紙面を読み込めませんでした。</p>'; });
+        return;
+      }
+      document.querySelector(".g-inner").classList.add("wide");
+      box.innerHTML = paperHTML(paper[paperIdx||0]);
+      fitPaper();
+      var art=box.querySelector(".plead");
+      if(art) art.addEventListener("click",function(){ openArticle(paper[paperIdx||0]); });
+      var rb=box.querySelector("#readArticle");
+      if(rb) rb.addEventListener("click",function(){ openArticle(paper[paperIdx||0]); });
+      return;
     }
     else if(gtab==="report"){
       if(!report){
@@ -759,6 +841,118 @@ body.zen .zenout{display:block}
     }
     t=t.replace(/^\s+/,"");
     return t.charAt(0)||String(n).charAt(0);
+  }
+
+
+  /* ---------- 紙面 ---------- */
+  function streetSVG(){
+    /* 写真の代わり。南の口から北を見た通り。奥の四十メートルだけ屋根が残っている */
+    var sh="", i, x;
+    for(i=0;i<7;i++){ x=8+i*46; sh+='<path d="M'+x+' '+(150-i*11)+' V'+(258-i*20)+'" />'; }
+    for(i=0;i<7;i++){ x=652-i*46; sh+='<path d="M'+x+' '+(150-i*11)+' V'+(258-i*20)+'" />'; }
+    var hat="";
+    for(i=0;i<26;i++){ hat+='<path d="M'+(232+i*7.5)+' 96 V128" />'; }
+    return '<svg viewBox="0 0 660 300" width="100%" height="100%" preserveAspectRatio="none" '+
+      'fill="none" stroke="#5a574c" stroke-width="1" stroke-linecap="round">'+
+      '<rect width="660" height="300" fill="#e7e4da"/>'+
+      '<g opacity=".85">'+
+        '<path d="M0 300 L286 150 M660 300 L374 150" stroke-width="1.4"/>'+
+        '<path d="M0 214 L286 150 M660 214 L374 150" opacity=".5"/>'+
+        '<g opacity=".7">'+sh+'</g>'+
+        '<path d="M286 150 H374 V96 H286 Z" opacity=".9"/>'+
+        '<g opacity=".45">'+hat+'</g>'+
+        '<path d="M232 96 H428" stroke-width="1.6"/>'+
+        '<path d="M286 150 H374" stroke-width="1.6"/>'+
+        '<path d="M0 44 H660" opacity=".18"/>'+
+      '</g></svg>';
+  }
+
+  function paperHTML(d){
+    var L=d.lead||{}, h="";
+    h+='<div class="paperbar">'+
+       '<button class="btn" id="readArticle">記事を大きく読む</button>'+
+       '<span class="chip">'+esc(d.date)+'</span>'+
+       '<span class="chip">'+esc(d.page)+'面</span></div>';
+    h+='<div class="paperwrap"><div class="paper" id="paperPage">';
+    h+='<div class="phead"><span class="pno">'+esc(d.page)+'</span>'+
+       '<span class="psec">'+esc(d.section)+'</span><span class="sp"></span>'+
+       '<span class="pdate">'+esc(d.date)+'</span>'+
+       '<span class="ptitle">'+esc(d.title)+'</span></div>';
+
+    /* 主記事 */
+    h+='<div class="plead"><div class="phcol">'+
+       (L.series?'<div class="ser">'+esc(L.series)+'</div>':'')+
+       '<div class="big">'+esc(L.head||"")+'</div>'+
+       (L.sub?'<div class="sub2">'+esc(L.sub)+'</div>':'')+'</div>';
+    h+='<div class="ptext">';
+    (L.body||[]).forEach(function(x){ h+='<p>'+esc(x)+'</p>'; });
+    if(L.by) h+='<p class="by">（'+esc(L.by)+'）</p>';
+    h+='</div>';
+    h+='<div class="pphoto"><div class="fr">'+streetSVG()+'</div>'+
+       '<div class="cap">'+esc(L.caption||"")+'</div></div></div>';
+
+    /* 左側 */
+    h+='<div class="pside">';
+    (d.news||[]).forEach(function(n){
+      h+='<div class="pnews"><div class="h">'+esc(n.head)+
+         (n.sub?'<div class="s">'+esc(n.sub)+'</div>':'')+'</div><div class="b">';
+      (n.body||[]).forEach(function(x){ h+='<p>'+esc(x)+'</p>'; });
+      h+='</div></div>';
+    });
+    var w=d.weather;
+    if(w){
+      h+='<div class="pbox"><div class="t">きょうの天気</div><div class="pwx">'+
+         '<span class="tm">'+esc(w["今日"]||"")+'</span>'+
+         '<span>最高 <b class="hi">'+esc(w["最高"]||"")+'</b>／最低 '+esc(w["最低"]||"")+
+         '　降水 '+esc(w["降水"]||"")+'％<br>あす '+esc(w["明日"]||"")+
+         '　日の出 '+esc(w["日の出"]||"")+'　日の入 '+esc(w["日の入"]||"")+'</span></div></div>';
+    }
+    if((d.obits||[]).length){
+      h+='<div class="pbox"><div class="t">おくやみ</div>';
+      d.obits.forEach(function(o){ h+='<p class="pobit">'+esc(o)+'</p>'; });
+      h+='</div>';
+    }
+    h+='</div>';
+
+    /* 広告 */
+    var ads=(d.ads||[]).slice(), wide=null, i;
+    for(i=0;i<ads.length;i++){ if(ads[i].dan>=5){ wide=ads.splice(i,1)[0]; break; } }
+    h+='<div class="pads"><div class="padrow">';
+    ads.forEach(function(a){
+      h+='<div class="pad small"><div class="ad">広告</div><div class="m">'+esc(a.main)+'</div>'+
+         (a.sub?'<div class="s">'+esc(a.sub)+'</div>':'')+
+         (a.text?'<div class="x">'+esc(a.text)+'</div>':'')+'</div>';
+    });
+    h+='</div>';
+    if(wide){
+      h+='<div class="padrow"><div class="pad wide"><div class="ad">広告</div>'+
+         '<div class="m">'+esc(wide.main)+'</div>'+
+         (wide.sub?'<div class="s">'+esc(wide.sub)+'</div>':'')+
+         (wide.text?'<div class="x">'+esc(wide.text)+'</div>':'')+'</div></div>';
+    }
+    h+='</div>';
+    h+='</div></div>';
+    return h;
+  }
+
+  function fitPaper(){
+    var page=$("paperPage"); if(!page) return;
+    var wrap=page.parentNode;
+    var k=Math.min(1, wrap.clientWidth/1400);
+    page.style.transform="scale("+k+")";
+    wrap.style.height=(2000*k)+"px";
+  }
+
+  function openArticle(d){
+    var L=d.lead||{};
+    var b='<p class="big">'+esc(L.head||"")+'</p>'+
+          '<p class="sub">'+esc(d.title)+'　'+esc(d.date)+'　'+esc(d.page)+'面</p>'+
+          '<p class="rl2">'+esc(L.series||"")+'　'+esc(L.by||"")+'</p>';
+    b+='<div class="pfield"><h4>本文（'+L.chars+'字）</h4><div style="font-size:.92rem;line-height:2;color:var(--ink-soft)">';
+    (L.body||[]).forEach(function(x){ b+='<p style="margin:0;text-indent:1em">'+esc(x)+'</p>'; });
+    b+='</div></div>';
+    if(L.caption) b+='<div class="pfield"><h4>写真説明</h4><p>'+esc(L.caption)+'</p></div>';
+    mountSheet("紙面", L.head||"記事", b);
   }
 
   /* ---------- 人物の詳細 ---------- */
@@ -933,6 +1127,7 @@ body.zen .zenout{display:block}
   $("toLib").addEventListener("click",toLibrary);
   $("toGuide").addEventListener("click",function(){ gtab="people"; syncTabs(); openGuide(); });
   $("toReport").addEventListener("click",function(){ gtab="report"; syncTabs(); openGuide(); });
+  $("toPaper").addEventListener("click",function(){ gtab="paper"; syncTabs(); openGuide(); });
   function syncTabs(){
     Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(o){
       o.setAttribute("aria-selected", o.dataset.tab===gtab ? "true" : "false");
@@ -959,7 +1154,7 @@ body.zen .zenout{display:block}
     requestAnimationFrame(tick);
   });
   $("pane").addEventListener("scroll",tick,{passive:true});
-  window.addEventListener("resize",function(){ requestAnimationFrame(tick); });
+  window.addEventListener("resize",function(){ requestAnimationFrame(tick); requestAnimationFrame(fitPaper); });
   document.addEventListener("keydown",function(e){
     if($("reader").hidden) return;
     if(e.key==="Escape"){
