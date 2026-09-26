@@ -181,9 +181,19 @@ ruby rt{ font-size:.5em; font-weight:400; font-family:var(--body); }
 
   // --- 文字の整形：{漢字|かんじ} → ルビ、**ことば** → 傍点 ---------------------
   function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+  // ふりがなは、JSON の furigana_from 年生以上で習う漢字をふくむ言葉にだけつける（ふつうは 3。0 はつけない）
+  // 1・2年生で習う漢字は学年別漢字配当表のとおり
+  const KANJI_BY_GRADE = ['',
+    '一右雨円王音下火花貝学気九休玉金空月犬見五口校左三山子四糸字耳七車手十出女小上森人水正生青夕石赤千川先早草足村大男竹中虫町天田土二日入年白八百文木本名目立力林六',
+    '引羽雲園遠何科夏家歌画回会海絵外角楽活間丸岩顔汽記帰弓牛魚京強教近兄形計元言原戸古午後語工公広交光考行高黄合谷国黒今才細作算止市矢姉思紙寺自時室社弱首秋週春書少場色食心新親図数西声星晴切雪船線前組走多太体台地池知茶昼長鳥朝直通弟店点電刀冬当東答頭同道読内南肉馬売買麦半番父風分聞米歩母方北毎妹万明鳴毛門夜野友用曜来里理話'];
+  const rubyFrom = data.furigana_from == null ? 3 : Number(data.furigana_from);
+  const known = (() => { let k = ''; for (let g = 1; g < rubyFrom && g < KANJI_BY_GRADE.length; g++) k += KANJI_BY_GRADE[g]; return k; })();
+  const needsRuby = base => rubyFrom > 0 && [...base].some(ch => /[\u4e00-\u9fff]/.test(ch) && !known.includes(ch));
+  const rubyRe = /\{([^|{}]+)\|([^{}]+)\}/g;
+  const rubyOut = (m, base, yomi) => needsRuby(base) ? '<ruby>' + base + '<rt>' + yomi + '</rt></ruby>' : base;
   function fmt(s){
     return esc(s ?? '')
-      .replace(/\{([^|{}]+)\|([^{}]+)\}/g, '<ruby>$1<rt>$2</rt></ruby>')
+      .replace(rubyRe, rubyOut)
       .replace(/\*\*(.+?)\*\*/g, '<em class="bouten">$1</em>');
   }
   const paras = arr => (Array.isArray(arr) ? arr : [arr]).filter(Boolean).map(t => '<p>' + fmt(t) + '</p>').join('');

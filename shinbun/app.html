@@ -214,6 +214,7 @@ details .grid{ display:grid; gap:10px; }
 .pbar .seg button{ border:0; border-radius:0; padding:5px 10px; background:var(--ui-field); color:var(--ui-text); }
 .pbar .seg button[aria-pressed="true"]{ background:var(--ui-text); color:var(--ui-panel); }
 .pbar .spacer{ flex:1; }
+.pbar .ruby-select{ width:auto; padding:5px 8px; }
 .pnote{ margin:0; font-size:12px; color:var(--ui-muted); }
 .stage{ overflow:hidden; max-width:100%; }
 .stage-inner{ transform-origin:top left; width:210mm; }
@@ -292,8 +293,13 @@ details .grid{ display:grid; gap:10px; }
   <section class="preview" aria-label="紙面">
     <div class="pbar">
       <span class="sample-flag" id="sample-flag">見本</span>
-      <span>ふりがな</span>
-      <span class="seg"><button type="button" id="ruby-on" aria-pressed="true">あり</button><button type="button" id="ruby-off" aria-pressed="false">なし</button></span>
+      <label for="ruby-from">ふりがな</label>
+      <select id="ruby-from" class="ruby-select">
+        <option value="3" selected>3年生以上で習う漢字</option>
+        <option value="2">2年生以上で習う漢字</option>
+        <option value="1">すべての漢字</option>
+        <option value="0">つけない</option>
+      </select>
       <span class="spacer"></span>
       <button type="button" class="btn primary" id="save">印刷用ファイルを保存</button>
     </div>
@@ -308,37 +314,62 @@ details .grid{ display:grid; gap:10px; }
   // 見本の号（はじめに開いたとき紙面に出しておく）
   // ---------------------------------------------------------------------------
   const SAMPLE = {
-    note: { label: "きょうのひとこと", text: "こんやは十五夜。帰り道に、東の空を見上げてみよう。" },
-    school: {
-      kicker: "学校のできごと", headline: "リレー練習、バトンが**つながった**！", subhead: "運動会まであと2週間",
-      body: [
-        "10月9日の運動会に向けて、4年生のリレー練習が本格的に始まりました。今週は、バトンの受けわたしを中心に練習しました。",
-        "はじめはバトンを落としてしまうチームもありましたが、「はい！」と声をかけ合うようにしたところ、少しずつなめらかにつながるようになりました。走る前の人が手を後ろにのばして待つ形も、みんなで何度もたしかめました。",
-        "練習のあと、あるチームの人は「声を出すと、うしろを見なくても分かる」と話していました。**速く走ること**だけでなく、**仲間を信じてバトンをわたすこと**が、リレーの大切なところです。本番まで、あと少し。チームの力を合わせて、がんばりましょう。"
-      ],
-      emoji: "🏃", caption: "声をかけ合って、バトンパスの練習をしました", quote: "声を出すと、うしろを見なくても分かる"
+    "note": {
+      "label": "きょうのひとこと",
+      "text": "こんやは{十五夜|じゅうごや}。{帰|かえ}り{道|みち}に、{東|ひがし}の{空|そら}を{見上|みあ}げてみよう。"
     },
-    world: {
-      kicker: "世の中のニュース", headline: "今夜は「中秋の名月」", subhead: "満月は2日後の27日",
-      body: [
-        "きょう9月25日は、「{中秋|ちゅうしゅう}の{名月|めいげつ}」、または「十五夜」とよばれる日です。むかしのこよみ（{旧暦|きゅうれき}）で8月15日にあたる夜の月のことで、昔から、すすきやだんごをかざってお月見をする習わしがあります。",
-        "ところが、ことしの十五夜の月は、まんまるではありません。{天文台|てんもんだい}によると、月がいちばんまるくなる満月は、2日後の27日です。十五夜と満月がこれほどずれるのは、9年ぶりだそうです。",
-        "こよみの日付と、月の動きは、ぴったり同じにはならないのですね。今夜と27日、2回月を見くらべてみると、ちがいが分かるかもしれません。"
+    "school": {
+      "kicker": "{学校|がっこう}のできごと",
+      "headline": "リレー{練習|れんしゅう}、バトンが**つながった**！",
+      "subhead": "{運動会|うんどうかい}まであと2{週間|しゅうかん}",
+      "body": [
+        "10{月|がつ}9{日|か}の{運動会|うんどうかい}に{向|む}けて、4{年生|ねんせい}のリレー{練習|れんしゅう}が{本格的|ほんかくてき}に{始|はじ}まりました。{今週|こんしゅう}は、バトンの{受|う}けわたしを{中心|ちゅうしん}に{練習|れんしゅう}しました。",
+        "はじめはバトンを{落|お}としてしまうチームもありましたが、「はい！」と{声|こえ}をかけ{合|あ}うようにしたところ、{少|すこ}しずつなめらかにつながるようになりました。{走|はし}る{前|まえ}の{人|ひと}が{手|て}を{後|うし}ろにのばして{待|ま}つ{形|かたち}も、みんなで{何度|なんど}もたしかめました。",
+        "{練習|れんしゅう}のあと、あるチームの{人|ひと}は「{声|こえ}を{出|だ}すと、うしろを{見|み}なくても{分|わ}かる」と{話|はな}していました。**{速|はや}く{走|はし}ること**だけでなく、**{仲間|なかま}を{信|しん}じてバトンをわたすこと**が、リレーの{大切|たいせつ}なところです。{本番|ほんばん}まで、あと{少|すこ}し。チームの{力|ちから}を{合|あ}わせて、がんばりましょう。"
       ],
-      memo: { label: "ことばメモ", body: ["{旧暦|きゅうれき}　月の満ち欠けをもとにした、むかしのこよみ。明治のはじめまで使われていました。"] },
-      source: "（仙台市天文台の発表より）"
+      "emoji": "🏃",
+      "caption": "{声|こえ}をかけ{合|あ}って、バトンパスの{練習|れんしゅう}をしました",
+      "quote": "{声|こえ}を{出|だ}すと、うしろを{見|み}なくても{分|わ}かる"
     },
-    column: {
-      headline: "「見上げる」時間",
-      body: [
-        "みなさんは、さいごに空をじっくり見上げたのはいつですか。毎日いそがしくしていると、空を見る時間は、意外と少ないものです。",
-        "月は、見るたびに形がかわります。きのうとちがう今日を、いちばん分かりやすく教えてくれるのが、月なのかもしれません。今夜、家の人といっしょに、少しだけ空を見上げてみてください。どんな形に見えたか、あした教えてくださいね。"
+    "world": {
+      "kicker": "{世|よ}の{中|なか}のニュース",
+      "headline": "{今夜|こんや}は「{中秋|ちゅうしゅう}の{名月|めいげつ}」",
+      "subhead": "{満月|まんげつ}は2{日後|にちご}の27{日|にち}",
+      "body": [
+        "きょう9{月|がつ}25{日|にち}は、「{中秋|ちゅうしゅう}の{名月|めいげつ}」、または「{十五夜|じゅうごや}」とよばれる{日|ひ}です。むかしのこよみ（{旧暦|きゅうれき}）で8{月|がつ}15{日|にち}にあたる{夜|よる}の{月|つき}のことで、{昔|むかし}から、すすきやだんごをかざってお{月見|つきみ}をする{習|なら}わしがあります。",
+        "ところが、ことしの{十五夜|じゅうごや}の{月|つき}は、まんまるではありません。{天文台|てんもんだい}によると、{月|つき}がいちばんまるくなる{満月|まんげつ}は、2{日後|にちご}の27{日|にち}です。{十五夜|じゅうごや}と{満月|まんげつ}がこれほどずれるのは、9{年|ねん}ぶりだそうです。",
+        "こよみの{日付|ひづけ}と、{月|つき}の{動|うご}きは、ぴったり{同|おな}じにはならないのですね。{今夜|こんや}と27{日|にち}、2{回|かい}{月|つき}を{見|み}くらべてみると、ちがいが{分|わ}かるかもしれません。"
       ],
-      byline: "（担任より）"
+      "memo": {
+        "label": "ことばメモ",
+        "body": [
+          "{旧暦|きゅうれき}　{月|つき}の{満|み}ち{欠|か}けをもとにした、むかしのこよみ。{明治|めいじ}のはじめまで{使|つか}われていました。"
+        ]
+      },
+      "source": "（{仙台市|せんだいし}{天文台|てんもんだい}の{発表|はっぴょう}より）"
     },
-    boxes: [
-      { title: "来週の予定", items: ["9/28（月）｜全校朝会", "9/30（水）｜リレー練習（校庭）", "10/2（金）｜運動会の係決め"] },
-      { title: "きょうのクイズ", body: "お月見でかざる「秋の七草」。すすき以外に、いくつ言えるかな？", answer: "はぎ・くず・なでしこ・おみなえし・ふじばかま・ききょう" }
+    "column": {
+      "headline": "「{見上|みあ}げる」{時間|じかん}",
+      "body": [
+        "みなさんは、さいごに{空|そら}をじっくり{見上|みあ}げたのはいつですか。{毎日|まいにち}いそがしくしていると、{空|そら}を{見|み}る{時間|じかん}は、{意外|いがい}と{少|すく}ないものです。",
+        "{月|つき}は、{見|み}るたびに{形|かたち}がかわります。きのうとちがう{今日|きょう}を、いちばん{分|わ}かりやすく{教|おし}えてくれるのが、{月|つき}なのかもしれません。{今夜|こんや}、{家|いえ}の{人|ひと}といっしょに、{少|すこ}しだけ{空|そら}を{見上|みあ}げてみてください。どんな{形|かたち}に{見|み}えたか、あした{教|おし}えてくださいね。"
+      ],
+      "byline": "（{担任|たんにん}より）"
+    },
+    "boxes": [
+      {
+        "title": "{来週|らいしゅう}の{予定|よてい}",
+        "items": [
+          "9/28（{月|げつ}）｜{全校|ぜんこう}{朝会|ちょうかい}",
+          "9/30（{水|すい}）｜リレー{練習|れんしゅう}（{校庭|こうてい}）",
+          "10/2（{金|きん}）｜{運動会|うんどうかい}の{係|かかり}{決|き}め"
+        ]
+      },
+      {
+        "title": "きょうのクイズ",
+        "body": "お{月見|つきみ}でかざる「{秋|あき}の{七草|ななくさ}」。すすき{以外|いがい}に、いくつ{言|い}えるかな？",
+        "answer": "はぎ・くず・なでしこ・おみなえし・ふじばかま・ききょう"
+      }
     ]
   };
   const $ = id => document.getElementById(id);
@@ -346,7 +377,7 @@ details .grid{ display:grid; gap:10px; }
   let article = SAMPLE;          // いま紙面に出している記事（AI が返したもの）
   let isSample = true;
   let photo = null;              // 写真（data URL）。保存はしない
-  let ruby = true;
+  let rubyFrom = 3;             // この学年以上で習う漢字にふりがなをつける（0 はつけない）
 
   // ---------------------------------------------------------------------------
   // 設定とメモの下書きは、このブラウザにだけ覚えておく
@@ -358,7 +389,7 @@ details .grid{ display:grid; gap:10px; }
       const saved = JSON.parse(localStorage.getItem('shinbun-app') || '{}');
       for (const id of [...SETTING_IDS, ...DRAFT_IDS]) if (saved[id] != null) $(id).value = saved[id];
       if (saved.article){ article = saved.article; isSample = false; }
-      if (saved.ruby === false) ruby = false;
+      if (saved.rubyFrom != null) rubyFrom = Number(saved.rubyFrom);
     } catch(e){}
     if (!$('s-date').value) $('s-date').value = todayJa();
   }
@@ -367,7 +398,7 @@ details .grid{ display:grid; gap:10px; }
       const o = {};
       for (const id of [...SETTING_IDS, ...DRAFT_IDS]) o[id] = $(id).value;
       if (!isSample) o.article = article;
-      o.ruby = ruby;
+      o.rubyFrom = rubyFrom;
       localStorage.setItem('shinbun-app', JSON.stringify(o));
     } catch(e){}
   }
@@ -390,8 +421,27 @@ details .grid{ display:grid; gap:10px; }
   // 紙面を組む
   // ---------------------------------------------------------------------------
   function esc(s){ return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+  // 1・2年生で習う漢字（学年別漢字配当表）。AI には漢字の言葉すべてに読みを書いてもらい、
+  // ここで「まだ習っていない漢字」をふくむ言葉にだけふりがなを残す
+  const KANJI_BY_GRADE = ['',
+    '一右雨円王音下火花貝学気九休玉金空月犬見五口校左三山子四糸字耳七車手十出女小上森人水正生青夕石赤千川先早草足村大男竹中虫町天田土二日入年白八百文木本名目立力林六',
+    '引羽雲園遠何科夏家歌画回会海絵外角楽活間丸岩顔汽記帰弓牛魚京強教近兄形計元言原戸古午後語工公広交光考行高黄合谷国黒今才細作算止市矢姉思紙寺自時室社弱首秋週春書少場色食心新親図数西声星晴切雪船線前組走多太体台地池知茶昼長鳥朝直通弟店点電刀冬当東答頭同道読内南肉馬売買麦半番父風分聞米歩母方北毎妹万明鳴毛門夜野友用曜来里理話'];
+  const isKanji = ch => /[\u4e00-\u9fff]/.test(ch);
+  function knownKanji(from){ let k = ''; for (let g = 1; g < from && g < KANJI_BY_GRADE.length; g++) k += KANJI_BY_GRADE[g]; return k; }
+  function needsRuby(base){
+    if (!rubyFrom) return false;
+    const known = knownKanji(rubyFrom);
+    return [...base].some(ch => isKanji(ch) && !known.includes(ch));
+  }
   function fmt(s){
-    return esc(s).replace(/\{([^|{}]+)\|([^{}]+)\}/g, '<ruby>$1<rt>$2</rt></ruby>').replace(/\*\*(.+?)\*\*/g, '<em class="bouten">$1</em>');
+    return esc(s)
+      .replace(/\{([^|{}]+)\|([^{}]+)\}/g, (m, base, yomi) => needsRuby(base) ? `<ruby>${base}<rt>${yomi}</rt></ruby>` : base)
+      .replace(/\*\*(.+?)\*\*/g, '<em class="bouten">$1</em>');
+  }
+  // 読みが書かれていない漢字のうち、ふりがなが必要なもの
+  function missingRuby(obj){
+    const text = JSON.stringify(obj).replace(/\{[^|{}]+\|[^{}]+\}/g, '');
+    return [...new Set([...text].filter(ch => isKanji(ch) && needsRuby(ch)))];
   }
   const E = ' contenteditable="true" spellcheck="false"';
   const paras = arr => (Array.isArray(arr) ? arr : [arr]).filter(Boolean).map(t => `<p${E}>${fmt(t)}</p>`).join('');
@@ -494,7 +544,6 @@ details .grid{ display:grid; gap:10px; }
     while (name.scrollWidth > room && size > 12){ size -= 1; name.style.fontSize = size + 'px'; }
   }
   function fitAll(){
-    document.body.classList.toggle('no-ruby', !ruby);
     // 縮小表示のままだと測りまちがえるので、いったん等倍にもどして測る
     const inner = $('stage-inner'), prev = inner.style.transform;
     inner.style.transform = 'none';
@@ -536,7 +585,7 @@ details .grid{ display:grid; gap:10px; }
   - コラム：担任の一人称で、最後は読み手へのよびかけや問いで終える。メモになければ、季節や他の記事につながるテーマで書く。
 - 子どもの名前はフルネームで書かない（メモにあっても「〇〇さん」までか「ある人」にする）。
 - 「です・ます」。一文は40字くらいまで。
-- ${st.grade}年生までに習わない漢字は、ひらがなにするか {漢字|かんじ} の形でふりがなをつける。${st.grade <= 2 ? 'ひらがなを多めにし、全体を2〜3割短くする。' : ''}
+- 漢字をふくむ言葉には、見出し・本文・囲み・ひとことまで、すべて {漢字|かんじ} の形で読みを書く（どの漢字にふりがなを出すかは紙面の側で学年に合わせて決めるので、かんたんな漢字にも書く）。送りがなは外に出す：{走|はし}る、{見上|みあ}げる。数字には書かない。\n- ${st.grade}年生にむずかしい言葉は、やさしい言葉に言いかえる。${st.grade <= 2 ? 'ひらがなを多めにし、全体を2〜3割短くする。' : ''}
 - 大事なところは **ことば** で傍点をつける（1記事に1〜2か所まで）。
 - 数字は半角。予定の items は「9/28（月）｜全校朝会」のように、日付と内容を全角の｜で区切る。
 
@@ -605,7 +654,8 @@ ${$('in-other').value.trim() || '（なし）'}`;
       if (!data || !data.school) throw { code: 'parse_error' };
       article = data; isSample = false;
       render(); persist();
-      showChecks(data.checks);
+      const missing = rubyFrom ? missingRuby({ note: data.note, school: data.school, world: data.world, column: data.column, boxes: data.boxes }) : [];
+      showChecks([...(data.checks || []), ...(missing.length ? [`ふりがながついていない漢字があります：${missing.join('、')}（紙面で直すか、「直したいこと」に「ふりがなをつけて」と書いてください）`] : [])]);
       $('revise-box').hidden = false;
       setStatus('できました。紙面を確かめて、よければ「印刷用ファイルを保存」を押してください。');
     } catch(e){
@@ -643,15 +693,8 @@ ${$('in-other').value.trim() || '（なし）'}`;
   });
   $('photo-clear').addEventListener('click', () => { photo = null; $('in-photo').value = ''; $('photo-clear').hidden = true; render(); });
 
-  // ふりがな
-  function setRuby(on){
-    ruby = on;
-    $('ruby-on').setAttribute('aria-pressed', on);
-    $('ruby-off').setAttribute('aria-pressed', !on);
-    fitAll(); persist();
-  }
-  $('ruby-on').addEventListener('click', () => setRuby(true));
-  $('ruby-off').addEventListener('click', () => setRuby(false));
+  // ふりがな（選びなおしたら組みなおす）
+  $('ruby-from').addEventListener('change', () => { rubyFrom = Number($('ruby-from').value); render(); persist(); });
 
   // ---------------------------------------------------------------------------
   // 印刷用ファイル：開くと自動で印刷画面が出る HTML
@@ -674,7 +717,7 @@ body{ background:#9a978f; -webkit-print-color-adjust:exact; print-color-adjust:e
 .page{ margin:16px auto; }
 @media print{ body{ background:none; } .page{ margin:0; box-shadow:none; } }
 </style></head>
-<body class="${ruby ? '' : 'no-ruby'}">
+<body>
 <main class="page">${clone.innerHTML}</main>
 <script>
   (document.fonts ? document.fonts.ready : Promise.resolve()).then(function(){ setTimeout(function(){ window.print(); }, 400); });
@@ -701,8 +744,7 @@ body{ background:#9a978f; -webkit-print-color-adjust:exact; print-color-adjust:e
 
   // ---------------------------------------------------------------------------
   load();
-  $('ruby-on').setAttribute('aria-pressed', ruby);
-  $('ruby-off').setAttribute('aria-pressed', !ruby);
+  $('ruby-from').value = String(rubyFrom);
   render();
   if (document.fonts) document.fonts.ready.then(render);
 })();
