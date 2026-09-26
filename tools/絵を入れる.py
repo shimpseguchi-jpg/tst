@@ -6,6 +6,7 @@
 
 やること
   ・グレースケールにする（鉛筆画なので色は要らない）
+  ・縦横比を四対五にする。**切り落とさない。**紙の色で足して合わせる
   ・長辺を九百ピクセルに縮める（大きいものだけ。小さいものは拡大しない）
   ・WebP 品質八十二で保存する
   ・人物詳細.py の art= が指す名前に付け替える
@@ -23,6 +24,7 @@ OUT = os.path.join(ROOT, "reader", "portraits")
 INBOX = os.path.join(OUT, "_取り込み")
 LONG_EDGE = 900
 QUALITY = 82
+RATIO = 4 / 5.0      # カードがこの比で出す。外れていたら、切らずに紙の色で足す
 EXT = (".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".tiff")
 
 try:
@@ -64,18 +66,43 @@ def match(stem, table):
     return best
 
 
+def paper_tone(im):
+    """縁の画素の中央値。紙の地の色を拾う。"""
+    w, h = im.size
+    edge = (im.crop((0, 0, w, 1)), im.crop((0, h - 1, w, h)),
+            im.crop((0, 0, 1, h)), im.crop((w - 1, 0, w, h)))
+    px = [b for e in edge for b in e.tobytes()]   # mode "L" は一画素一バイト
+    px.sort()
+    return px[len(px) // 2]
+
+
+def fit_ratio(im):
+    """四対五に合わせる。**切らない。** 足りないぶんを紙の色で足す。"""
+    w, h = im.size
+    if abs(w / float(h) - RATIO) < 0.01:
+        return im, False
+    if w / float(h) > RATIO:            # 横に広い → 上下に足す
+        W, H = w, int(round(w / RATIO))
+    else:                               # 縦に長い → 左右に足す
+        W, H = int(round(h * RATIO)), h
+    out = Image.new("L", (W, H), paper_tone(im))
+    out.paste(im, ((W - w) // 2, (H - h) // 2))
+    return out, True
+
+
 def convert(src, dst):
     im = Image.open(src)
     if im.mode in ("RGBA", "LA", "P"):          # 透過は白で潰す
         bg = Image.new("RGBA", im.size, (255, 255, 255, 255))
         im = Image.alpha_composite(bg, im.convert("RGBA"))
     im = im.convert("L")
+    im, padded = fit_ratio(im)
     w, h = im.size
     if max(w, h) > LONG_EDGE:
         r = LONG_EDGE / float(max(w, h))
         im = im.resize((max(1, round(w * r)), max(1, round(h * r))), Image.LANCZOS)
     im.convert("RGB").save(dst, "WEBP", quality=QUALITY, method=6)
-    return im.size
+    return im.size, padded
 
 
 def main():
@@ -101,12 +128,14 @@ def main():
         name, base = hit
         clash.setdefault(name, []).append(os.path.basename(f))
         dst = os.path.join(OUT, base)
-        size = convert(f, dst)
+        size, padded = convert(f, dst)
         kb = os.path.getsize(dst) / 1024.0
-        done.append((name, base, size, kb))
+        done.append((name, base, size, kb, padded))
 
-    for name, base, size, kb in done:
+    for name, base, size, kb, padded in done:
         mark = "" if kb <= 200 else "　← 重い。品質を下げるか、長辺を縮める"
+        if padded:
+            mark = "　（四対五に足した）" + mark
         print("  %-12s → %-26s %dx%d  %.0fKB%s" % (name, base, size[0], size[1], kb, mark))
     print("取り込んだ: %d枚" % len(done))
 
