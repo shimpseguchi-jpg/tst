@@ -1,0 +1,20 @@
+{
+  "name": "商店街連作",
+  "short_name": "商店街",
+  "description": "新潟の羽室銀座と、広島の柏尾銀天街。二つのアーケード街を舞台にした連作小説と、その資料。",
+  "lang": "ja",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "id": "shotengai-rensaku",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#e8e9e3",
+  "theme_color": "#e8e9e3",
+  "categories": ["books", "entertainment"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
