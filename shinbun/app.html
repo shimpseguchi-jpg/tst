@@ -203,6 +203,25 @@ summary{ cursor:pointer; font-weight:700; font-size:13px; }
 details[open] summary{ margin-bottom:10px; }
 details .grid{ display:grid; gap:10px; }
 
+.tabs{ display:flex; gap:4px; border-bottom:1px solid var(--ui-line); margin:-4px 0 2px; }
+.tabs button{
+  border:0; background:none; color:var(--ui-muted); padding:8px 12px; font-weight:700; border-bottom:3px solid transparent; border-radius:0;
+}
+.tabs button[aria-selected="true"]{ color:var(--ui-text); border-bottom-color:var(--ui-accent); }
+.tabs button:focus-visible{ outline:2px solid var(--ui-accent); outline-offset:-2px; }
+.tabs .count{ font-weight:400; font-size:12px; margin-left:4px; }
+.tabpanel{ display:grid; gap:14px; }
+.qgroup{ display:grid; gap:10px; border-top:1px solid var(--ui-line); padding-top:12px; }
+.qgroup h2{ margin:0; font-size:14px; }
+.qgroup .why{ margin:-6px 0 0; font-size:12px; color:var(--ui-muted); }
+.qnum{ display:inline-block; min-width:2.2em; color:var(--ui-accent); font-variant-numeric:tabular-nums; }
+.grade-range{ display:flex; align-items:center; gap:6px; }
+.grade-range select{ flex:1; }
+.clsbar{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.clsbar select{ flex:1; min-width:10em; width:auto; }
+.clsbar .btn{ padding:6px 10px; font-size:13px; }
+.clsbar .lbl{ font-size:13px; font-weight:700; }
+.sync{ margin:0; font-size:12px; color:var(--ui-muted); }
 .photo-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:13px; }
 .photo-row input[type=file]{ font-size:12px; max-width:100%; }
 
@@ -226,8 +245,24 @@ details .grid{ display:grid; gap:10px; }
 </style>
 
 <div class="app">
-  <form class="panel" id="form" autocomplete="off">
+  <div class="panel">
     <div class="brand"><h1>学級新聞メーカー</h1><span>メモを書くだけで学級新聞に</span></div>
+    <div class="clsbar">
+      <label class="lbl" for="cls">つくる新聞</label>
+      <select id="cls"></select>
+      <button type="button" class="btn" id="cls-add">＋ 新聞をふやす</button>
+      <button type="button" class="btn" id="cls-del">この新聞を消す</button>
+    </div>
+    <div class="clsbar" id="cls-confirm" hidden>
+      <span id="cls-confirm-text"></span>
+      <button type="button" class="btn" id="cls-del-yes">消す</button>
+      <button type="button" class="btn" id="cls-del-no">やめる</button>
+    </div>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="tab-make" aria-selected="true" aria-controls="panel-make">新聞をつくる</button>
+      <button type="button" role="tab" id="tab-class" aria-selected="false" aria-controls="panel-class">クラスのこと<span class="count" id="profile-count"></span></button>
+    </div>
+  <form class="tabpanel" id="form" role="tabpanel" aria-labelledby="tab-make" autocomplete="off">
     <p class="lede">思いついたことを、話すように書いてください。箇条書きでもかまいません。AIが子ども向けの記事にして、右の紙面に組みます。</p>
 
     <div class="field">
@@ -274,8 +309,8 @@ details .grid{ display:grid; gap:10px; }
         </div>
         <div class="row2">
           <div class="field"><label for="s-class">クラス</label><input type="text" id="s-class" value="4年1組"></div>
-          <div class="field"><label for="s-grade">学年（漢字とふりがなの目安）</label>
-            <select id="s-grade"><option value="1">1年生</option><option value="2">2年生</option><option value="3">3年生</option><option value="4" selected>4年生</option><option value="5">5年生</option><option value="6">6年生</option></select>
+          <div class="field"><label for="s-grade">読む子の学年 <small>異学年なら範囲で</small></label>
+            <div class="grade-range"><select id="s-grade" aria-label="いちばん下の学年"><option value="1" selected>1年生</option><option value="2">2年生</option><option value="3">3年生</option><option value="4">4年生</option><option value="5">5年生</option><option value="6">6年生</option></select><span>〜</span><select id="s-grade-max" aria-label="いちばん上の学年"><option value="1" selected>1年生</option><option value="2">2年生</option><option value="3">3年生</option><option value="4">4年生</option><option value="5">5年生</option><option value="6">6年生</option></select></div>
           </div>
         </div>
         <div class="row2">
@@ -288,7 +323,15 @@ details .grid{ display:grid; gap:10px; }
         </div>
       </div>
     </details>
+    <p class="sync" id="sync"></p>
   </form>
+
+  <section class="tabpanel" id="panel-class" role="tabpanel" aria-labelledby="tab-class" hidden>
+    <p class="lede">クラスや学校のことを教えてください。AIが記事を書くときに毎回参考にします（書いていない出来事を作ることはしません）。<br>わからない・書きたくない質問は空らんのままでかまいません。答えは自動で保存されます。</p>
+    <div id="profile-fields"></div>
+    <p class="sync" id="sync2"></p>
+  </section>
+  </div>
 
   <section class="preview" aria-label="紙面">
     <div class="pbar">
@@ -380,28 +423,230 @@ details .grid{ display:grid; gap:10px; }
   let rubyFrom = 3;             // この学年以上で習う漢字にふりがなをつける（0 はつけない）
 
   // ---------------------------------------------------------------------------
-  // 設定とメモの下書きは、このブラウザにだけ覚えておく
+  // クラスのこと（基礎知識）の質問
   // ---------------------------------------------------------------------------
-  const SETTING_IDS = ['s-title','s-title-en','s-class','s-grade','s-issue','s-publisher','s-colname'];
+  const QUESTIONS = [
+    { group: 'クラスの基本', why: '記事の書き出しやコラムのしめくくりに使います。', items: [
+      { id: 'p-size', q: '人数（だいたいでOK）', ph: '例）28人' },
+      { id: 'p-goal', q: '学級目標', ph: '例）「ありがとう」が言えるクラス' },
+      { id: 'p-motto', q: 'クラスの合言葉・スローガン・クラスの名前', ph: '例）「チーム4の1」、合言葉は「やってみよう」' },
+      { id: 'p-teacher', q: '子どもたちからの先生の呼ばれ方', ph: '例）〇〇先生、〇〇ちゃん先生' },
+      { id: 'p-first', q: 'コラムでの先生の一人称', ph: '例）先生は／わたしは' },
+      { id: 'p-roles', q: 'クラスの係・当番の名前', ph: '例）生き物係、図書係、お楽しみ係、日直', area: true },
+      { id: 'p-routines', q: 'クラス独自の活動や時間の名前', ph: '例）朝の会の「1分スピーチ」、金曜日の「なかよしタイム」', area: true },
+      { id: 'p-living', q: 'クラスで育てている生き物・植物', ph: '例）メダカ（名前は「メダ吉」）、ホウセンカ' },
+      { id: 'p-boom', q: '最近クラスではやっていること・がんばっていること', ph: '例）休み時間のドッジボール、なわとびの二重とび', area: true },
+    ]},
+    { group: '学校と地域', shared: true, why: '「うちの学校のことだ」と感じられる一言を入れるために使います。どの新聞にも共通なので、1回答えればOKです。', items: [
+      { id: 'p-schoolname', q: '学校名（新聞にのせてよい場合だけ）', ph: '例）〇〇市立〇〇小学校　※のせないなら空らん' },
+      { id: 'p-school', q: '学校の特色（シンボル・伝統・有名な場所）', ph: '例）校庭の大きなイチョウ、毎年のもちつき大会、屋上の菜園', area: true },
+      { id: 'p-schoolliving', q: '学校で飼っている生き物', ph: '例）ウサギのモカ、池のコイ' },
+      { id: 'p-area', q: '校区・地域の特色（自然・名物・施設・行事）', ph: '例）近くに〇〇川、名物は梨、秋に地域の祭り', area: true },
+    ]},
+    { group: '行事と予定', why: '「運動会まであと〇日」や予定の囲みを正しく書くために使います。', items: [
+      { id: 'p-events', q: '今学期の主な行事と日付（1行に1つ）', ph: '例）\n10/9 運動会\n10/24 遠足（〇〇公園）\n11/15 学習発表会', area: true, rows: 5 },
+      { id: 'p-weekly', q: '毎週・毎月決まっていること', ph: '例）月曜は全校朝会、水曜は5時間授業、毎月1回の読み聞かせ', area: true },
+    ]},
+    { group: 'いま学習していること', why: '世の中のニュースやクイズを授業とつなげるために使います。学期が変わったら書きかえてください。', items: [
+      { id: 'p-ja', q: '国語', ph: '例）「ごんぎつね」、漢字辞典の使い方' },
+      { id: 'p-math', q: '算数', ph: '例）わり算の筆算、角の大きさ' },
+      { id: 'p-sci', q: '理科', ph: '例）月と星、とじこめた空気と水' },
+      { id: 'p-soc', q: '社会', ph: '例）ごみのゆくえ、水はどこから' },
+      { id: 'p-etc', q: 'そのほか（総合・道徳・外国語・音楽・図工・体育など）', ph: '例）総合で地域の川の調べ学習、音楽で「〇〇」のリコーダー', area: true },
+    ]},
+    { group: '書き方の好み', why: 'AIの文章のトーンを先生に合わせるために使います。', items: [
+      { id: 'p-readers', q: '新聞を読む人', select: ['', '子どもだけ', '子どもと保護者（家庭への呼びかけも入れる）'] },
+      { id: 'p-tone', q: '記事やコラムの口調', select: ['', 'やわらかく、親しみやすく', 'ふつう', 'きりっと、ていねいに'] },
+      { id: 'p-value', q: '学級新聞で大切にしたいこと', ph: '例）一人ひとりのがんばりを見つけて伝える、失敗も前向きに書く', area: true },
+      { id: 'p-avoid', q: '使わないでほしい言葉・ふれないでほしい話題', ph: '例）「えらい」「ダメ」は使わない、順位の話は書かない', area: true },
+      { id: 'p-other', q: 'そのほか、AIに知っておいてほしいこと', ph: '例）1〜5年生の縦割りのホーム。上の学年がリーダー役をしている', area: true },
+    ]},
+  ];
+  const PROFILE_IDS = QUESTIONS.flatMap(g => g.items.map(it => it.id));
+  function buildQuestions(){
+    let n = 0;
+    $('profile-fields').innerHTML = QUESTIONS.map(g => `
+      <div class="qgroup"><h2>${esc(g.group)}</h2><p class="why">${esc(g.why)}</p>
+      ${g.items.map(it => {
+        n++;
+        const label = `<label for="${it.id}"><span><span class="qnum">Q${n}</span>${esc(it.q)}</span></label>`;
+        if (it.select) return `<div class="field">${label}<select id="${it.id}">${it.select.map(o => `<option value="${esc(o)}">${o ? esc(o) : '（えらばない）'}</option>`).join('')}</select></div>`;
+        if (it.area) return `<div class="field">${label}<textarea id="${it.id}" rows="${it.rows || 2}" placeholder="${esc(it.ph)}"></textarea></div>`;
+        return `<div class="field">${label}<input type="text" id="${it.id}" placeholder="${esc(it.ph)}"></div>`;
+      }).join('')}</div>`).join('');
+  }
+  function profileCount(){
+    const done = PROFILE_IDS.filter(id => $(id).value.trim()).length;
+    $('profile-count').textContent = `${done}/${PROFILE_IDS.length}`;
+  }
+  // AI にわたす「クラスの基礎知識」（答えのある質問だけ）
+  function profileBlock(){
+    const lines = [];
+    for (const g of QUESTIONS){
+      const answered = g.items.filter(it => $(it.id).value.trim());
+      if (!answered.length) continue;
+      lines.push(`## ${g.group}`);
+      for (const it of answered) lines.push(`- ${it.q}：${$(it.id).value.trim().replace(/\n+/g, ' ／ ')}`);
+    }
+    return lines.join('\n');
+  }
+
+  // タブ
+  function showTab(which){
+    const make = which === 'make';
+    $('tab-make').setAttribute('aria-selected', make);
+    $('tab-class').setAttribute('aria-selected', !make);
+    $('form').hidden = !make;
+    $('panel-class').hidden = make;
+  }
+  $('tab-make').addEventListener('click', () => showTab('make'));
+  $('tab-class').addEventListener('click', () => showTab('class'));
+
+  // ---------------------------------------------------------------------------
+  // 保存：Claude のアカウントに保存して、どのブラウザで開いても同じ内容にする
+  //（アカウントに保存できないときは、このブラウザにだけ保存）
+  // ---------------------------------------------------------------------------
+  const SETTING_IDS = ['s-title','s-title-en','s-class','s-grade','s-grade-max','s-issue','s-publisher','s-colname'];   // 発行日は保存せず、開いた日にする
   const DRAFT_IDS = ['in-school','in-world','in-other'];
+  const SHARED_IDS = QUESTIONS.filter(g => g.shared).flatMap(g => g.items.map(it => it.id));
+  const CLASS_IDS = () => [...SETTING_IDS, ...DRAFT_IDS, ...PROFILE_IDS.filter(id => !SHARED_IDS.includes(id))];
+  const LOCAL_KEY = 'shinbun-app';
+
+  // 新聞（クラス）ごとの内容。はじめて開いたときは、1年生のクラスとホームの2つを用意しておく
+  const newClass = (name, f) => ({ id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, rubyFrom: 1, fields: f });
+  let state = {
+    current: null,
+    shared: {},
+    classes: [
+      newClass('1年生のクラス', { 's-title': '1ねんせい しんぶん', 's-title-en': '', 's-class': '1年生', 's-grade': '1', 's-grade-max': '1', 's-issue': '1', 's-publisher': '担任', 's-colname': '先生のまど', 'p-size': '28人' }),
+      newClass('ホーム（1〜5年生）', { 's-title': 'ホーム新聞', 's-title-en': '', 's-class': 'ホーム', 's-grade': '1', 's-grade-max': '5', 's-issue': '1', 's-publisher': '担任', 's-colname': '先生のまど', 'p-size': '30人（1〜5年生）' }),
+    ],
+    updatedAt: 0,
+  };
+  state.current = state.classes[0].id;
+  const cur = () => state.classes.find(c => c.id === state.current) || state.classes[0];
+
+  let cloudDoc = null;           // db のドキュメント（自分だけが読み書きできる場所）
+  let dirty = false, writing = null, writeTimer = null;
+
+  // 画面 → state（いま開いている新聞）
+  function collect(){
+    const c = cur();
+    c.fields = {};
+    for (const id of CLASS_IDS()) c.fields[id] = $(id).value;
+    for (const id of SHARED_IDS) state.shared[id] = $(id).value;
+    c.rubyFrom = rubyFrom;
+    c.article = isSample ? null : article;
+    return state;
+  }
+  // state → 画面
+  function show(){
+    const c = cur();
+    for (const id of CLASS_IDS()) $(id).value = c.fields?.[id] ?? (id === 's-grade' || id === 's-grade-max' ? '1' : '');
+    for (const id of SHARED_IDS) $(id).value = state.shared?.[id] ?? '';
+    $('s-date').value = todayJa();
+    if (!$('s-issue').value) $('s-issue').value = '1';
+    rubyFrom = c.rubyFrom ?? 3;
+    $('ruby-from').value = String(rubyFrom);
+    if (c.article){ article = c.article; isSample = false; } else { article = SAMPLE; isSample = true; }
+    showChecks([]); $('revise-box').hidden = isSample;
+    $('cls').innerHTML = state.classes.map(k => `<option value="${k.id}"${k.id === c.id ? ' selected' : ''}>${esc(k.name)}</option>`).join('');
+    $('cls-del').disabled = state.classes.length < 2;
+    profileCount();
+    render();
+  }
+  function adopt(o){
+    if (!o) return false;
+    if (o.classes && o.classes.length){ state = { shared: {}, ...o }; if (!cur()) state.current = state.classes[0].id; return true; }
+    // 前の版（1つの新聞だけの形）から引っこし
+    const f = o.fields || o, c = state.classes[0];
+    c.fields = { ...c.fields }; for (const k in f) if (typeof f[k] === 'string') c.fields[k] = f[k];
+    if (o.article) c.article = o.article;
+    if (o.rubyFrom != null) c.rubyFrom = Number(o.rubyFrom);
+    return true;
+  }
+  function setSync(t){ $('sync').textContent = t; $('sync2').textContent = t; }
+
   function load(){
-    try {
-      const saved = JSON.parse(localStorage.getItem('shinbun-app') || '{}');
-      for (const id of [...SETTING_IDS, ...DRAFT_IDS]) if (saved[id] != null) $(id).value = saved[id];
-      if (saved.article){ article = saved.article; isSample = false; }
-      if (saved.rubyFrom != null) rubyFrom = Number(saved.rubyFrom);
-    } catch(e){}
-    if (!$('s-date').value) $('s-date').value = todayJa();
+    try { adopt(JSON.parse(localStorage.getItem(LOCAL_KEY) || 'null')); } catch(e){}
   }
   function persist(){
-    try {
-      const o = {};
-      for (const id of [...SETTING_IDS, ...DRAFT_IDS]) o[id] = $(id).value;
-      if (!isSample) o.article = article;
-      o.rubyFrom = rubyFrom;
-      localStorage.setItem('shinbun-app', JSON.stringify(o));
-    } catch(e){}
+    collect();
+    state.updatedAt = Date.now();
+    try { localStorage.setItem(LOCAL_KEY, JSON.stringify(state)); } catch(e){}
+    if (!cloudDoc) return;
+    dirty = true;
+    setSync('保存中…');
+    clearTimeout(writeTimer);
+    writeTimer = setTimeout(flush, 1200);    // 打ち終わってから1回だけ書く
   }
+  async function flush(){
+    if (!cloudDoc || !dirty) return;
+    if (writing){ await writing; return flush(); }
+    dirty = false;
+    writing = cloudDoc.set(JSON.parse(JSON.stringify(state)))
+      .then(() => setSync('アカウントに保存しました（どのブラウザで開いても同じ内容になります）'))
+      .catch(() => { dirty = true; setSync('アカウントに保存できませんでした。このブラウザには保存されています。'); })
+      .finally(() => { writing = null; });
+    await writing;
+  }
+  async function connectCloud(){
+    let db = null, user = null;
+    try { [db, user] = await Promise.all([window.claude?.use ? window.claude.use('db') : null, window.claude?.use ? window.claude.use('user') : null]); } catch(e){}
+    const uid = user ? await user.id().catch(() => null) : null;
+    if (!db || !uid){ setSync('このブラウザにだけ保存しています。'); return; }
+    cloudDoc = db.doc('data/users/' + uid + '/app');
+    try {
+      const snap = await cloudDoc.get();
+      const remote = snap.exists ? snap.data() : null;
+      if (remote && (remote.updatedAt || 0) >= (state.updatedAt || 0)){
+        adopt(JSON.parse(JSON.stringify(remote))); show();
+        try { localStorage.setItem(LOCAL_KEY, JSON.stringify(state)); } catch(e){}
+        setSync('アカウントに保存された内容を読みこみました（どのブラウザで開いても同じ内容になります）');
+      } else {
+        collect(); dirty = true; await flush();   // はじめて、またはこのブラウザの方が新しい
+      }
+    } catch(e){
+      cloudDoc = null;
+      setSync('アカウントに保存できないため、このブラウザにだけ保存しています。');
+    }
+  }
+  // 別のブラウザで書きかえてから戻ってきたら、新しいほうを読みこむ
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState !== 'visible' || !cloudDoc || dirty || writing) return;
+    try {
+      const snap = await cloudDoc.get();
+      const remote = snap.exists ? snap.data() : null;
+      if (remote && (remote.updatedAt || 0) > (state.updatedAt || 0)){ adopt(JSON.parse(JSON.stringify(remote))); show(); setSync('別のブラウザで書きかえた内容を読みこみました'); }
+    } catch(e){}
+  });
+  window.addEventListener('pagehide', () => { if (dirty) flush(); });
+
+  // 新聞の切りかえ・追加・削除
+  $('cls').addEventListener('change', () => { collect(); state.current = $('cls').value; show(); persist(); });
+  $('cls-add').addEventListener('click', () => {
+    collect();
+    const c = newClass('新しい新聞' + (state.classes.length + 1), { 's-title': '学級新聞', 's-grade': cur().fields['s-grade'] || '1', 's-grade-max': cur().fields['s-grade-max'] || '1', 's-issue': '1', 's-publisher': '担任', 's-colname': '先生のまど' });
+    state.classes.push(c); state.current = c.id;
+    show(); persist();
+    showTab('make'); $('settings').open = true; $('s-title').focus();
+  });
+  $('cls-del').addEventListener('click', () => {
+    $('cls-confirm-text').textContent = `「${cur().name}」の設定・メモ・クラスのことを消しますか？`;
+    $('cls-confirm').hidden = false;
+  });
+  $('cls-del-no').addEventListener('click', () => { $('cls-confirm').hidden = true; });
+  $('cls-del-yes').addEventListener('click', () => {
+    $('cls-confirm').hidden = true;
+    if (state.classes.length < 2) return;
+    state.classes = state.classes.filter(c => c.id !== state.current);
+    state.current = state.classes[0].id;
+    show(); persist();
+  });
+  // 新聞の名前を変えたら、切りかえの一覧の名前もそろえる
+  $('s-class').addEventListener('change', () => { const v = $('s-class').value.trim(); if (v){ cur().name = v; $('cls').selectedOptions[0].textContent = v; } });
+  $('s-date').addEventListener('change', render);
+
   function todayJa(){
     const d = new Date();
     return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日（${'日月火水木金土'[d.getDay()]}）`;
@@ -410,7 +655,8 @@ details .grid{ display:grid; gap:10px; }
     title: $('s-title').value.trim() || '学級新聞',
     title_en: $('s-title-en').value.trim(),
     klass: $('s-class').value.trim(),
-    grade: Number($('s-grade').value) || 4,
+    grade: Number($('s-grade').value) || 1,
+    gradeMax: Math.max(Number($('s-grade').value) || 1, Number($('s-grade-max').value) || 1),
     issue: Number($('s-issue').value) || 1,
     date: $('s-date').value.trim() || todayJa(),
     publisher: $('s-publisher').value.trim(),
@@ -572,7 +818,8 @@ details .grid{ display:grid; gap:10px; }
   // ---------------------------------------------------------------------------
   // AI にたのむ
   // ---------------------------------------------------------------------------
-  const RULES = (st) => `あなたは小学校の担任の先生の代わりに、${st.grade}年生の児童が読む学級新聞の記事を書く編集者です。
+  const gradeText = st => st.gradeMax > st.grade ? `${st.grade}〜${st.gradeMax}年生` : `${st.grade}年生`;
+  const RULES = (st) => `あなたは小学校の担任の先生の代わりに、${gradeText(st)}の児童が読む学級新聞の記事を書く編集者です。${st.gradeMax > st.grade ? `\n${st.grade}〜${st.gradeMax}年生がいっしょに読む異学年の新聞なので、いちばん下の${st.grade}年生にも分かる言葉で書き、上の学年も楽しめる中身にする（上の学年への呼びかけや、ちょっと考えるクイズなど）。` : ''}
 先生が送ってきたメモ（散文・箇条書き・話し言葉）をもとに、紙面用の記事を JSON で書いてください。
 
 # 書き方のきまり
@@ -583,9 +830,10 @@ details .grid{ display:grid; gap:10px; }
   - 世の中のメモが空なら、発行日の季節の行事や自然の話題（暦・天体・生き物など、日付に左右されない一般的な知識）で書き、最近の出来事は書かない。checks に「話題はAIが選びました」と書く。
   - 事件・事故・災害・戦争など、子どもがこわがる話題はメモで明示されたときだけ、落ち着いて書く。
   - コラム：担任の一人称で、最後は読み手へのよびかけや問いで終える。メモになければ、季節や他の記事につながるテーマで書く。
+- 「クラスの基礎知識」があれば参考にする。学級目標・係や活動の名前・行事の日付・学習中の単元は、そこに書かれたとおりに使ってよく、記事やクイズを授業や学級目標とつなげられるときは一言つなげる。ただし、基礎知識から今回の出来事を作らない（今回の出来事はメモに書かれたことだけ）。口調・読む人・使わない言葉の希望があれば必ず守る。
 - 子どもの名前はフルネームで書かない（メモにあっても「〇〇さん」までか「ある人」にする）。
 - 「です・ます」。一文は40字くらいまで。
-- ふりがな・読みは書かない（あとで別につける）。{ } の記号は使わない。\n- ${st.grade}年生にむずかしい言葉は、やさしい言葉に言いかえる。${st.grade <= 2 ? 'ひらがなを多めにし、全体を2〜3割短くする。' : ''}
+- ふりがな・読みは書かない（あとで別につける）。{ } の記号は使わない。\n- ${st.grade}年生にむずかしい言葉は、やさしい言葉に言いかえる。${st.grade <= 2 ? 'ひらがなを多めにし、一文をとくに短く（30字くらいまで）、全体を2〜3割短くする。' : ''}
 - 大事なところは **ことば** で傍点をつける（1記事に1〜2か所まで）。
 - 数字は半角。予定の items は「9/28（月）｜全校朝会」のように、日付と内容を全角の｜で区切る。
 
@@ -608,9 +856,9 @@ details .grid{ display:grid; gap:10px; }
   "checks": ["先生に確かめてほしいこと（事実があやしい所、AIが選んだ話題、メモが足りなかった所など）。なければ空配列"]
 }`;
 
-  const inputBlock = st => `# 新聞の情報
+  const inputBlock = st => `${profileBlock() ? '# クラスの基礎知識（先生が前もって書いたもの）\n' + profileBlock() + '\n\n' : ''}# 新聞の情報
 - 新聞の名前：${st.title}
-- クラス：${st.klass}（${st.grade}年生）
+- クラス：${st.klass}（${gradeText(st)}）
 - 発行日：${st.date}
 - コラムの名前：${st.colname}
 
@@ -745,8 +993,9 @@ ${list}`, { signal, modelTier: 'default', cache: false });
 
   // 設定を変えたらすぐ紙面に反映（下書きは覚えておくだけ）
   for (const id of SETTING_IDS) $(id).addEventListener('change', () => { render(); persist(); });
-  $('s-date').addEventListener('change', render);
   for (const id of DRAFT_IDS) $(id).addEventListener('input', persist);
+  $('profile-fields').addEventListener('input', () => { profileCount(); persist(); });
+  $('profile-fields').addEventListener('change', () => { profileCount(); persist(); });
 
   // 写真
   $('in-photo').addEventListener('change', () => {
@@ -808,9 +1057,10 @@ body{ background:#9a978f; -webkit-print-color-adjust:exact; print-color-adjust:e
   });
 
   // ---------------------------------------------------------------------------
+  buildQuestions();
   load();
-  $('ruby-from').value = String(rubyFrom);
-  render();
+  show();
   if (document.fonts) document.fonts.ready.then(render);
+  connectCloud();
 })();
 </script>
