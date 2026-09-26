@@ -323,14 +323,23 @@ import importlib.util as _iu
 _spec = _iu.spec_from_file_location("人物詳細", os.path.join(os.path.dirname(os.path.abspath(__file__)), "人物詳細.py"))
 _m = _iu.module_from_spec(_spec); _spec.loader.exec_module(_m)
 _missing = []
+_ART = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "reader")
+_noart = []
 for _p in people:
     _d = _m.D.get(_p["name"])
     if _d:
         _p.update({k: v for k, v in _d.items() if v and v != "—"})
+        # 一枚絵は、実物が置いてあるときだけ出す。
+        # 無いまま出すと、人物タブを開くたびに読み込み失敗が人数ぶん出る。
+        if _p.get("art") and not os.path.exists(os.path.join(_ART, _p["art"])):
+            _noart.append(_p["name"])
+            del _p["art"]
     else:
         _missing.append(_p["name"])
 if _missing:
     print("詳細なし:", "、".join(_missing))
+if _noart:
+    print("絵がまだ無い（art を出さない）: %d人" % len(_noart))
 
 json.dump({"works":works_period,"people":people,"shops":shops,"years":years,"facts":facts},
   open("reader/data/guide.json","w",encoding="utf-8"),
@@ -397,16 +406,33 @@ def md_to_html(md):
         out.append("<p>" + "<br>".join(_inline(x) for x in para) + "</p>")
     return "".join(out)
 
-src = open("資料/森岡レポート_商店街の存続について.md", encoding="utf-8").read()
-# 一行目の見出しと、宛先・日付・差出の前書きは meta として別に持つので本文から外す
-body = src.split("\n", 1)[1]
-body = body.split("---", 1)[1]
-json.dump({
-    "title": "商店街の存続に関する調査報告",
-    "to": "柏尾銀天街振興組合　理事会　御中",
-    "date": "二〇三二年四月十二日",
-    "from": "事務局　森岡　佑",
-    "note": "作中の事務局文書の形式で、実在の統計・事例・制度をまとめたもの。数字と出典は現実のものである。",
-    "html": md_to_html(body),
-}, open("reader/data/report.json", "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
-print("report.json", len(md_to_html(body)), "bytes")
+def _doc(path, meta):
+    src = open(path, encoding="utf-8").read()
+    body = src.split("\n", 1)[1]
+    if "---" in body:
+        body = body.split("---", 1)[1]
+    d = dict(meta)
+    d["html"] = md_to_html(body)
+    return d
+
+docs = [
+    _doc("資料/森岡レポート_商店街の存続について.md", {
+        "title": "商店街の存続に関する調査報告",
+        "tab": "森岡レポート",
+        "to": "柏尾銀天街振興組合　理事会　御中",
+        "date": "二〇三二年四月十二日",
+        "from": "事務局　森岡　佑",
+        "note": "作中の事務局文書の形式で、実在の統計・事例・制度をまとめたもの。数字と出典は現実のものである。",
+    }),
+    _doc("資料/互いへの印象_半人前が六つ.md", {
+        "title": "六人の、互いへの印象",
+        "tab": "互いへの印象",
+        "to": "幕間04『半人前が六つ』",
+        "date": "二〇三三年七月",
+        "from": "第一印象と、いまの印象",
+        "note": "作中の人物が書いた文書ではない。六人がたがいをどう見ているかを、書く側で並べたもの。この夜が初対面の組がいくつかある。",
+    }),
+]
+json.dump(docs, open("reader/data/report.json", "w", encoding="utf-8"),
+          ensure_ascii=False, separators=(",", ":"))
+print("report.json", len(docs), "本", os.path.getsize("reader/data/report.json"), "bytes")

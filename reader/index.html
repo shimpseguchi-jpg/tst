@@ -696,7 +696,7 @@ body.zen .zenout{display:block}
   });
 
   /* ---------- guide ---------- */
-  var guide=null, report=null, paper=null, paperIdx=0, gtab="people";
+  var guide=null, report=null, reportIdx=0, paper=null, paperIdx=0, gtab="people";
   function chips(w){
     var out='<span class="chips">';
     (w.lead||[]).forEach(function(n){ out+='<span class="chip lead">'+n+'</span>'; });
@@ -791,8 +791,18 @@ body.zen .zenout{display:block}
         }).catch(function(){ $("gsec").innerHTML='<p class="ds">報告書を読み込めませんでした。</p>'; });
         return;
       }
-      var d=report;
-      box.innerHTML=
+      var docs=Array.isArray(report)?report:[report];
+      var d=docs[Math.min(reportIdx||0, docs.length-1)];
+      var tabs='';
+      if(docs.length>1){
+        tabs='<div class="paperbar">';
+        docs.forEach(function(q,i){
+          tabs+='<button class="btn" data-doc="'+i+'"'+(i===(reportIdx||0)?' aria-pressed="true"':'')+'>'+
+                esc(q.tab||q.title)+'</button>';
+        });
+        tabs+='</div>';
+      }
+      box.innerHTML= tabs+
         '<div class="doc"><div class="doc-head">'+
         '<p class="t">'+esc(d.title)+'</p>'+
         '<dl><dt>宛先</dt><dd>'+esc(d.to)+'</dd>'+
@@ -800,6 +810,11 @@ body.zen .zenout{display:block}
         '<dt>作成</dt><dd>'+esc(d.from)+'</dd></dl>'+
         '<p class="doc-note">'+esc(d.note)+'</p></div>'+
         d.html+'</div>';
+      Array.prototype.forEach.call(box.querySelectorAll("[data-doc]"),function(bt){
+        bt.addEventListener("click",function(){
+          reportIdx=+bt.getAttribute("data-doc"); renderGuide(); $("guide").scrollTop=0;
+        });
+      });
       return;
     }
     else {
