@@ -1,7 +1,8 @@
 # 学級新聞メーカー
 
 思いついたことを散文で送るだけで、AI（Claude）が文章に肉付けして、
-児童向けの学級新聞（A4・たて書き）の PDF にします。
+児童向けの学級新聞（A4）の PDF にします。
+紙面は英字新聞ふうの横書き（飾り文字の題字・段組み）。たて書きの和風版にも切りかえられます。
 
 ![見本](issues/2026-09-25-mihon.png)
 
@@ -25,7 +26,7 @@ AI がやること：
    - 世の中のニュースは、Web で事実を確かめて出典をつけます
 3. 新聞の形に組んで、印刷用の PDF をわたす
 
-「見出しをもっと元気に」「2年生向けにして」「B4で」などと返せば、直して組み直します。
+「見出しをもっと元気に」「2年生向けにして」「B4で」「たて書きで」などと返せば、直して組み直します。
 
 AI への細かい指示は [`.claude/skills/shinbun/SKILL.md`](../.claude/skills/shinbun/SKILL.md) にあります。
 新聞の名前・学年・号数は [`settings.json`](settings.json) で変えられます。
@@ -34,10 +35,11 @@ AI への細かい指示は [`.claude/skills/shinbun/SKILL.md`](../.claude/skill
 
 | ファイル | 中身 |
 |---|---|
-| `template.html` | 紙面のデザイン（題字・3段組み・たて書き・ふりがな） |
+| `template.html` | 紙面のデザイン（英字新聞ふう・横書き・段組み・ふりがな） |
+| `template-tate.html` | たて書きの和風レイアウト（`--tate` で使う） |
 | `build.mjs` | JSON から HTML と PDF を作るスクリプト |
 | `settings.json` | 新聞の名前、学年、次の号数など |
 | `issues/` | 各号の JSON（原稿）・HTML（画面用）・PDF（印刷用） |
 
-手で組むとき：`node shinbun/build.mjs shinbun/issues/2026-09-25-mihon.json`（B4 は `--b4`）。
+手で組むとき：`node shinbun/build.mjs shinbun/issues/2026-09-25-mihon.json`（B4 は `--b4`、たて書きは `--tate`）。
 PDF づくりには Playwright（Chromium）を使います。記事の文字の大きさは、枠に収まるいちばん大きいサイズに自動でそろいます。

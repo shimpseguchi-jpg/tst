@@ -1,155 +1,156 @@
 <title>__TITLE__</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@400;700&family=Zen+Kaku+Gothic+New:wght@700;900&family=Dela+Gothic+One&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Shippori+Mincho+B1:wght@500;700;800&family=BIZ+UDPMincho:wght@400;700&display=swap">
 <style>
-/* 学級新聞テンプレート
-   紙面は A4 たて（210×297mm）で組んである。B4 は全体を拡大して刷る。
+/* 学級新聞テンプレート（英字新聞ふう・横書き）
+   紙面は A4 たて（210×297mm）。B4 は全体を拡大して刷る。
    新聞紙そのものの見た目に固定しているので、ダークモードでも紙は白いまま。 */
 :root{
-  --paper:#fbfaf6;
-  --ink:#1c1b19;
-  --ink-soft:#55524b;
-  --rule:#2a2824;
-  --accent:#b8321f;      /* 題字の朱色 */
-  --accent-ink:#fff8f2;
-  --tint:#efe9dc;        /* 囲み記事の地色 */
-  --desk:#d9d6cf;        /* 画面で見るときの机の色 */
-  --mincho:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho","IPAMincho","Noto Serif JP",serif;
-  --gothic:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic","IPAGothic","Noto Sans JP",sans-serif;
-  --display:"Dela Gothic One","Zen Kaku Gothic New","Hiragino Sans","IPAGothic",sans-serif;
+  --paper:#f7f5f0;
+  --ink:#151412;
+  --ink-soft:#4d4a44;
+  --rule:#151412;
+  --tint:#e8e4da;       /* 囲みの地色 */
+  --desk:#cfccc5;       /* 画面で見るときの机の色 */
+  --blackletter:"UnifrakturMaguntia","Old English Text MT",serif;
+  --latin:"Playfair Display","Times New Roman",serif;
+  --head:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho","IPAMincho","Noto Serif JP",serif;
+  --body:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho","IPAMincho","Noto Serif JP",serif;
   color-scheme:light;
 }
 @page{ size:A4 portrait; margin:0; }
 *{ box-sizing:border-box; }
 html,body{ margin:0; }
 body{
-  background:var(--desk);
-  color:var(--ink);
-  font-family:var(--mincho);
+  background:var(--desk); color:var(--ink); font-family:var(--body);
   -webkit-print-color-adjust:exact; print-color-adjust:exact;
   padding-inline:16px; padding-block:16px 40px;
 }
 
 /* ---------- 画面用のツールバー（印刷されない） ---------- */
 .bar{
-  max-width:210mm; margin:0 auto 12px; display:flex; flex-wrap:wrap; gap:8px 16px;
-  align-items:center; font-family:var(--gothic); font-size:13px; color:var(--ink);
+  max-width:210mm; margin:0 auto 12px; display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center;
+  font-family:var(--latin); font-size:13px;
 }
 .bar .group{ display:flex; gap:4px; align-items:center; }
 .bar button{
-  font:inherit; font-weight:700; padding:6px 12px; border:1.5px solid var(--rule);
-  background:var(--paper); color:var(--ink); border-radius:3px; cursor:pointer;
+  font:inherit; font-weight:700; padding:5px 12px; border:1px solid var(--rule);
+  background:var(--paper); color:var(--ink); cursor:pointer;
 }
 .bar button[aria-pressed="true"]{ background:var(--ink); color:var(--paper); }
-.bar button:focus-visible{ outline:3px solid var(--accent); outline-offset:2px; }
-.bar .hint{ color:var(--ink-soft); }
+.bar button:focus-visible{ outline:2px solid var(--ink); outline-offset:3px; }
+.bar .hint{ color:var(--ink-soft); font-family:var(--body); }
 
-/* 画面では横幅に合わせて縮めて見せる */
 .stage{ margin:0 auto; max-width:100%; overflow:hidden; }
 .stage-inner{ transform-origin:top left; width:210mm; }
 
 /* ---------- 紙面 ---------- */
 .page{
-  width:210mm; height:297mm; background:var(--paper); padding:9mm 9mm 8mm;
-  display:grid; grid-template-rows:33mm 99mm 76mm 1fr; grid-template-columns:minmax(0,1fr); gap:3mm;
-  box-shadow:0 2px 14px rgb(0 0 0 / .18); overflow:hidden;
+  width:210mm; height:297mm; background:var(--paper); padding:9mm 10mm 8mm;
+  display:grid; grid-template-rows:auto minmax(0,1fr) 82mm 31mm; grid-template-columns:minmax(0,1fr); gap:3.2mm;
+  box-shadow:0 2px 14px rgb(0 0 0 / .2); overflow:hidden;
 }
 
-/* 題字まわり */
-.mast{ display:flex; gap:3mm; border-bottom:2.2pt solid var(--rule); padding-bottom:2.5mm; }
-.mast-title{
-  flex:0 0 auto; background:var(--accent); color:var(--accent-ink);
-  display:flex; flex-direction:column; justify-content:center; padding:0 6mm; min-width:70mm;
+/* 題字 */
+.mast{ display:grid; grid-template-columns:38mm minmax(0,1fr) 38mm; align-items:center; column-gap:4mm; }
+.ear{
+  border:.6pt solid var(--rule); padding:1.6mm 2.2mm; font-size:7.4pt; line-height:1.45; align-self:center;
 }
-.mast-title .name{ font-family:var(--display); font-size:26pt; line-height:1.1; letter-spacing:.04em; }
-.mast-title .sub{ font-family:var(--gothic); font-weight:700; font-size:8.5pt; letter-spacing:.2em; margin-top:1.5mm; opacity:.92; }
-.mast-info{
-  flex:1; display:grid; grid-template-columns:auto 1fr; gap:.6mm 3mm; align-content:center;
-  font-family:var(--gothic); font-size:9pt; font-weight:700;
+.ear .label{ display:block; font-family:var(--latin); font-style:italic; font-weight:700; font-size:7.6pt; margin-bottom:.6mm; }
+.ear.right{ text-align:center; }
+.ear.right .num{ font-family:var(--latin); font-weight:900; font-size:15pt; line-height:1.1; font-variant-numeric:lining-nums; }
+.name-block{ text-align:center; }
+.name{
+  font-family:var(--blackletter); font-weight:400; font-size:40pt; line-height:1; margin:0; letter-spacing:.005em;
+  white-space:nowrap;
 }
-.mast-info dt{ color:var(--ink-soft); }
-.mast-info dd{ margin:0; }
-.mast-info .issue{ font-size:13pt; }
-.mast-note{
-  flex:0 0 46mm; border:1pt solid var(--rule); padding:2mm 3mm; display:flex; flex-direction:column; justify-content:center;
+.name.ja{ font-family:var(--head); font-weight:800; font-size:34pt; letter-spacing:.12em; }
+.name-sub{ font-family:var(--head); font-weight:700; font-size:9pt; letter-spacing:.5em; margin-top:1.4mm; padding-left:.5em; }
+.dateline{
+  grid-column:1 / -1; margin-top:2.4mm;
+  border-top:.6pt solid var(--rule); border-bottom:.6pt solid var(--rule);
+  box-shadow:0 -1.2mm 0 -1mm var(--rule), 0 1.2mm 0 -1mm var(--rule); /* 二重罫 */
+  display:flex; justify-content:space-between; gap:4mm; padding:1.1mm .5mm;
+  font-family:var(--latin); font-size:7.6pt; letter-spacing:.14em; text-transform:uppercase; font-variant-numeric:lining-nums;
 }
-.mast-note .label{ font-family:var(--gothic); font-weight:900; font-size:8pt; color:var(--accent); letter-spacing:.1em; }
-.mast-note .text{ font-size:10pt; line-height:1.5; margin-top:1mm; }
+.dateline .ja{ font-family:var(--body); letter-spacing:.06em; text-transform:none; }
 
-/* 段（横の帯） */
-.band{ display:flex; flex-direction:row-reverse; gap:3mm; min-height:0; min-width:0; border-bottom:.8pt solid var(--rule); padding-bottom:3mm; }
-.band:last-child{ border-bottom:none; padding-bottom:0; }
-
-/* 帯の右端に立てる見出しラベル */
+/* 記事の共通部品 */
 .kicker{
-  writing-mode:vertical-rl; flex:0 0 auto; background:var(--ink); color:var(--paper);
-  font-family:var(--gothic); font-weight:900; font-size:10pt; letter-spacing:.35em;
-  padding:3mm 1.6mm; text-align:center;
+  display:flex; align-items:baseline; gap:2mm; font-size:7.6pt; margin-bottom:1.2mm;
+  border-top:2.4pt solid var(--rule); padding-top:1.2mm;
 }
-.kicker.alt{ background:var(--accent); color:var(--accent-ink); }
+.kicker .en{ font-family:var(--latin); font-weight:900; letter-spacing:.24em; text-transform:uppercase; }
+.kicker .ja{ font-family:var(--head); font-weight:700; color:var(--ink-soft); letter-spacing:.1em; }
+h2{ font-family:var(--head); font-weight:800; line-height:1.22; margin:0; text-wrap:balance; letter-spacing:.01em; }
+.deck{ font-family:var(--head); font-weight:500; color:var(--ink-soft); margin:1.2mm 0 0; line-height:1.4; text-wrap:balance; }
+.cols{
+  column-gap:5mm; column-rule:.5pt solid var(--rule); column-fill:balance;
+  min-height:0; overflow:hidden; text-align:justify; line-height:1.75; font-size:10.5pt; line-break:strict;
+}
+.cols p{ margin:0; text-indent:1em; }
+.dropcap > p:first-child{ text-indent:0; }
+.dropcap > p:first-child::first-letter{
+  float:left; font-family:var(--head); font-weight:800; font-size:3.35em; line-height:1; margin:.04em .12em 0 0;
+}
+.source, .byline{ font-family:var(--latin); font-style:italic; font-size:.85em; color:var(--ink-soft); text-align:right; text-indent:0 !important; margin-top:.4em !important; }
+.source .ja, .byline{ font-family:var(--body); font-style:normal; }
 
-/* たて書きの記事。子要素は右から左へ並ぶ */
-.article{
-  writing-mode:vertical-rl; flex:1 1 0; min-width:0; height:100%; overflow:hidden;
-  font-size:12pt; line-height:1.72; text-align:justify; line-break:strict;
+/* トップ記事（学校） */
+.lead{ display:flex; flex-direction:column; min-height:0; }
+.lead h2{ font-size:25pt; }
+.lead .deck{ font-size:11pt; }
+.lead-body{ flex:1; min-height:0; display:grid; grid-template-columns:minmax(0,1fr) 52mm; gap:5mm; margin-top:3mm; }
+.lead-body .cols{ column-count:2; height:100%; }
+.side{ display:flex; flex-direction:column; gap:2.4mm; min-height:0; border-left:.5pt solid var(--rule); padding-left:5mm; }
+.photo{ margin:0; display:flex; flex-direction:column; gap:1.2mm; flex:1; min-height:0; }
+.photo .pic{
+  flex:1; min-height:24mm; background:var(--tint); display:grid; place-items:center;
+  font-size:54pt; line-height:1; border:.5pt solid var(--rule);
 }
-.article h2{
-  font-family:var(--gothic); font-weight:900; font-size:2.05em; line-height:1.18;
-  margin:0 0 0 .5em; letter-spacing:.02em; text-align:start; text-wrap:balance;
+.photo figcaption{ font-size:7.4pt; line-height:1.5; color:var(--ink-soft); }
+.photo figcaption::before{ content:"▲ "; }
+.pull{
+  margin:0; padding:2mm 0; border-top:1.4pt solid var(--rule); border-bottom:.5pt solid var(--rule);
+  font-family:var(--head); font-weight:700; font-size:11.5pt; line-height:1.45; text-align:center;
 }
-.article h3{
-  font-family:var(--gothic); font-weight:700; font-size:1.05em; line-height:1.4;
-  margin:0 0 0 .9em; color:var(--ink-soft); padding-top:1.5em; text-align:start;
-}
-.article p{ margin:0; text-indent:1em; }
-.article .byline{ font-family:var(--gothic); font-size:.8em; color:var(--ink-soft); text-align:end; margin-right:.6em; }
+.pull::before{ content:"“"; display:block; font-family:var(--latin); font-weight:900; font-size:26pt; line-height:.6; margin-top:1.5mm; }
 
-/* 絵（絵文字）と説明 */
-.figure{
-  flex:0 0 36mm; display:flex; flex-direction:column; gap:2mm;
-}
-.figure .pic{
-  flex:1; border:1pt solid var(--rule); background:var(--tint);
-  display:grid; place-items:center; font-size:64pt; line-height:1;
-}
-.figure .cap{ font-family:var(--gothic); font-size:7.5pt; line-height:1.45; color:var(--ink-soft); }
-
-/* 囲み（たて書き） */
+/* 2段目：世の中＋コラム */
+.second{ display:grid; grid-template-columns:minmax(0,1.85fr) minmax(0,1fr); gap:5mm; min-height:0; }
+.world, .opinion{ display:flex; flex-direction:column; min-height:0; }
+.world h2{ font-size:17pt; }
+.world .deck{ font-size:9.5pt; }
+.world .cols{ column-count:2; flex:1; margin-top:2.4mm; }
 .memo{
-  writing-mode:vertical-rl; flex:0 0 auto; max-width:48mm; height:100%;
-  border:1pt solid var(--rule); background:var(--tint); padding:3mm 2.6mm;
-  font-size:9.5pt; line-height:1.6; overflow:hidden;
+  break-inside:avoid; background:var(--tint); padding:1.8mm 2.4mm; margin-top:1.6mm;
+  font-size:.86em; line-height:1.6; text-align:left;
 }
-.memo .label{ font-family:var(--gothic); font-weight:900; color:var(--accent); margin-left:.6em; display:block; }
-.memo p{ margin:0; }
+.memo .label{ font-family:var(--head); font-weight:800; display:block; }
+.memo p{ text-indent:0; }
+.opinion{ border-left:.5pt solid var(--rule); padding-left:5mm; }
+.opinion .kicker .en{ font-style:italic; }
+.opinion h2{ font-size:14pt; font-weight:700; }
+.opinion .colname{ font-family:var(--head); font-weight:800; font-size:8pt; letter-spacing:.3em; margin-bottom:1mm; }
+.opinion .cols{ column-count:1; flex:1; margin-top:2.4mm; }
 
-/* 下段：コラム＋よこ書きの囲み */
-.boxes{ flex:0 0 64mm; display:flex; flex-direction:column; gap:2.5mm; min-height:0; }
-.box{
-  border:1pt solid var(--rule); padding:2.4mm 3mm; font-family:var(--gothic); font-size:8.8pt; line-height:1.5;
-  flex:1 1 auto; min-height:0; overflow:hidden;
-}
-.box .label{ display:block; font-weight:900; font-size:9.5pt; border-bottom:.8pt solid var(--rule); padding-bottom:1mm; margin-bottom:1.2mm; }
-.box ul{ margin:0; padding:0; list-style:none; display:grid; gap:.6mm; }
-.box li{ display:grid; grid-template-columns:auto 1fr; gap:2mm; }
-.box li b{ font-variant-numeric:tabular-nums; }
+/* 3段目：囲み */
+.notices{ display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); border-top:2.4pt solid var(--rule); min-height:0; }
+.box{ padding:1.8mm 4mm 0; font-size:8.6pt; line-height:1.5; min-height:0; overflow:hidden; }
+.box + .box{ border-left:.5pt solid var(--rule); }
+.box:first-child{ padding-left:0; }
+.box .label{ display:block; font-family:var(--head); font-weight:800; font-size:1.08em; margin-bottom:1mm; }
+.box ul{ margin:0; padding:0; list-style:none; display:grid; gap:.3mm; }
+.box li{ display:grid; grid-template-columns:auto 1fr; gap:2.4mm; }
+.box li b{ font-family:var(--latin); font-weight:700; font-variant-numeric:lining-nums tabular-nums; }
 .box p{ margin:0; }
-.box .answer{
-  margin-top:1.2mm; font-size:7.8pt; color:var(--ink-soft);
-  display:inline-block; transform:rotate(180deg); /* こたえは さかさまに */
-}
-.article.column h2{ font-size:1.55em; }
-.article.column .col-name{
-  font-family:var(--gothic); font-weight:900; font-size:.85em; color:var(--paper); background:var(--accent);
-  padding:.5em .25em; margin-left:.7em; display:inline-block; letter-spacing:.2em;
-}
+.box .answer{ display:inline-block; margin-top:1mm; font-size:.88em; color:var(--ink-soft); transform:rotate(180deg); }
 
 /* 文字の飾り */
-.tcy{ text-combine-upright:all; }
 em.bouten{ font-style:normal; font-weight:700; text-emphasis:sesame; -webkit-text-emphasis:sesame; }
-.box em.bouten, .mast em.bouten{ text-emphasis:none; -webkit-text-emphasis:none; }
-ruby rt{ font-size:.5em; font-family:var(--gothic); font-weight:400; }
+h2 em.bouten, .deck em.bouten, .box em.bouten, .ear em.bouten{ text-emphasis:none; -webkit-text-emphasis:none; font-weight:inherit; }
+ruby rt{ font-size:.5em; font-weight:400; font-family:var(--body); }
 .no-ruby ruby rt{ display:none; }
 
 @media print{
@@ -158,7 +159,6 @@ ruby rt{ font-size:.5em; font-family:var(--gothic); font-weight:400; }
   .stage, .stage-inner{ width:auto !important; height:auto !important; transform:none !important; overflow:visible; }
   .page{ box-shadow:none; }
 }
-@media (prefers-reduced-motion:reduce){ *{ transition:none !important; } }
 </style>
 
 <div class="bar" role="toolbar" aria-label="表示の切りかえ">
@@ -179,84 +179,87 @@ ruby rt{ font-size:.5em; font-family:var(--gothic); font-weight:400; }
   const data = JSON.parse(document.getElementById('issue-data').textContent);
   const page = document.getElementById('page');
 
-  // --- 文字の整形 ---------------------------------------------------------
-  // {漢字|かんじ} → ルビ、**ことば** → 傍点、たて書きでは数字を縦中横にする
+  // --- 文字の整形：{漢字|かんじ} → ルビ、**ことば** → 傍点 ---------------------
   function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-  function toFullWidth(d){ return d.replace(/[0-9]/g, c => String.fromCharCode(c.charCodeAt(0) + 0xFEE0)); }
-  function fmt(s, vertical){
-    let h = esc(s);
-    h = h.replace(/\{([^|{}]+)\|([^{}]+)\}/g, '<ruby>$1<rt>$2</rt></ruby>');
-    h = h.replace(/\*\*(.+?)\*\*/g, '<em class="bouten">$1</em>');
-    if (vertical){
-      // タグの中は変えないよう、テキスト部分だけ数字を処理する
-      h = h.split(/(<[^>]+>)/).map(part => part.startsWith('<') ? part :
-        part.replace(/[0-9]+/g, n => n.length <= 2 ? '<span class="tcy">' + n + '</span>' : toFullWidth(n))
-            .replace(/[!?！？]{2}/g, m => '<span class="tcy">' + m.replace(/！/g,'!').replace(/？/g,'?') + '</span>')
-      ).join('');
-    }
-    return h;
+  function fmt(s){
+    return esc(s ?? '')
+      .replace(/\{([^|{}]+)\|([^{}]+)\}/g, '<ruby>$1<rt>$2</rt></ruby>')
+      .replace(/\*\*(.+?)\*\*/g, '<em class="bouten">$1</em>');
   }
-  const paras = (arr, v) => (Array.isArray(arr) ? arr : [arr]).filter(Boolean).map(t => '<p>' + fmt(t, v) + '</p>').join('');
+  const paras = arr => (Array.isArray(arr) ? arr : [arr]).filter(Boolean).map(t => '<p>' + fmt(t) + '</p>').join('');
+  const toRoman = n => { const m = [[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']]; let r = ''; for (const [v, k] of m) while (n >= v){ r += k; n -= v; } return r; };
 
-  // --- 紙面を組む ---------------------------------------------------------
+  // --- 紙面を組む -----------------------------------------------------------
   const d = data, s = d.school || {}, w = d.world || {}, c = d.column || {};
+  const issueNo = Number(d.issue) || 0;
+  const volume = toRoman(Number(d.volume) || 1);  // 巻（年度）。ふつうは 1
+  const kick = (en, ja) => `<div class="kicker"><span class="en">${esc(en)}</span><span class="ja">${fmt(ja)}</span></div>`;
+
   const boxes = (d.boxes || []).map(b => {
     let inner = '<span class="label">' + fmt(b.title) + '</span>';
     if (b.items) inner += '<ul>' + b.items.map(it => {
       const [k, ...rest] = String(it).split('｜');
       return rest.length ? '<li><b>' + fmt(k) + '</b><span>' + fmt(rest.join('｜')) + '</span></li>' : '<li><span></span><span>' + fmt(k) + '</span></li>';
     }).join('') + '</ul>';
-    if (b.body) inner += paras(b.body, false);
+    if (b.body) inner += paras(b.body);
     if (b.answer) inner += '<div><span class="answer">こたえ：' + fmt(b.answer) + '</span></div>';
-    return '<section class="box">' + inner + '</section>';
+    return '<section class="box" data-fit-box>' + inner + '</section>';
   }).join('');
 
   page.innerHTML = `
     <header class="mast">
-      <div class="mast-title"><div class="name">${fmt(d.title || '学級新聞')}</div><div class="sub">${fmt(d.subtitle || '')}</div></div>
-      <dl class="mast-info">
-        <dt>号</dt><dd class="issue">${d.issue ? '第' + esc(d.issue) + '号' : ''}</dd>
-        <dt>発行日</dt><dd>${fmt(d.date || '')}</dd>
-        <dt>発行</dt><dd>${fmt(d.publisher || '')}</dd>
-      </dl>
-      ${d.note ? `<div class="mast-note"><span class="label">${fmt(d.note.label || 'きょうのひとこと')}</span><span class="text">${fmt(d.note.text || '')}</span></div>` : ''}
+      <div class="ear left">${d.note ? `<span class="label">${fmt(d.note.label || 'きょうのひとこと')}</span>${fmt(d.note.text)}` : ''}</div>
+      <div class="name-block">
+        ${d.title_en ? `<h1 class="name">${esc(d.title_en)}</h1><div class="name-sub">${fmt(d.title || '')}</div>`
+                     : `<h1 class="name ja">${fmt(d.title || '学級新聞')}</h1>`}
+      </div>
+      <div class="ear right"><span class="label">No.</span><div class="num">${issueNo ? esc(issueNo) : '—'}</div>第${esc(issueNo || '')}号</div>
+      <div class="dateline">
+        <span>Vol. ${esc(volume)} · No. ${esc(issueNo || '')}</span>
+        <span class="ja">${fmt(d.date || '')}</span>
+        <span class="ja">${fmt(d.subtitle || '')}${d.publisher ? '　発行：' + fmt(d.publisher) : ''}</span>
+      </div>
     </header>
 
-    <section class="band" aria-label="学校のこと">
-      <div class="kicker">${fmt(s.kicker || '学校のできごと')}</div>
-      <article class="article" data-fit>
-        <h2>${fmt(s.headline || '', true)}</h2>
-        ${s.subhead ? `<h3>${fmt(s.subhead, true)}</h3>` : ''}
-        ${paras(s.body, true)}
+    <article class="lead" aria-label="学校のこと">
+      ${kick(s.kicker_en || 'School', s.kicker || '学校のできごと')}
+      <h2>${fmt(s.headline)}</h2>
+      ${s.subhead ? `<p class="deck">${fmt(s.subhead)}</p>` : ''}
+      <div class="lead-body">
+        <div class="cols dropcap" data-fit="lead">${paras(s.body)}</div>
+        ${(s.emoji || s.quote) ? `<aside class="side">
+          ${s.emoji ? `<figure class="photo"><div class="pic" aria-hidden="true">${esc(s.emoji)}</div>${s.caption ? `<figcaption>${fmt(s.caption)}</figcaption>` : ''}</figure>` : ''}
+          ${s.quote ? `<blockquote class="pull">${fmt(s.quote)}</blockquote>` : ''}
+        </aside>` : ''}
+      </div>
+    </article>
+
+    <section class="second">
+      <article class="world" aria-label="世の中のニュース">
+        ${kick(w.kicker_en || 'World', w.kicker || '世の中のニュース')}
+        <h2>${fmt(w.headline)}</h2>
+        ${w.subhead ? `<p class="deck">${fmt(w.subhead)}</p>` : ''}
+        <div class="cols dropcap" data-fit="world">
+          ${paras(w.body)}
+          ${w.source ? `<p class="source"><span class="ja">${fmt(w.source)}</span></p>` : ''}
+          ${w.memo ? `<aside class="memo"><span class="label">${fmt(w.memo.label || 'ことばメモ')}</span>${paras(w.memo.body)}</aside>` : ''}
+        </div>
       </article>
-      ${s.emoji ? `<figure class="figure" style="margin:0"><div class="pic" aria-hidden="true">${esc(s.emoji)}</div>${s.caption ? `<figcaption class="cap">${fmt(s.caption)}</figcaption>` : ''}</figure>` : ''}
+      <article class="opinion" aria-label="コラム">
+        ${kick(c.kicker_en || 'Opinion', c.name || 'コラム')}
+        ${c.headline ? `<h2>${fmt(c.headline)}</h2>` : ''}
+        <div class="cols" data-fit="column">
+          ${paras(c.body)}
+          ${c.byline ? `<p class="byline">${fmt(c.byline)}</p>` : ''}
+        </div>
+      </article>
     </section>
 
-    <section class="band" aria-label="世の中のニュース">
-      <div class="kicker alt">${fmt(w.kicker || '世の中のニュース')}</div>
-      <article class="article" data-fit>
-        <h2>${fmt(w.headline || '', true)}</h2>
-        ${w.subhead ? `<h3>${fmt(w.subhead, true)}</h3>` : ''}
-        ${paras(w.body, true)}
-        ${w.source ? `<p class="byline">${fmt(w.source, true)}</p>` : ''}
-      </article>
-      ${w.memo ? `<aside class="memo" data-fit-memo><span class="label">${fmt(w.memo.label || 'ことばメモ', true)}</span>${paras(w.memo.body, true)}</aside>` : ''}
-    </section>
+    <section class="notices" aria-label="おしらせ">${boxes}</section>`;
 
-    <section class="band" aria-label="コラム">
-      <article class="article column" data-fit>
-        <span class="col-name">${fmt(c.name || 'コラム', true)}</span>
-        ${c.headline ? `<h2>${fmt(c.headline, true)}</h2>` : ''}
-        ${paras(c.body, true)}
-        ${c.byline ? `<p class="byline">${fmt(c.byline, true)}</p>` : ''}
-      </article>
-      ${boxes ? `<div class="boxes">${boxes}</div>` : ''}
-    </section>`;
-
-  // --- 文字の大きさを記事ごとに合わせる -----------------------------------
-  // あふれない範囲でいちばん大きい文字にする（子どもが読みやすいように上限は大きめ）
+  // --- 文字の大きさを記事ごとに合わせる -------------------------------------
+  // あふれない範囲でいちばん大きい文字にする。段組みであふれると右に列が増えるので、それも見る
   function fit(el, min, max){
-    // たて書きでは scrollWidth があてにならないので、見出しや段落が枠の外に出ていないかを直接しらべる
     const overflows = () => {
       const box = el.getBoundingClientRect();
       for (const child of el.children) for (const r of child.getClientRects()){
@@ -275,25 +278,39 @@ ruby rt{ font-size:.5em; font-family:var(--gothic); font-weight:400; }
     el.dataset.fitted = lo.toFixed(1);
     if (lo <= min + 0.05 && overflows()) el.dataset.overflow = 'true';
   }
+  // 書き出しの飾り文字は、かな・漢字で始まる段落だけにつける（「10月」の「1」だけ大きくなるのをさける）
+  page.querySelectorAll('.dropcap').forEach(el => {
+    const first = el.querySelector('p')?.textContent.trim()[0] || '';
+    if (!/[\u3041-\u30ff\u4e00-\u9fff]/.test(first)) el.classList.remove('dropcap');
+  });
+  // 題字が1行に収まらないときは縮める（フォントが読みこまれてから測る）
+  function fitName(){
+    const name = page.querySelector('.name');
+    if (!name) return;
+    name.style.fontSize = '';
+    const room = name.parentElement.clientWidth;
+    let size = parseFloat(getComputedStyle(name).fontSize);
+    while (name.scrollWidth > room && size > 12){ size -= 1; name.style.fontSize = size + 'px'; }
+  }
+
   function fitAll(){
-    page.querySelectorAll('[data-fit]').forEach(el => fit(el, 8, 15));
-    page.querySelectorAll('[data-fit-memo]').forEach(el => fit(el, 7, 11));
-    page.querySelectorAll('.box').forEach(el => fit(el, 6.5, 10));
+    fitName();
+    page.querySelectorAll('[data-fit]').forEach(el => fit(el, 8, el.dataset.fit === 'lead' ? 14 : 12.5));
+    page.querySelectorAll('[data-fit-box]').forEach(el => fit(el, 6.5, 9.5));
     document.documentElement.dataset.ready = 'true';
   }
 
-  // --- 画面では横幅に合わせて縮小 ---------------------------------------
+  // --- 画面では横幅に合わせて縮小 -----------------------------------------
   const stage = document.getElementById('stage'), inner = document.getElementById('stage-inner');
   function scaleToScreen(){
     if (window.matchMedia('print').matches) return;
-    const pageW = page.offsetWidth, pageH = page.offsetHeight;
-    const k = Math.min(1, stage.parentElement.clientWidth / pageW);
+    const k = Math.min(1, stage.parentElement.clientWidth / page.offsetWidth);
     inner.style.transform = 'scale(' + k + ')';
-    stage.style.width = pageW * k + 'px';
-    stage.style.height = pageH * k + 'px';
+    stage.style.width = page.offsetWidth * k + 'px';
+    stage.style.height = page.offsetHeight * k + 'px';
   }
 
-  // --- ふりがなの切りかえ -------------------------------------------------
+  // --- ふりがなの切りかえ ---------------------------------------------------
   function setRuby(on){
     document.body.classList.toggle('no-ruby', !on);
     document.getElementById('ruby-on').setAttribute('aria-pressed', on);
@@ -305,7 +322,6 @@ ruby rt{ font-size:.5em; font-family:var(--gothic); font-weight:400; }
   document.getElementById('ruby-off').addEventListener('click', () => setRuby(false));
   let rubyPref = true;
   try { rubyPref = localStorage.getItem('shinbun-ruby') !== '0'; } catch(e){}
-  if (new URLSearchParams(location.search).get('ruby') === '0') rubyPref = false;
 
   const start = () => { setRuby(rubyPref); scaleToScreen(); };
   (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(start);

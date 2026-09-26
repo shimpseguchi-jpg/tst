@@ -2,6 +2,7 @@
 //   node shinbun/build.mjs shinbun/issues/2026-09-25.json
 // → 同じ場所に .html（画面で見る用）と .pdf（印刷用・A4）と .png（確認用）を書き出す
 //   --b4 をつけると B4 の PDF になる（紙面を拡大して刷る）
+//   --tate をつけると、たて書きの和風レイアウトで組む（ふだんは英字新聞ふうの横書き）
 import { readFileSync, writeFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -11,14 +12,16 @@ import { fileURLToPath } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
 const jsonPath = args.find(a => !a.startsWith('--'));
-const b4 = args.includes('--b4');
 if (!jsonPath) {
-  console.error('つかいかた: node shinbun/build.mjs <号のJSON> [--b4]');
+  console.error('つかいかた: node shinbun/build.mjs <号のJSON> [--b4] [--tate]');
   process.exit(1);
 }
-
 const issue = JSON.parse(readFileSync(jsonPath, 'utf8'));
-const template = readFileSync(path.join(here, 'template.html'), 'utf8');
+const b4 = args.includes('--b4');
+// 号の JSON に "layout": "tate" と書いてあっても、たて書きで組む
+const tate = args.includes('--tate') || issue.layout === 'tate';
+
+const template = readFileSync(path.join(here, tate ? 'template-tate.html' : 'template.html'), 'utf8');
 // </script> で JSON が途切れないように < をエスケープしておく
 const json = JSON.stringify(issue, null, 2).replace(/</g, '\\u003c');
 const plainTitle = String(issue.title || '学級新聞').replace(/\{([^|{}]+)\|[^{}]+\}/g, '$1');
@@ -61,7 +64,7 @@ await page.waitForFunction(() => document.documentElement.dataset.ready === 'tru
 
 // あふれている記事があれば知らせる（文章をけずる目安）
 const report = await page.evaluate(() => [...document.querySelectorAll('[data-fitted]')].map(el => ({
-  where: el.closest('section,header')?.getAttribute('aria-label') || el.className,
+  where: el.closest('[aria-label]')?.getAttribute('aria-label') || el.className,
   size: el.dataset.fitted, overflow: el.dataset.overflow === 'true',
 })));
 for (const r of report) console.log(`  ${r.overflow ? '⚠ あふれ' : '  ok    '} ${r.where}（${r.size}pt）`);
