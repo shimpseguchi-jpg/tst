@@ -315,11 +315,18 @@ body.zen .zenout{display:block}
   pointer-events:auto;width:min(42rem,100%);background:var(--surface);
   border-left:1px solid var(--rule);border-right:1px solid var(--rule);
   display:flex;flex-direction:column;animation:pup .2s ease;
+  max-height:100%;min-height:0;
 }
 @keyframes pup{from{opacity:0;transform:translateY(1.2rem)}to{opacity:1;transform:none}}
 .phead{display:flex;align-items:center;gap:.6rem;padding:.9rem 1.2rem;border-bottom:1px solid var(--rule);flex:none}
 .phead .t{font-family:var(--mincho);font-size:1.05rem;font-weight:600;letter-spacing:.1em;flex:1}
-.pbody{overflow-y:auto;padding:1.4rem 1.2rem 3rem}
+.pbody{
+  /* 縦並びの flex 項目は min-height:auto のままだと縮まず、
+     中身の高さのまま伸びて overflow-y が働かない。min-height:0 が要る */
+  flex:1 1 auto;min-height:0;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  padding:1.4rem 1.2rem 3rem;
+}
 .pbody .pshot{
   margin:-1.4rem -1.2rem 1.4rem;background:var(--sunk);
   border-bottom:1px solid var(--rule);
@@ -366,13 +373,13 @@ body.zen .zenout{display:block}
   font-family:var(--mincho);
 }
 .paper *{box-sizing:border-box}
-.phead{position:absolute;left:24px;right:24px;top:24px;height:64px;border-bottom:3px double #1b1a16;
+.pgtop{position:absolute;left:24px;right:24px;top:24px;height:64px;border-bottom:3px double #1b1a16;
   display:flex;align-items:center;gap:18px}
-.phead .pno{font-family:var(--util);font-size:22px;font-weight:600;letter-spacing:.05em}
-.phead .psec{font-size:20px;letter-spacing:.35em;border-left:1px solid #1b1a16;padding-left:16px}
-.phead .sp{flex:1}
-.phead .pdate{font-family:var(--util);font-size:15px;letter-spacing:.06em}
-.phead .ptitle{font-size:26px;letter-spacing:.4em;font-weight:600}
+.pgtop .pno{font-family:var(--util);font-size:22px;font-weight:600;letter-spacing:.05em}
+.pgtop .psec{font-size:20px;letter-spacing:.35em;border-left:1px solid #1b1a16;padding-left:16px}
+.pgtop .sp{flex:1}
+.pgtop .pdate{font-family:var(--util);font-size:15px;letter-spacing:.06em}
+.pgtop .ptitle{font-size:26px;letter-spacing:.4em;font-weight:600}
 
 /* 主記事。段一〜七 */
 .pphoto{position:absolute;display:flex;flex-direction:column}
@@ -402,8 +409,8 @@ body.zen .zenout{display:block}
   border-left:1px solid #b9b6a8;padding-left:10px}
 .nhead .s{font-size:14px;font-weight:400;letter-spacing:.08em;color:#3d3b33}
 .dan.nd{font-size:13px;line-height:1.9}
-.pbox{position:absolute;border:1px solid #b9b6a8;padding:8px 10px;background:#efece2;overflow:hidden}
-.pbox .t{font-size:14px;letter-spacing:.2em;border-bottom:1px solid #c9c6b8;padding-bottom:4px;margin-bottom:6px}
+.pgbox{position:absolute;border:1px solid #b9b6a8;padding:8px 10px;background:#efece2;overflow:hidden}
+.pgbox .t{font-size:14px;letter-spacing:.2em;border-bottom:1px solid #c9c6b8;padding-bottom:4px;margin-bottom:6px}
 .pwx{display:flex;align-items:center;gap:12px;font-family:var(--util);font-size:13px;line-height:1.6}
 .pwx .tm{font-size:22px}
 .pwx .hi{color:#7a2018}
@@ -932,7 +939,7 @@ body.zen .zenout{display:block}
     });
     h+='<button class="btn" id="readArticle">記事を大きく読む</button></div>';
     h+='<div class="paperwrap"><div class="paper" id="paperPage">';
-    h+='<div class="phead"><span class="pno">'+esc(d.page)+'</span>'+
+    h+='<div class="pgtop"><span class="pno">'+esc(d.page)+'</span>'+
        '<span class="psec">'+esc(d.section)+'</span><span class="sp"></span>'+
        '<span class="pdate">'+esc(d.date)+'</span>'+
        '<span class="ptitle">'+esc(d.title)+'</span></div>';
@@ -972,7 +979,7 @@ body.zen .zenout{display:block}
     /* 段十二　天気とおくやみ */
     var w=d.weather, halfW=(PG.CW-14)/2;
     if(w){
-      h+='<div class="pbox" style="left:'+(PG.M+halfW+14)+'px;width:'+halfW+'px;top:'+
+      h+='<div class="pgbox" style="left:'+(PG.M+halfW+14)+'px;width:'+halfW+'px;top:'+
          danTop(12)+'px;height:'+danH(1)+'px">'+
          '<div class="t">きょうの天気</div><div class="pwx">'+
          '<span class="tm">'+esc(w["今日"]||"")+'</span>'+
@@ -981,7 +988,7 @@ body.zen .zenout{display:block}
          '　日の出 '+esc(w["日の出"]||"")+'　日の入 '+esc(w["日の入"]||"")+'</span></div></div>';
     }
     if((d.obits||[]).length){
-      h+='<div class="pbox" style="left:'+PG.M+'px;width:'+halfW+'px;top:'+
+      h+='<div class="pgbox" style="left:'+PG.M+'px;width:'+halfW+'px;top:'+
          danTop(12)+'px;height:'+danH(1)+'px"><div class="t">おくやみ</div>';
       d.obits.forEach(function(o){ h+='<p class="pobit">'+esc(o)+'</p>'; });
       h+='</div>';
