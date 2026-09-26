@@ -4,8 +4,8 @@
    フォントだけはキャッシュ優先にする（毎回取りにいく必要がないため）。 */
 "use strict";
 
-var CACHE = "shotengai-v1";
-var FONTS = "shotengai-fonts-v1";
+var CACHE = "shotengai-v2";
+var FONTS = "shotengai-fonts-v2";
 
 var WORKS = ["01","02","03","04","05","06","07","08","09","10","11","12","i1","i2","i3"];
 var PRECACHE = [
