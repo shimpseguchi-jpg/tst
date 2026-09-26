@@ -229,7 +229,7 @@ body.zen .zenout{display:block}
   margin:2.2rem 0 .2rem;padding-bottom:.5rem;border-bottom:1px solid var(--rule-soft);
 }
 .gsec h2:first-child{margin-top:.6rem}
-.chips{display:inline-flex;gap:.25rem;vertical-align:.1em}
+.chips{display:inline-flex;flex-wrap:wrap;gap:.25rem;vertical-align:.1em}
 .chip{
   font-family:var(--util);font-size:.6rem;letter-spacing:.04em;line-height:1;
   border:1px solid var(--rule);color:var(--muted);border-radius:1px;padding:.22rem .3rem;
@@ -268,7 +268,7 @@ body.zen .zenout{display:block}
   color:var(--muted);border-left:2px solid var(--accent);padding-left:.8rem;line-height:1.9;
 }
 /* 人物のサムネと詳細 */
-.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(9.5rem,1fr));gap:.7rem;margin:.5rem 0 .2rem}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(7.4rem,1fr));gap:.7rem;margin:.5rem 0 .2rem}
 .pcard{
   display:flex;flex-direction:column;gap:.45rem;text-align:left;width:100%;
   padding:.85rem .85rem .9rem;border:1px solid var(--rule);background:var(--surface);
@@ -283,8 +283,20 @@ body.zen .zenout{display:block}
 .pcard .pn{font-family:var(--mincho);font-size:.98rem;font-weight:600;letter-spacing:.06em;line-height:1.4}
 .pcard .py{font-family:var(--util);font-size:.63rem;color:var(--muted);letter-spacing:.05em}
 .pcard .pr{font-family:var(--util);font-size:.66rem;color:var(--ink-soft);line-height:1.6}
-.pcard .chips{margin-top:.15rem}
+.pcard .chips{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.15rem}
 .pcard.isLead .gl{color:var(--accent)}
+/* 一枚絵。無い人は下のグリフがそのまま見える */
+.pcard .pic{
+  position:relative;width:100%;aspect-ratio:4/5;margin-bottom:.2rem;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+  background:var(--sunk);
+}
+.pcard .pic .gl{font-size:2.6rem;opacity:.75}
+.pcard .pimg{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:50% 20%;
+}
+.pcard .pimg.dead{display:none}
 /* 詳細 */
 .psheet{
   position:fixed;z-index:31;inset:0;display:flex;justify-content:center;
@@ -300,6 +312,13 @@ body.zen .zenout{display:block}
 .phead{display:flex;align-items:center;gap:.6rem;padding:.9rem 1.2rem;border-bottom:1px solid var(--rule);flex:none}
 .phead .t{font-family:var(--mincho);font-size:1.05rem;font-weight:600;letter-spacing:.1em;flex:1}
 .pbody{overflow-y:auto;padding:1.4rem 1.2rem 3rem}
+.pbody .pshot{
+  margin:-1.4rem -1.2rem 1.4rem;background:var(--sunk);
+  border-bottom:1px solid var(--rule);
+  display:flex;align-items:center;justify-content:center;
+}
+.pbody .pshot img{display:block;max-width:100%;max-height:56vh}
+.pbody .pshot.dead{display:none}
 .pbody .big{font-family:var(--mincho);font-size:1.75rem;font-weight:600;letter-spacing:.12em;line-height:1.4;margin:0}
 .pbody .sub{font-family:var(--util);font-size:.72rem;color:var(--muted);letter-spacing:.06em;margin:.35rem 0 0;line-height:1.9}
 .pbody .rl2{font-family:var(--util);font-size:.76rem;color:var(--ink-soft);letter-spacing:.05em;margin:.15rem 0 .7rem}
@@ -637,7 +656,9 @@ body.zen .zenout{display:block}
           var nm=String(p.name).split(/\s+/);
           var gl=(nm[1]||nm[0]).charAt(0);
           h+='<button class="pcard'+((p.lead||[]).length?" isLead":"")+'" data-p="'+i+'">'+
-             '<span class="gl">'+esc(gl)+'</span>'+
+             '<span class="pic"><span class="gl">'+esc(gl)+'</span>'+
+             (p.art?'<img class="pimg" src="'+esc(p.art)+'" alt="" loading="lazy" decoding="async">':'')+
+             '</span>'+
              '<span class="pn">'+esc(p.name)+'</span>'+
              '<span class="py">'+esc(p.yomi)+'</span>'+
              '<span class="pr">'+esc(p.role)+'</span>'+chips(p)+'</button>';
@@ -717,6 +738,10 @@ body.zen .zenout{display:block}
     Array.prototype.forEach.call(box.querySelectorAll("[data-s]"),function(b){
       b.addEventListener("click",function(){ openShop(+b.getAttribute("data-s")); });
     });
+    Array.prototype.forEach.call(box.querySelectorAll(".pimg"),function(im){
+      im.addEventListener("error",function(){ im.classList.add("dead"); });
+      if(im.complete && im.naturalWidth===0) im.classList.add("dead");
+    });
   }
 
   var SHOP_PRE=["理容室","古書店 ","古書店","中華 ","中華","時計・メガネ ","時計・メガネ","喫茶","国道沿いの"];
@@ -738,7 +763,8 @@ body.zen .zenout{display:block}
     var p=guide.people[i]; if(!p) return;
     closePerson();
     var nm=String(p.name).split(/\s+/);
-    var b='<p class="big">'+esc(p.name)+'</p>'+
+    var b=(p.art?'<div class="pshot"><img src="'+esc(p.art)+'" alt="'+esc(p.name)+'"></div>':'')+
+          '<p class="big">'+esc(p.name)+'</p>'+
           '<p class="sub">'+esc(p.yomi)+'　'+esc(p.age)+'</p>'+
           '<p class="rl2">'+esc(p.role)+'</p>'+chips(p);
     PF.forEach(function(f){
@@ -816,6 +842,12 @@ body.zen .zenout{display:block}
     Array.prototype.forEach.call(psheet.querySelectorAll("[data-jump]"),function(x){
       x.addEventListener("click",function(){ openPerson(+x.getAttribute("data-jump")); });
     });
+    var shot=psheet.querySelector(".pshot img");
+    if(shot){
+      var wrap=shot.parentNode;
+      shot.addEventListener("error",function(){ wrap.classList.add("dead"); });
+      if(shot.complete && shot.naturalWidth===0) wrap.classList.add("dead");
+    }
     psheet.querySelector("[data-close]").focus();
   }
 
