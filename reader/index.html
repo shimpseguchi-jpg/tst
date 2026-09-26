@@ -392,6 +392,13 @@ body.zen .zenout{display:block}
 .pphoto .fr{flex:1;border:1px solid #b9b6a8;background:#e7e4da;overflow:hidden}
 .pphoto .cap{font-size:13px;letter-spacing:.03em;padding-top:5px;color:#3d3b33}
 
+.pinset{position:absolute;display:none;writing-mode:vertical-rl;
+  border:1px solid #b9b6a8;background:#ece9df;padding:14px 12px;font-size:13px;line-height:1.95}
+.pinset .it{font-size:15px;letter-spacing:.25em;margin-left:12px;
+  border-left:1px solid #c9c6b8;padding-left:12px}
+.pinset ul{list-style:none;margin:0;padding:0}
+.pinset li{margin:0 0 .7em 0;letter-spacing:.02em}
+.pinset .ft{font-size:11px;color:#5a574c;letter-spacing:.1em;margin-left:8px}
 .pside{position:absolute;left:18px;top:78px;width:462px;height:1560px}
 .pnews{position:relative;height:300px;border-bottom:1px solid #b9b6a8;padding-bottom:10px;margin-bottom:10px}
 .pnews:last-of-type{border-bottom:0}
@@ -774,7 +781,12 @@ body.zen .zenout{display:block}
       }
       document.querySelector(".g-inner").classList.add("wide");
       box.innerHTML = paperHTML(paper[paperIdx||0]);
-      fitPaper();
+      fitLead(); fitPaper();
+      Array.prototype.forEach.call(box.querySelectorAll("[data-issue]"),function(bt){
+        bt.addEventListener("click",function(){
+          paperIdx=+bt.getAttribute("data-issue"); renderGuide(); $("guide").scrollTop=0;
+        });
+      });
       var art=box.querySelector(".plead");
       if(art) art.addEventListener("click",function(){ openArticle(paper[paperIdx||0]); });
       var rb=box.querySelector("#readArticle");
@@ -845,34 +857,63 @@ body.zen .zenout{display:block}
 
 
   /* ---------- 紙面 ---------- */
-  function streetSVG(){
-    /* 写真の代わり。南の口から北を見た通り。奥の四十メートルだけ屋根が残っている */
-    var sh="", i, x;
-    for(i=0;i<7;i++){ x=8+i*46; sh+='<path d="M'+x+' '+(150-i*11)+' V'+(258-i*20)+'" />'; }
-    for(i=0;i<7;i++){ x=652-i*46; sh+='<path d="M'+x+' '+(150-i*11)+' V'+(258-i*20)+'" />'; }
-    var hat="";
-    for(i=0;i<26;i++){ hat+='<path d="M'+(232+i*7.5)+' 96 V128" />'; }
-    return '<svg viewBox="0 0 660 300" width="100%" height="100%" preserveAspectRatio="none" '+
-      'fill="none" stroke="#5a574c" stroke-width="1" stroke-linecap="round">'+
-      '<rect width="660" height="300" fill="#e7e4da"/>'+
-      '<g opacity=".85">'+
-        '<path d="M0 300 L286 150 M660 300 L374 150" stroke-width="1.4"/>'+
+  function photoSVG(kind){
+    /* 写真の代わりの線画。中央に主題を置き、額に合わせて切り抜かれてももつようにする */
+    var g="", i, x;
+    if(kind==="窯"){                                  /* 窯の口と、天板を持つ手 */
+      for(i=0;i<9;i++) g+='<path d="M'+(258+i*16)+' 96 V150" opacity=".35"/>';
+      g+='<path d="M250 168 h170 v-64 a85 60 0 0 0 -170 0 z" stroke-width="1.5"/>'+
+         '<path d="M232 176 h206" stroke-width="1.6"/>'+
+         '<path d="M96 196 h300 v16 h-300 z" stroke-width="1.5"/>'+
+         '<path d="M118 190 q-18 12 -2 26 q16 12 30 -2" stroke-width="1.4"/>'+
+         '<path d="M150 190 q-14 12 0 24" stroke-width="1.2" opacity=".7"/>'+
+         '<path d="M360 196 v-14 M300 196 v-10 M240 196 v-12" opacity=".4"/>';
+    } else if(kind==="筆"){                            /* 板の上を通った一筆 */
+      g+='<path d="M120 196 L470 172 L478 226 L128 250 z" stroke-width="1.5"/>'+
+         '<path d="M162 214 q70 -18 150 -14 q70 4 120 -10" stroke-width="3.2" opacity=".85"/>'+
+         '<path d="M300 92 l26 -8 l40 84 l-26 10 z" stroke-width="1.4"/>'+
+         '<path d="M340 178 l22 -8 l16 36 q-14 12 -26 4 z" stroke-width="1.4"/>'+
+         '<path d="M356 214 l6 14" stroke-width="1.2" opacity=".6"/>';
+      for(i=0;i<6;i++) g+='<path d="M'+(150+i*54)+' 262 h34" opacity=".25"/>';
+    } else if(kind==="桶"){                            /* 積んだ桶。いちばん上だけ伏せてある */
+      for(i=0;i<4;i++){
+        var y=252-i*34;
+        g+='<ellipse cx="330" cy="'+y+'" rx="78" ry="17" stroke-width="1.4"/>'+
+           '<path d="M252 '+y+' v-16 M408 '+y+' v-16" opacity=".6"/>';
+      }
+      g+='<ellipse cx="330" cy="112" rx="78" ry="17" stroke-width="1.6"/>'+
+         '<path d="M252 112 v14 M408 112 v14" stroke-width="1.4"/>'+
+         '<path d="M252 126 q78 20 156 0" stroke-width="1.4"/>';
+      for(i=0;i<7;i++) g+='<path d="M'+(70+i*84)+' 276 v18" opacity=".22"/>';
+      g+='<path d="M40 276 H620" opacity=".3"/>';
+    } else {                                           /* 通り。南の口から北を見る */
+      var sh="", hat="";
+      for(i=0;i<7;i++){ x=8+i*46;   sh+='<path d="M'+x+' '+(150-i*11)+' V'+(258-i*20)+'" />'; }
+      for(i=0;i<7;i++){ x=652-i*46; sh+='<path d="M'+x+' '+(150-i*11)+' V'+(258-i*20)+'" />'; }
+      for(i=0;i<26;i++) hat+='<path d="M'+(232+i*7.5)+' 96 V128" />';
+      g='<path d="M0 300 L286 150 M660 300 L374 150" stroke-width="1.4"/>'+
         '<path d="M0 214 L286 150 M660 214 L374 150" opacity=".5"/>'+
         '<g opacity=".7">'+sh+'</g>'+
         '<path d="M286 150 H374 V96 H286 Z" opacity=".9"/>'+
         '<g opacity=".45">'+hat+'</g>'+
         '<path d="M232 96 H428" stroke-width="1.6"/>'+
-        '<path d="M286 150 H374" stroke-width="1.6"/>'+
-        '<path d="M0 44 H660" opacity=".18"/>'+
-      '</g></svg>';
+        '<path d="M286 150 H374" stroke-width="1.6"/>';
+    }
+    return '<svg viewBox="0 0 660 300" width="100%" height="100%" preserveAspectRatio="none" '+
+      'fill="none" stroke="#5a574c" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">'+
+      '<rect x="-400" y="-900" width="1460" height="2400" fill="#e7e4da"/>'+
+      '<g class="art" opacity=".85">'+g+'</g></svg>';
   }
 
   function paperHTML(d){
     var L=d.lead||{}, h="";
-    h+='<div class="paperbar">'+
-       '<button class="btn" id="readArticle">記事を大きく読む</button>'+
-       '<span class="chip">'+esc(d.date)+'</span>'+
-       '<span class="chip">'+esc(d.page)+'面</span></div>';
+    h+='<div class="paperbar">';
+    paper.forEach(function(q,i){
+      var t=(q.lead&&q.lead.series||"").replace("まちを動かす女たち","").trim()||String(i+1);
+      h+='<button class="btn" data-issue="'+i+'"'+(i===(paperIdx||0)?' aria-pressed="true"':'')+'>'+
+         t+'　'+esc(q.date.replace(/^.*年（[^）]*）/,""))+'</button>';
+    });
+    h+='<button class="btn" id="readArticle">記事を大きく読む</button></div>';
     h+='<div class="paperwrap"><div class="paper" id="paperPage">';
     h+='<div class="phead"><span class="pno">'+esc(d.page)+'</span>'+
        '<span class="psec">'+esc(d.section)+'</span><span class="sp"></span>'+
@@ -888,8 +929,15 @@ body.zen .zenout{display:block}
     (L.body||[]).forEach(function(x){ h+='<p>'+esc(x)+'</p>'; });
     if(L.by) h+='<p class="by">（'+esc(L.by)+'）</p>';
     h+='</div>';
-    h+='<div class="pphoto"><div class="fr">'+streetSVG()+'</div>'+
-       '<div class="cap">'+esc(L.caption||"")+'</div></div></div>';
+    h+='<div class="pphoto"><div class="fr">'+photoSVG(L.photo)+'</div>'+
+       '<div class="cap">'+esc(L.caption||"")+'</div></div>';
+    h+='<div class="pinset"><div class="it">この連載は</div><ul>';
+    paper.forEach(function(q){
+      var t2=(q.lead&&q.lead.series||"").replace("まちを動かす女たち","").trim();
+      h+='<li>'+esc(q.date.replace(/^.*年（[^）]*）/,"").replace(/\s*月曜日.*$/,""))+
+         '　'+(t2?esc(t2)+'　':'')+esc(q.lead.head)+'</li>';
+    });
+    h+='</ul><div class="ft">毎週月曜　地域面に掲載</div></div></div>';
 
     /* 左側 */
     h+='<div class="pside">';
@@ -933,6 +981,47 @@ body.zen .zenout{display:block}
     h+='</div>';
     h+='</div></div>';
     return h;
+  }
+
+  function fitLead(){
+    /* 一、本文が幅いっぱいを使う高さを二分探索する
+       二、余った縦を写真に回す。ただし写真は六二〇までで打ち止め
+       三、それでも横が余ったら、左端に囲みを置く（紙面では、そこに囲みが入る） */
+    var t=document.querySelector(".ptext"), ph=document.querySelector(".pphoto"),
+        bx=document.querySelector(".pinset"), W=716, TOP=1560, GAP=20;
+    if(!t||!ph) return;
+    var lo=260, hi=TOP-GAP-300, best=hi;
+    t.style.width=W+"px";
+    for(var n=0;n<14 && lo<=hi;n++){
+      var mid=Math.round((lo+hi)/2);
+      t.style.height=mid+"px";
+      if(t.scrollWidth<=t.clientWidth+1){ best=mid; hi=mid-1; } else { lo=mid+1; }
+    }
+    var photoH=Math.max(300, Math.min(620, TOP-best-GAP));
+    var textH=TOP-photoH-GAP;
+    t.style.height=textH+"px"; t.style.top=(TOP-textH)+"px";
+    ph.style.height=photoH+"px";
+
+    /* 絵の画布を額の縦横比に合わせ、絵を中央へ置く */
+    var svg=ph.querySelector("svg"), art=ph.querySelector(".art");
+    if(svg&&art){
+      var H=Math.round(660*photoH/W);
+      svg.setAttribute("viewBox","0 0 660 "+H);
+      var k=Math.max(1, Math.min(1.7, H/360));
+      art.setAttribute("transform","translate(330,"+(H/2).toFixed(1)+") scale("+k.toFixed(3)+") translate(-330,-150)");
+    }
+
+    /* 使い切れなかった横を測って、囲みに回す */
+    t.style.width="";
+    var used=Math.min(W, t.scrollWidth);
+    t.style.width=used+"px";
+    var slack=W-used-16;
+    if(bx){
+      if(slack>110){ bx.style.display="block"; bx.style.width=slack+"px";
+                     bx.style.right=(164+used+16)+"px"; bx.style.height=textH+"px";
+                     bx.style.top=(TOP-textH)+"px"; }
+      else bx.style.display="none";
+    }
   }
 
   function fitPaper(){

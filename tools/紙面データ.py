@@ -75,7 +75,7 @@ def build(path):
             paper["lead"] = {
                 "series": b.get("柱", ""), "head": b.get("見出し", ""),
                 "sub": b.get("脇見出し", ""), "by": b.get("署名", ""),
-                "caption": b.get("写真説明", ""), "body": body,
+                "caption": b.get("写真説明", ""), "photo": b.get("写真", "通り"), "body": body,
                 "chars": len("".join(body).replace("　", "")),
             }
         elif k == "記事":
