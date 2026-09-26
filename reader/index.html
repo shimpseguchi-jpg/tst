@@ -4,6 +4,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;600&family=Noto+Serif+JP:wght@400;500&display=swap">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="theme-color" content="#e8e9e3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#131513" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="商店街">
 <style>
 :root{
   --ground:#e8e9e3; --surface:#f5f5f1; --sunk:#dedfd7;
@@ -384,10 +393,11 @@ body.zen .zenout{display:block}
       </header>
       <ul class="works" id="works"></ul>
       <div class="colophon">
-        <p style="margin:0 0 1.1rem"><button class="btn" id="toGuide">人物・店・年表の資料を見る</button> <button class="btn" id="toReport">森岡レポート</button></p>
+        <p style="margin:0 0 1.1rem"><button class="btn" id="toGuide">人物・店・年表の資料を見る</button> <button class="btn" id="toReport">森岡レポート</button> <button class="btn" id="installBtn" hidden>ホーム画面に追加</button></p>
         本文は縦書きで表示しています。横組みに切り替えることもできます。<br>
         字数は見出しと空白を除いた本文の文字数です。<br>
-        読んだ位置はこの端末に記憶され、次に開いたときに続きから始まります。
+        読んだ位置はこの端末に記憶され、次に開いたときに続きから始まります。<br>
+        <span id="offlineNote" hidden>一度開いた本文は端末に保存され、圏外でも読めます。</span>
       </div>
     </div>
   </div>
@@ -923,6 +933,35 @@ body.zen .zenout{display:block}
     else if(e.key===" "){ e.preventDefault(); page(e.shiftKey?-1:1); }
     else if(e.key==="ArrowDown"&&!tate){ return; }
   });
+
+  /* ---------- ホーム画面に追加 / オフライン ---------- */
+  var deferredPrompt=null;
+  window.addEventListener("beforeinstallprompt",function(e){
+    e.preventDefault(); deferredPrompt=e;
+    var b=$("installBtn"); if(b) b.hidden=false;
+  });
+  window.addEventListener("appinstalled",function(){
+    deferredPrompt=null;
+    var b=$("installBtn"); if(b) b.hidden=true;
+  });
+  if($("installBtn")){
+    $("installBtn").addEventListener("click",function(){
+      if(!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function(){
+        deferredPrompt=null; $("installBtn").hidden=true;
+      });
+    });
+  }
+  if("serviceWorker" in navigator){
+    window.addEventListener("load",function(){
+      try{
+        navigator.serviceWorker.register("sw.js").then(function(){
+          var n=$("offlineNote"); if(n) n.hidden=false;
+        }).catch(function(){});
+      }catch(e){}
+    });
+  }
 
   applyMode();
   fetch("data/index.json").then(function(r){ return r.json(); }).then(function(d){

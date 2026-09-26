@@ -38,3 +38,24 @@ cd reader && python3 -m http.server 8811
 ```
 
 `fetch` を使うので、ファイルを直接開くのではなくサーバー越しに見る。
+
+## ホーム画面に追加する（Android / iOS）
+
+リーダーはPWAとして動く。`manifest.webmanifest` と `sw.js` と `icons/` がその一式である。
+
+- **Android（Chrome）**　メニュー →「アプリをインストール」または「ホーム画面に追加」。
+  インストールできる状態のときは、作品一覧の下に「ホーム画面に追加」ボタンが出る。
+- **iOS（Safari）**　共有 →「ホーム画面に追加」。`beforeinstallprompt` は来ないのでボタンは出ない。
+
+`sw.js` は**ネットワーク優先、失敗したらキャッシュ**である。
+本文を更新して再公開すれば、オンラインなら次に開いた時点で新しいものが出る。
+古い本文がキャッシュに残り続けることはない。圏外のときだけキャッシュが使われる。
+
+キャッシュを作り直したいときは `sw.js` の `CACHE` の版数を上げる。
+
+### 公開URLで使いたい場合
+
+claude.ai のアーティファクトはログインが要る。ログイン不要の常設URLにするなら
+GitHub Pages に `reader/` を出す。`.github/workflows/pages.yml` を用意してある。
+リポジトリの Settings → Pages → Source を「GitHub Actions」にしてから、
+Actions タブで `reader を GitHub Pages に出す` を手動実行する。
