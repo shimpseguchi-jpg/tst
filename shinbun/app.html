@@ -585,7 +585,7 @@ details .grid{ display:grid; gap:10px; }
   - コラム：担任の一人称で、最後は読み手へのよびかけや問いで終える。メモになければ、季節や他の記事につながるテーマで書く。
 - 子どもの名前はフルネームで書かない（メモにあっても「〇〇さん」までか「ある人」にする）。
 - 「です・ます」。一文は40字くらいまで。
-- 漢字をふくむ言葉には、見出し・本文・囲み・ひとことまで、すべて {漢字|かんじ} の形で読みを書く（どの漢字にふりがなを出すかは紙面の側で学年に合わせて決めるので、かんたんな漢字にも書く）。送りがなは外に出す：{走|はし}る、{見上|みあ}げる。数字には書かない。\n- ${st.grade}年生にむずかしい言葉は、やさしい言葉に言いかえる。${st.grade <= 2 ? 'ひらがなを多めにし、全体を2〜3割短くする。' : ''}
+- ふりがな・読みは書かない（あとで別につける）。{ } の記号は使わない。\n- ${st.grade}年生にむずかしい言葉は、やさしい言葉に言いかえる。${st.grade <= 2 ? 'ひらがなを多めにし、全体を2〜3割短くする。' : ''}
 - 大事なところは **ことば** で傍点をつける（1記事に1〜2か所まで）。
 - 数字は半角。予定の items は「9/28（月）｜全校朝会」のように、日付と内容を全角の｜で区切る。
 
@@ -632,8 +632,60 @@ ${$('in-other').value.trim() || '（なし）'}`;
     rate_limited: '少し混み合っています。1分ほど待ってからもう一度押してください。',
     cancelled: '止めました。',
     parse_error: 'AIの答えをうまく読み取れませんでした。もう一度押してください。',
+    invalid_json: 'AIの答えが長くなりすぎて、途中で切れました。もう一度押してください（メモを少し短くすると確実です）。',
   };
   const setStatus = (t, err) => { $('status').textContent = t; $('status').classList.toggle('error', !!err); };
+
+  // ---------------------------------------------------------------------------
+  // ふりがな：記事の中の漢字の言葉を一覧にして、読みだけを AI に答えてもらう
+  // （記事の本文にふりがなを書かせると答えが長くなりすぎて途中で切れるため）
+  // ---------------------------------------------------------------------------
+  const RUN = /[\u4e00-\u9fff々〆]+/g;
+  const SKIP_KEYS = new Set(['emoji', 'title_en', 'label']);
+  function stripRuby(obj){ return JSON.parse(JSON.stringify(obj).replace(/\{([^|{}]+)\|[^{}]+\}/g, '$1')); }
+  function eachString(obj, fn, key){
+    if (typeof obj === 'string') return SKIP_KEYS.has(key) ? obj : fn(obj);
+    if (Array.isArray(obj)) return obj.map(v => eachString(v, fn, key));
+    if (obj && typeof obj === 'object'){ const o = {}; for (const k in obj) o[k] = eachString(obj[k], fn, k); return o; }
+    return obj;
+  }
+  // 同じ漢字でも読みが変わるので（分かる／10分）、前後の文字も合わせて区別する
+  const runKey = (str, i, run) => {
+    const before = /[0-9０-９]/.test(str[i - 1] || '') ? '#' : '';
+    const after = (str.slice(i + run.length).match(/^[\u3041-\u309f]{0,3}/) || [''])[0];
+    return before + run + '|' + after;
+  };
+  async function addReadings(sample, art, signal){
+    const plain = stripRuby(art);
+    const items = new Map();   // key -> {run, context}
+    eachString(plain, str => {
+      for (const m of str.matchAll(RUN)){
+        const key = runKey(str, m.index, m[0]);
+        if (!items.has(key)) items.set(key, {
+          run: m[0],
+          context: str.slice(Math.max(0, m.index - 12), m.index) + '【' + m[0] + '】' + str.slice(m.index + m[0].length, m.index + m[0].length + 12),
+        });
+      }
+      return str;
+    });
+    if (!items.size) return plain;
+    const keys = [...items.keys()];
+    const list = keys.map((k, i) => `${i + 1}: ${items.get(k).context}`).join('\n');
+    const answer = await sample.json(`小学生向けの新聞にふりがなをつけます。各行の【】の中の漢字の読みを、前後の文に合わせて、ひらがなで答えてください。
+送りがなは入れず、【】の中の漢字の部分だけの読みにします（例：【見上】げる → みあ、【練習】 → れんしゅう、【10】【分】 のような時間なら ふん）。
+{"1": "よみ", "2": "よみ", ...} の形の JSON だけを返してください。
+
+${list}`, { signal, modelTier: 'default', cache: false });
+    const yomi = new Map();
+    keys.forEach((k, i) => {
+      const y = answer?.[String(i + 1)];
+      if (typeof y === 'string' && /^[\u3041-\u309fー]+$/.test(y.trim())) yomi.set(k, y.trim());
+    });
+    return eachString(plain, str => str.replace(RUN, (run, i) => {
+      const y = yomi.get(runKey(str, i, run));
+      return y ? `{${run}|${y}}` : run;
+    }));
+  }
 
   async function ask(extra){
     const sample = await getSample();
@@ -641,7 +693,7 @@ ${$('in-other').value.trim() || '（なし）'}`;
     const st = settings();
     if (!extra && !$('in-school').value.trim()){ setStatus('① 学校のこと を書いてください（ここはAIが作り話にできないため）。', true); $('in-school').focus(); return; }
     let prompt = RULES(st) + '\n\n' + inputBlock(st);
-    if (extra) prompt += `\n\n# いまの紙面（JSON）\n${JSON.stringify(article)}\n\n# 先生からの直してほしいこと\n${extra}\n\n直してほしいことを反映した JSON 全体を、同じ形で返してください。言われていない所はなるべく変えないでください。`;
+    if (extra) prompt += `\n\n# いまの紙面（JSON）\n${JSON.stringify(stripRuby(article))}\n\n# 先生からの直してほしいこと\n${extra}\n\n直してほしいことを反映した JSON 全体を、同じ形で返してください。言われていない所はなるべく変えないでください。`;
 
     ctl = new AbortController();
     busy(true);
@@ -652,10 +704,23 @@ ${$('in-other').value.trim() || '（なし）'}`;
         onText: ({ text }) => setStatus(`書いています…（${text.length}字）`),
       });
       if (!data || !data.school) throw { code: 'parse_error' };
+      const checks = data.checks || [];
+      delete data.checks;
       article = data; isSample = false;
       render(); persist();
-      const missing = rubyFrom ? missingRuby({ note: data.note, school: data.school, world: data.world, column: data.column, boxes: data.boxes }) : [];
-      showChecks([...(data.checks || []), ...(missing.length ? [`ふりがながついていない漢字があります：${missing.join('、')}（紙面で直すか、「直したいこと」に「ふりがなをつけて」と書いてください）`] : [])]);
+
+      // 2回目：漢字の言葉の読みだけを答えてもらい、ふりがなとして差しこむ
+      setStatus('ふりがなをつけています…');
+      try {
+        article = await addReadings(sample, article, ctl.signal);
+        render(); persist();
+      } catch(e){
+        if (e?.code === 'cancelled') throw e;
+        checks.push('ふりがなをつけられませんでした。もう一度「AIで直す」に「ふりがなをつけて」と書いてください。');
+      }
+      const data2 = article;
+      const missing = rubyFrom ? missingRuby({ note: data2.note, school: data2.school, world: data2.world, column: data2.column, boxes: data2.boxes }) : [];
+      showChecks([...checks, ...(missing.length ? [`ふりがながついていない漢字があります：${missing.join('、')}（紙面で直すか、「直したいこと」に「ふりがなをつけて」と書いてください）`] : [])]);
       $('revise-box').hidden = false;
       setStatus('できました。紙面を確かめて、よければ「印刷用ファイルを保存」を押してください。');
     } catch(e){
