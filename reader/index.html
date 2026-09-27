@@ -132,6 +132,11 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 
 /* 番外（非公式）。本編とわざと違う見た目にしてある */
 .xwrap{font-family:var(--util);writing-mode:horizontal-tb;max-width:44rem;margin:0 auto}
+.xwrap .xnav{display:flex;gap:.4rem;margin:0 0 1.4rem;flex-wrap:wrap}
+.xwrap .xnav button{
+  font-family:var(--util);font-size:.72rem;letter-spacing:.08em;color:var(--muted);
+  border:1px solid var(--rule);border-radius:2px;padding:.4rem .7rem;white-space:nowrap}
+.xwrap .xnav button[aria-pressed="true"]{color:var(--accent);border-color:var(--accent-soft);background:var(--sunk)}
 .xwrap .xtitle{
   font-family:var(--util);font-size:1.15rem;font-weight:800;line-height:1.5;
   letter-spacing:0;color:var(--accent);margin:0 0 .8rem}
@@ -146,6 +151,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .xwrap .xsec p{
   font-family:var(--body);font-size:.95rem;line-height:1.95;letter-spacing:.01em;
   margin:0 0 .85rem;text-indent:0}
+.xwrap .xsec p b{font-family:var(--util);font-weight:800;color:var(--accent);letter-spacing:0}
 .xwrap .xsec p.sp{color:var(--ink-soft)}
 .xwrap .xsec p.big{
   font-family:var(--util);font-weight:800;font-size:1.05rem;color:var(--accent);
@@ -1338,11 +1344,19 @@ body.zen .zenout{display:block}
     var n=0, cache=null, unlocked=store.get("x",0);
     if(unlocked) b.classList.add("open");
 
+    function ib(t){
+      return esc(t).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/\n/g,"<br>");
+    }
     function shout(t){
       return /^[「『]/.test(t) || /[！!?？]{2}/.test(t) || /^「「「/.test(t);
     }
-    function render(d){
-      var h='<div class="xwrap">';
+    function one(d, items, at){
+      var h='<div class="xwrap"><div class="xnav">';
+      for(var k=0;k<items.length;k++){
+        h+='<button data-x="'+k+'" aria-pressed="'+(k===at?"true":"false")+'">'+
+           esc(items[k].label)+'</button>';
+      }
+      h+='</div>';
       h+='<p class="xtitle">'+esc(d.title)+'</p>';
       h+='<p class="xnote">'+esc(d.note)+'</p>';
       h+='<p class="xmeta">'+d.secs.length+'節 / '+d.chars+'字 / 正史ではありません</p>';
@@ -1352,7 +1366,7 @@ body.zen .zenout{display:block}
         for(var j=0;j<sc.ps.length;j++){
           var t=sc.ps[j];
           var cl = /^「「「/.test(t) ? "big" : (shout(t) ? "sp" : "");
-          h+='<p'+(cl?' class="'+cl+'"':'')+'>'+esc(t).replace(/\n/g,"<br>")+'</p>';
+          h+='<p'+(cl?' class="'+cl+'"':'')+'>'+ib(t)+'</p>';
         }
         h+='</div>';
       }
@@ -1361,13 +1375,26 @@ body.zen .zenout{display:block}
       h+='</div>';
       return h;
     }
+    function bind(items, at){
+      var host=document.querySelector(".psheet .pbody"); if(!host) return;
+      host.innerHTML=one(items[at], items, at);
+      host.scrollTop=0;
+      Array.prototype.forEach.call(host.querySelectorAll("[data-x]"),function(bt){
+        bt.addEventListener("click",function(){ bind(items, +bt.getAttribute("data-x")); });
+      });
+    }
+    function render(d){ return one(d.items[0], d.items, 0); }
+    function show(d){
+      mountSheet("番外（非公式）","番外",render(d));
+      bind(d.items, 0);
+    }
     function open(){
-      if(cache){ mountSheet("番外（非公式）","番外",render(cache)); return; }
+      if(cache){ show(cache); return; }
       b.disabled=true;
       fetch("data/x.json").then(function(r){ return r.json(); }).then(function(d){
         cache=d; b.disabled=false;
         store.set("x",1); b.classList.add("open");
-        mountSheet("番外（非公式）","番外",render(d));
+        show(d);
       }).catch(function(){
         b.disabled=false; b.title="読み込めませんでした";
       });
