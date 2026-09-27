@@ -130,39 +130,18 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .qmark.open::after{content:"";display:inline-block;width:4px;height:4px;border-radius:50%;
   background:var(--accent);vertical-align:.45em;margin-left:.3em}
 
-/* 番外（非公式）。本編とわざと違う見た目にしてある */
-.xwrap{font-family:var(--util);writing-mode:horizontal-tb;max-width:44rem;margin:0 auto}
-.xwrap .xnav{display:flex;gap:.4rem;margin:0 0 1.4rem;flex-wrap:wrap}
-.xwrap .xnav button{
-  font-family:var(--util);font-size:.72rem;letter-spacing:.08em;color:var(--muted);
-  border:1px solid var(--rule);border-radius:2px;padding:.4rem .7rem;white-space:nowrap}
-.xwrap .xnav button[aria-pressed="true"]{color:var(--accent);border-color:var(--accent-soft);background:var(--sunk)}
-.xwrap .xtitle{
-  font-family:var(--util);font-size:1.15rem;font-weight:800;line-height:1.5;
-  letter-spacing:0;color:var(--accent);margin:0 0 .8rem}
-.xwrap .xnote{
-  font-size:.74rem;line-height:1.85;color:var(--ink-soft);letter-spacing:.02em;
-  border:1px dashed var(--accent-soft);border-radius:3px;padding:.7rem .85rem;margin:0 0 1.6rem}
-.xwrap .xmeta{font-size:.68rem;color:var(--muted);letter-spacing:.06em;margin:0 0 1.8rem}
-.xwrap .xsec{margin:0 0 2.1rem}
-.xwrap .xsec h3{
-  font-family:var(--util);font-size:.82rem;font-weight:800;letter-spacing:.04em;
-  color:var(--ink);margin:0 0 .8rem;padding:.3rem 0 .35rem;border-bottom:2px solid var(--mark)}
-.xwrap .xsec p{
-  font-family:var(--body);font-size:.95rem;line-height:1.95;letter-spacing:.01em;
-  margin:0 0 .85rem;text-indent:0}
-.xwrap .xsec .xred{
+/* 番外（非公式） */
+.xmast h1{color:var(--accent)}
+.xnote{
+  font-family:var(--util);font-size:.74rem;line-height:1.9;letter-spacing:.02em;color:var(--ink-soft);
+  border:1px dashed var(--accent-soft);border-radius:3px;padding:.75rem .9rem;margin:1.4rem 0 0}
+.xred{
   background:var(--ink);color:var(--ink);border-radius:1px;
-  padding:0 .12em;box-decoration-break:clone;-webkit-box-decoration-break:clone;
+  box-decoration-break:clone;-webkit-box-decoration-break:clone;
   -webkit-user-select:none;user-select:none}
-.xwrap .xsec p b{font-family:var(--util);font-weight:800;color:var(--accent);letter-spacing:0}
-.xwrap .xsec p.sp{color:var(--ink-soft)}
-.xwrap .xsec p.big{
-  font-family:var(--util);font-weight:800;font-size:1.05rem;color:var(--accent);
-  letter-spacing:0;margin:1.1rem 0}
-.xwrap .xend{
-  font-size:.72rem;color:var(--muted);letter-spacing:.06em;line-height:2;
-  border-top:1px solid var(--rule);margin:2.4rem 0 0;padding:1.1rem 0 0}
+body.yoko .xred{padding:0 .1em}
+body.tate .xred{padding:.1em 0}
+.text b{font-weight:700;color:var(--accent)}
 
 /* stage */
 .stage{flex:1;min-height:0;position:relative;overflow:hidden}
@@ -256,6 +235,7 @@ body.zen .zenout{display:block}
   position:absolute;inset:0;display:grid;place-items:center;
   font-family:var(--util);font-size:.75rem;letter-spacing:.2em;color:var(--muted);
 }
+.loading[hidden]{display:none}
 /* ---------- guide ---------- */
 #guide{flex:1;overflow-y:auto;overflow-x:hidden}
 .g-inner{max-width:60rem;margin:0 auto;padding:0 16px;padding-block:2rem 4rem}
@@ -519,7 +499,7 @@ body.zen .zenout{display:block}
 <div id="app">
   <div id="library">
     <div class="lib-inner">
-      <header class="masthead">
+      <header class="masthead" id="mast">
         <h1>商店街連作</h1>
         <p class="sub">新潟の羽室銀座と、広島の柏尾銀天街。二つのアーケード街を舞台に、二〇二六年から二〇三五年までを共有する十六篇と、六つの幕間。どこから読んでも、続けて読んでも成立します。</p>
         <div class="tally">
@@ -528,13 +508,29 @@ body.zen .zenout{display:block}
           <span><b class="num" id="t-chars">—</b> 字</span>
         </div>
       </header>
+      <header class="masthead xmast" id="xmast" hidden>
+        <h1>番外（非公式）</h1>
+        <p class="sub">作者による非公式の二次創作。本編で自分に課した制限を外して書いたもので、正史ではありません。年表にも、既刊の数にも、字数の合計にも入れていません。</p>
+        <div class="tally">
+          <span><b class="num" id="x-works">—</b> 篇</span>
+          <span><b class="num" id="x-chaps">—</b> 節</span>
+          <span><b class="num" id="x-chars">—</b> 字</span>
+        </div>
+        <p class="xnote">外してあるものは一篇ごとに違います。表記の決まりを全部外したもの、甘さの上限を外したもの、文体は本編のままで内容の制限だけ外したもの。<br>黒い帯は塗りつぶしです。指でなぞっても下は出てきません。</p>
+        <p style="margin:1.4rem 0 0"><button class="btn" id="xBack">本編の一覧へ</button></p>
+      </header>
       <ul class="works" id="works"></ul>
-      <div class="colophon">
+      <div class="colophon" id="colo">
         <p style="margin:0 0 1.1rem"><button class="btn" id="toGuide">人物・店・年表の資料を見る</button> <button class="btn" id="toReport">森岡レポート</button> <span class="paperq"><button class="btn" id="toPaper">備陽新報の紙面</button><button class="btn ghost qmark" id="qBtn" aria-label="？" title="">？</button></span> <button class="btn" id="installBtn" hidden>ホーム画面に追加</button></p>
         本文は縦書きで表示しています。横組みに切り替えることもできます。<br>
         字数は見出しと空白を除いた本文の文字数です。<br>
         読んだ位置はこの端末に記憶され、次に開いたときに続きから始まります。<br>
         <span id="offlineNote" hidden>一度開いた本文は端末に保存され、圏外でも読めます。</span>
+      </div>
+      <div class="colophon" id="xcolo" hidden>
+        ここに並んでいる一篇は、どれも本編に含まれません。<br>
+        本編の人物がここで言ったこと、したことは、本編では起きていないものとして扱います。<br>
+        本編は、ルールを外しません。
       </div>
     </div>
   </div>
@@ -602,6 +598,7 @@ body.zen .zenout{display:block}
 
   var $ = function(id){ return document.getElementById(id); };
   var index=[], cache={}, cur=null, curCh=0, drawer=null;
+  var xindex=null, libx=false;   /* 番外の一覧を出しているあいだ true */
   var SIZES=[15,17,19,22], sizeIdx=store.get("size",1);
   var tate=store.get("tate",true);
 
@@ -614,10 +611,17 @@ body.zen .zenout{display:block}
   }
 
   /* ---------- library ---------- */
+  /* 番外は章ではなく節で数える */
+  function unit(num){ return /^x/.test(String(num)) ? "節" : "章"; }
+
   function renderLibrary(){
+    var list = libx ? (xindex||[]) : index;
+    var u = libx ? "節" : "章";
+    $("mast").hidden=libx; $("colo").hidden=libx;
+    $("xmast").hidden=!libx; $("xcolo").hidden=!libx;
     var chaps=0, chars=0;
     var ul=$("works"); ul.textContent="";
-    index.forEach(function(w,i){
+    list.forEach(function(w){
       chaps+=w.count; chars+=w.chars;
       var pos=store.get("pos:"+w.num,null);
       var li=document.createElement("li"); li.className="work";
@@ -627,16 +631,22 @@ body.zen .zenout{display:block}
         '<span><span class="wt">'+w.title+'</span><br>'+
         '<span class="wgenre">'+w.genre+'</span>'+
         '<span class="wblurb">'+w.blurb+'</span>'+
-        '<span class="wmeta"><span class="num">'+w.count+'</span>章'+
+        '<span class="wmeta"><span class="num">'+w.count+'</span>'+u+
         '<span class="dot">／</span><span class="num">'+comma(w.chars)+'</span>字'+
-        (pos?'<span class="dot">／</span><span class="mark">第'+kan(pos.ch+1)+'章まで読了</span>':'')+
+        (pos?'<span class="dot">／</span><span class="mark">第'+kan(pos.ch+1)+u+'まで読了</span>':'')+
         '</span></span>';
       b.addEventListener("click",function(){ open(w.num, pos?pos.ch:0); });
       li.appendChild(b); ul.appendChild(li);
     });
-    $("t-works").textContent=index.length;
-    $("t-chaps").textContent=chaps;
-    $("t-chars").textContent=comma(chars);
+    if(libx){
+      $("x-works").textContent=list.length;
+      $("x-chaps").textContent=chaps;
+      $("x-chars").textContent=comma(chars);
+    }else{
+      $("t-works").textContent=list.length;
+      $("t-chaps").textContent=chaps;
+      $("t-chars").textContent=comma(chars);
+    }
   }
 
   /* ---------- scroll helpers (vertical-rl safe) ---------- */
@@ -671,6 +681,7 @@ body.zen .zenout{display:block}
 
   /* ---------- reader ---------- */
   function open(num, ch){
+    libx = /^x/.test(String(num));
     $("library").hidden=true; $("guide").hidden=true; $("reader").hidden=false;
     if(cache[num]){ show(cache[num],ch); return; }
     $("loading").hidden=false; $("pane").textContent="";
@@ -685,7 +696,10 @@ body.zen .zenout{display:block}
     cur=w; curCh=Math.max(0,Math.min(w.chapters.length-1, ch||0));
     var c=w.chapters[curCh];
     $("cw").textContent=w.title;
-    $("cc").textContent="第"+kan(curCh+1)+"章 ／ 全"+kan(w.chapters.length)+"章";
+    var u=unit(w.num);
+    $("cc").textContent="第"+kan(curCh+1)+u+" ／ 全"+kan(w.chapters.length)+u;
+    $("prevCh").textContent="前の"+u;
+    $("nextCh").textContent="次の"+u;
 
     var pane=$("pane"); pane.textContent="";
     var text=document.createElement("div"); text.className="text";
@@ -693,7 +707,11 @@ body.zen .zenout{display:block}
     text.appendChild(h);
     c.scenes.forEach(function(sc){
       var d=document.createElement("div"); d.className="scene";
-      sc.forEach(function(p){ var el=document.createElement("p"); el.textContent=p; d.appendChild(el); });
+      sc.forEach(function(p){
+        var el=document.createElement("p");
+        if(/\{\{|\*\*/.test(p)) el.innerHTML=deco(p); else el.textContent=p;
+        d.appendChild(el);
+      });
       text.appendChild(d);
     });
     var end=document.createElement("p"); end.className="endmark";
@@ -755,6 +773,12 @@ body.zen .zenout{display:block}
     return out+'</span>';
   }
   function esc(t){ return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+  /* 番外だけで使う。{{ }} は塗りつぶし、** ** は強調 */
+  function deco(t){
+    return esc(t)
+      .replace(/\*\*(.+?)\*\*/g,"<b>$1</b>")
+      .replace(/\{\{([^{}]*)\}\}/g,'<span class="xred">$1</span>');
+  }
 
   function renderGuide(){
     var box=$("gsec"); box.textContent="";
@@ -1299,7 +1323,7 @@ body.zen .zenout{display:block}
   /* ---------- drawer ---------- */
   function buildDrawer(){
     var body=drawer.querySelector(".dbody"); body.textContent="";
-    index.forEach(function(w){
+    (libx ? (xindex||[]) : index).forEach(function(w){
       var head=document.createElement("div"); head.className="dwork";
       head.textContent=w.num+"　"+w.title;
       body.appendChild(head);
@@ -1342,76 +1366,43 @@ body.zen .zenout{display:block}
   $("toReport").addEventListener("click",function(){ gtab="report"; syncTabs(); openGuide(); });
   $("toPaper").addEventListener("click",function(){ gtab="paper"; syncTabs(); openGuide(); });
 
+  /* ---------- 番外（非公式） ---------- */
+  function xLib(){
+    libx=true; setZen(false);
+    $("reader").hidden=true; $("guide").hidden=true; $("library").hidden=false;
+    closeDrawer(); renderLibrary();
+    try{ $("library").scrollTop=0; }catch(e){}
+  }
+  function loadX(then, fail){
+    if(xindex){ then(); return; }
+    fetch("data/x.json").then(function(r){ return r.json(); }).then(function(d){
+      xindex=d; then();
+    }).catch(fail);
+  }
+  $("xBack").addEventListener("click",function(){ libx=false; toLibrary(); });
+
   /* ？ ---- 五回押すと開く。開いたことは端末に覚えておく */
   (function(){
     var b=$("qBtn"); if(!b) return;
-    var n=0, cache=null, unlocked=store.get("x",0);
+    var n=0, unlocked=store.get("x",0);
     if(unlocked) b.classList.add("open");
 
-    function ib(t){
-      return esc(t)
-        .replace(/\*\*(.+?)\*\*/g,"<b>$1</b>")
-        .replace(/\{\{([^{}]*)\}\}/g,'<span class="xred">$1</span>')
-        .replace(/\n/g,"<br>");
-    }
-    function shout(t){
-      return /^[「『]/.test(t) || /[！!?？]{2}/.test(t) || /^「「「/.test(t);
-    }
-    function one(d, items, at){
-      var h='<div class="xwrap"><div class="xnav">';
-      for(var k=0;k<items.length;k++){
-        h+='<button data-x="'+k+'" aria-pressed="'+(k===at?"true":"false")+'">'+
-           esc(items[k].label)+'</button>';
-      }
-      h+='</div>';
-      h+='<p class="xtitle">'+esc(d.title)+'</p>';
-      h+='<p class="xnote">'+esc(d.note)+'</p>';
-      h+='<p class="xmeta">'+d.secs.length+'節 / '+d.chars+'字 / 正史ではありません</p>';
-      for(var i=0;i<d.secs.length;i++){
-        var sc=d.secs[i];
-        h+='<div class="xsec"><h3>'+esc(sc.h)+'</h3>';
-        for(var j=0;j<sc.ps.length;j++){
-          var t=sc.ps[j];
-          var cl = /^「「「/.test(t) ? "big" : (shout(t) ? "sp" : "");
-          h+='<p'+(cl?' class="'+cl+'"':'')+'>'+ib(t)+'</p>';
-        }
-        h+='</div>';
-      }
-      h+='<p class="xend">この一篇は本編に含まれません。字数の合計にも入れていません。<br>'+
-         '本編は、ルールを外しません。</p>';
-      h+='</div>';
-      return h;
-    }
-    function bind(items, at){
-      var host=document.querySelector(".psheet .pbody"); if(!host) return;
-      host.innerHTML=one(items[at], items, at);
-      host.scrollTop=0;
-      Array.prototype.forEach.call(host.querySelectorAll("[data-x]"),function(bt){
-        bt.addEventListener("click",function(){ bind(items, +bt.getAttribute("data-x")); });
-      });
-    }
-    function render(d){ return one(d.items[0], d.items, 0); }
-    function show(d){
-      mountSheet("番外（非公式）","番外",render(d));
-      bind(d.items, 0);
-    }
-    function open(){
-      if(cache){ show(cache); return; }
+    function go(){
       b.disabled=true;
-      fetch("data/x.json").then(function(r){ return r.json(); }).then(function(d){
-        cache=d; b.disabled=false;
+      loadX(function(){
+        b.disabled=false;
         store.set("x",1); b.classList.add("open");
-        show(d);
-      }).catch(function(){
+        xLib();
+      },function(){
         b.disabled=false; b.title="読み込めませんでした";
       });
     }
     b.addEventListener("click",function(){
-      if(unlocked){ open(); return; }
+      if(unlocked){ go(); return; }
       n++;
       b.classList.toggle("warm", n>=3 && n<5);
       b.classList.toggle("hot", n===4);
-      if(n>=5){ unlocked=1; b.classList.remove("warm","hot"); open(); }
+      if(n>=5){ unlocked=1; b.classList.remove("warm","hot"); go(); }
     });
   })();
   function syncTabs(){
