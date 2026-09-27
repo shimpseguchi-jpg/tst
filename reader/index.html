@@ -472,11 +472,12 @@ body.zen .zenout{display:block}
 .doc a:hover{border-bottom-color:var(--accent)}
 .doc hr{border:0;border-top:1px solid var(--rule-soft);margin:2.6rem 0 0}
 .doc .tw{overflow-x:auto;margin:1.3rem 0 .3rem;border:1px solid var(--rule)}
-.doc table{border-collapse:collapse;width:100%;font-size:.84rem;background:var(--surface)}
+.doc table{border-collapse:collapse;width:auto;min-width:100%;font-size:.84rem;background:var(--surface)}
 .doc th,.doc td{padding:.6rem .8rem;text-align:left;border-bottom:1px solid var(--rule-soft);vertical-align:top}
 .doc th{font-family:var(--util);font-size:.72rem;letter-spacing:.08em;color:var(--muted);font-weight:400;
   background:var(--sunk);white-space:nowrap}
 .doc td{color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.doc td.n,.doc th.n{white-space:nowrap}
 .doc tbody tr:last-child td{border-bottom:0}
 .doc td strong{background:none;color:var(--accent);font-weight:500}
 

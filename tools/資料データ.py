@@ -354,7 +354,12 @@ def md_to_html(md):
             t += [f"<th>{_inline(c)}</th>" for c in head]
             t.append("</tr></thead><tbody>")
             for r in rows:
-                t.append("<tr>" + "".join(f"<td>{_inline(c)}</td>" for c in r) + "</tr>")
+                # 短い値だけのセルは途中で折らない（一五四 が 一五／四 に割れるのを防ぐ）
+                def _cell(c):
+                    plain = re.sub(r'\*\*|　', '', c)
+                    cls = ' class="n"' if len(plain) <= 8 and not re.search(r'[。、]', plain) else ''
+                    return f"<td{cls}>{_inline(c)}</td>"
+                t.append("<tr>" + "".join(_cell(c) for c in r) + "</tr>")
             t.append("</tbody></table></div>")
             out.append("".join(t)); continue
         if re.match(r'^[-*]\s+', s):
@@ -451,6 +456,22 @@ docs = [
         "date": "二〇三六年三月",
         "from": "入ってくるものと、出ていくもの",
         "note": "本編は値段をよく書くが、毎月いくら入るかは一度も書いていない。ここで初めて決めたものである。",
+    }),
+    _doc("資料/寸法.md", {
+        "title": "寸法",
+        "tab": "寸法",
+        "to": "十二人ぶん",
+        "date": "二〇三六年三月",
+        "from": "生まれ・背・手・目と耳と声・肩",
+        "note": "本編に一度も出していない。ここで初めて決めたものである。この連作でからだは道具として出てくるので、この表も働く前提の数字として並べてある。",
+    }),
+    _doc("資料/ポケットの中.md", {
+        "title": "ポケットの中",
+        "tab": "ポケット",
+        "to": "『鞄の中』の続き",
+        "date": "二〇三六年三月",
+        "from": "仕事着と、上着と、身につけているもの",
+        "note": "鞄に入れないものは、ポケットに入っている。鞄を持たない二人は、ここだけになる。十二人のうち時計をしているのは四人で、していない八人の理由は全部ちがう。",
     }),
 ]
 json.dump(docs, open("reader/data/report.json", "w", encoding="utf-8"),
