@@ -5,7 +5,8 @@
 import io, json, os, re
 
 SRC = ["番外_非公式/非公式二次創作.md",
-       "番外_非公式/非公式二次創作_甘々.md"]
+       "番外_非公式/非公式二次創作_甘々.md",
+       "番外_非公式/非公式二次創作_旅行.md"]
 OUT = "reader/data/x.json"
 
 def parse(path):
