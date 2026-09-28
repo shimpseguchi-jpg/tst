@@ -95,7 +95,7 @@ def build(path):
 
 
 def main():
-    src = sorted(glob.glob(os.path.join(ROOT, "資料", "備陽新報_*.md")))
+    src = sorted(glob.glob(os.path.join(ROOT, "資料", "備陽新報_[0-9]*.md")))
     if not src:
         raise SystemExit("資料/備陽新報_*.md が無い")
     papers = [build(p) for p in src]

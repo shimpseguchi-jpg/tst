@@ -4,10 +4,12 @@
    フォントだけはキャッシュ優先にする（毎回取りにいく必要がないため）。 */
 "use strict";
 
-var CACHE = "shotengai-v45";
+var CACHE = "shotengai-v46";
 var FONTS = "shotengai-fonts-v2";
 
-var WORKS = ["01","02","03","04","05","06","07","08","09","10","11","12","i1","i2","i3"];
+var WORKS = ["01","02","03","04","05","06","07","08","09","10","11","12",
+             "13","14","15","16","17","18",
+             "i1","i2","i3","i4","i5","i6","i7","i8","i9"];
 var PRECACHE = [
   "./index.html",
   "./manifest.webmanifest",
@@ -15,7 +17,8 @@ var PRECACHE = [
   "./icons/icon-512.png",
   "./data/index.json",
   "./data/guide.json",
-  "./data/report.json"
+  "./data/report.json",
+  "./data/paper.json"
 ].concat(WORKS.map(function (n) { return "./data/" + n + ".json"; }));
 
 /* addAll は一つでも落ちると全部やり直しになるので、一つずつ入れる */
