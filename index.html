@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>商店街連作</title>
+<meta name="description" content="新潟の羽室銀座と、広島の柏尾銀天街。二つのアーケード街を舞台に、二〇二六年から二〇三六年までを共有する二十五篇。">
+<link rel="canonical" href="reader/">
+<meta http-equiv="refresh" content="3;url=reader/">
+<style>
+:root{
+  --ground:#e8e9e3; --surface:#f5f5f1;
+  --ink:#191b19; --ink-soft:#4a4f4b; --muted:#71776f;
+  --rule:#cccec4; --accent:#9c382c;
+  --mincho:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
+  --body:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#131513; --surface:#1b1e1b;
+    --ink:#dbdcd3; --ink-soft:#b3b6ac; --muted:#858b81;
+    --rule:#2c302c; --accent:#c9685a;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#131513; --surface:#1b1e1b;
+  --ink:#dbdcd3; --ink-soft:#b3b6ac; --muted:#858b81;
+  --rule:#2c302c; --accent:#c9685a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--ground); color:var(--ink);
+  font-family:var(--body); line-height:1.95;
+  min-height:100dvh; display:grid; place-items:center;
+  padding:3rem 16px;
+}
+main{max-width:34rem;width:100%}
+h1{
+  font-family:var(--mincho); font-weight:600;
+  font-size:clamp(2rem,7vw,2.9rem); letter-spacing:.06em;
+  margin:0 0 1.2rem;
+}
+p{color:var(--ink-soft); margin:0 0 1.1rem; font-size:1rem}
+.tally{
+  display:flex; flex-wrap:wrap; gap:1.2rem;
+  font-family:var(--body); color:var(--muted);
+  font-size:.92rem; letter-spacing:.04em;
+  border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);
+  padding:.9rem 0; margin:1.6rem 0;
+}
+.tally b{color:var(--ink); font-weight:600; font-size:1.05rem}
+a.go{
+  display:inline-block; text-decoration:none;
+  font-family:var(--mincho); font-size:1.1rem; letter-spacing:.08em;
+  color:var(--ground); background:var(--accent);
+  padding:.7rem 1.8rem; border-radius:2px;
+}
+a.go:hover{opacity:.88}
+.sub{margin-top:1.4rem; font-size:.86rem; color:var(--muted)}
+.sub a{color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+  <h1>商店街連作</h1>
+  <p>新潟の羽室銀座と、広島の柏尾銀天街。二つのアーケード街を舞台に、二〇二六年から二〇三六年までを共有する十八篇と、七つの幕間。どこから読んでも、続けて読んでも成立します。</p>
+  <div class="tally">
+    <span><b>25</b> 篇</span>
+    <span><b>214</b> 章</span>
+    <span><b>646,907</b> 字</span>
+  </div>
+  <p><a class="go" href="reader/">読む</a></p>
+  <p class="sub">三秒後に、自動でひらきます。ひらかないときは <a href="reader/">reader/</a> をおしてください。</p>
+</main>
+</body>
+</html>
