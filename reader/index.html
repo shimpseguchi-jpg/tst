@@ -59,6 +59,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 #library{flex:1;overflow-y:auto;overflow-x:hidden}
 .lib-inner{max-width:62rem;margin:0 auto;padding:0 16px;padding-block:clamp(2.5rem,7vw,5rem) 4rem}
 .masthead{border-bottom:1px solid var(--rule);padding-bottom:1.6rem;margin-bottom:.4rem}
+.masthead .navrow{margin:1.3rem 0 0;display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
 .masthead h1{
   font-family:var(--mincho);font-weight:600;margin:0;
   font-size:clamp(2rem,6vw,3.1rem);letter-spacing:.14em;text-wrap:balance;line-height:1.3;
@@ -508,6 +509,7 @@ body.zen .zenout{display:block}
           <span><b class="num" id="t-chaps">—</b> 章</span>
           <span><b class="num" id="t-chars">—</b> 字</span>
         </div>
+        <p class="navrow"><button class="btn" id="toGuide">人物・店・年表の資料を見る</button> <button class="btn" id="toReport">森岡レポート</button> <span class="paperq"><button class="btn" id="toPaper">備陽新報の紙面</button><button class="btn ghost qmark" id="qBtn" aria-label="？" title="">？</button></span> <button class="btn" id="installBtn" hidden>ホーム画面に追加</button></p>
       </header>
       <header class="masthead xmast" id="xmast" hidden>
         <h1>番外（非公式）</h1>
@@ -522,7 +524,6 @@ body.zen .zenout{display:block}
       </header>
       <ul class="works" id="works"></ul>
       <div class="colophon" id="colo">
-        <p style="margin:0 0 1.1rem"><button class="btn" id="toGuide">人物・店・年表の資料を見る</button> <button class="btn" id="toReport">森岡レポート</button> <span class="paperq"><button class="btn" id="toPaper">備陽新報の紙面</button><button class="btn ghost qmark" id="qBtn" aria-label="？" title="">？</button></span> <button class="btn" id="installBtn" hidden>ホーム画面に追加</button></p>
         本文は縦書きで表示しています。横組みに切り替えることもできます。<br>
         字数は見出しと空白を除いた本文の文字数です。<br>
         読んだ位置はこの端末に記憶され、次に開いたときに続きから始まります。<br>
