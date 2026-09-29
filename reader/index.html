@@ -170,6 +170,20 @@ body.yoko .chead{font-size:1.3em;margin:0 0 2.6em;padding-bottom:.9em;border-bot
 .scene+.scene{margin:0}
 body.tate .scene+.scene{margin-left:2.6em}
 body.yoko .scene+.scene{margin-top:2.4em}
+/* 章末の一言。本文の .md には書かない。資料/一言.md から来る */
+.note{color:var(--muted)}
+body.tate .note{margin-left:3.4em;border-right:1px solid var(--rule);padding-right:1.6em;height:100%}
+body.yoko .note{margin-top:3rem;border-top:1px solid var(--rule);padding-top:1.5rem;max-width:32rem}
+.note .nwho{
+  font-family:var(--mincho);font-size:.92em;font-weight:600;
+  letter-spacing:.16em;color:var(--accent-soft);margin:0;
+}
+body.tate .note .nwho{margin:0 0 1.4em}
+body.yoko .note .nwho{margin:0 0 .7rem}
+.note .ntext{font-size:.86em;line-height:2.05;letter-spacing:.04em;margin:0}
+.note .ntext+.ntext{margin-top:0}
+body.tate .note .ntext+.ntext{margin-left:1.2em}
+body.yoko .note .ntext+.ntext{margin-top:.5em}
 body.tate .endmark{margin-left:3em;color:var(--muted);font-size:.8em;letter-spacing:.3em}
 body.yoko .endmark{margin-top:2.4em;color:var(--muted);font-size:.8em;letter-spacing:.3em;text-align:right}
 
@@ -719,6 +733,19 @@ body.zen .zenout{display:block}
     var end=document.createElement("p"); end.className="endmark";
     end.textContent = (curCh+1===w.chapters.length) ? "［了］" : "＊";
     text.appendChild(end);
+
+    if(c.note && c.note.text){
+      var nb=document.createElement("div"); nb.className="note";
+      var nw=document.createElement("p"); nw.className="nwho";
+      nw.textContent="――　"+c.note.who;
+      nb.appendChild(nw);
+      String(c.note.text).split("\n").forEach(function(line){
+        if(!line) return;
+        var np=document.createElement("p"); np.className="ntext"; np.textContent=line;
+        nb.appendChild(np);
+      });
+      text.appendChild(nb);
+    }
     pane.appendChild(text);
 
     $("prevCh").disabled = curCh===0;
