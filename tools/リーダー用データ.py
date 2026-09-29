@@ -79,6 +79,31 @@ def load_notes(path="資料/一言.md"):
 NOTES = load_notes()
 
 
+def load_periods(path="商店街連作設定.md"):
+    """既刊表の「時期」を読む。時系列の並べ替えは、この列だけで決める。
+
+       表に並んでいる順そのものが作者の決めた時系列なので、
+       日付が同じときは表の順で割る。手で二重管理しない。
+    """
+    src = io.open(path, encoding="utf-8").read()
+    seg = src[src.index("## 本編（既刊）"):src.index("番号は執筆順")]
+    out = {}
+    for i, ln in enumerate(seg.split("\n")):
+        m = re.match(r'^\|\s*([0-9]{2}|i[0-9]{1,2})\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|', ln)
+        if not m:
+            continue
+        num, period = m.group(1), m.group(3)
+        d = re.match(r'(\d{4})年(?:(\d{1,2})月)?(?:(\d{1,2})日)?', period)
+        y  = int(d.group(1)) if d else 9999
+        mo = int(d.group(2)) if (d and d.group(2)) else 4      # 月がないものは年度の頭に置く
+        da = int(d.group(3)) if (d and d.group(3)) else 1
+        out[num] = {"period": period, "key": (y, mo, da, i)}
+    return out
+
+
+PERIODS = load_periods()
+
+
 def count(s):
     s = re.sub(r'^#.*$', '', s, flags=re.M)
     return len(re.sub(r'\s', '', s))
@@ -113,13 +138,20 @@ for d in dirs:
     json.dump({"num": num, "title": title, "genre": genre, "blurb": blurb,
                "chars": total, "chapters": chapters},
               open(f"{OUT}/{num}.json", "w", encoding='utf-8'), ensure_ascii=False, separators=(',',':'))
+    pd = PERIODS.get(num, {"period": "", "key": (9999, 0, 0, 0)})
     index.append({"num": num, "title": title, "genre": genre, "blurb": blurb,
+                  "kind": "幕間" if num.startswith("i") else "作品",
+                  "period": pd["period"],
                   "chars": total, "count": len(chapters),
                   "chapters": [c["title"] for c in chapters]})
 
+# 時系列の順位を持たせる。並びそのものは執筆順のままにしておく
+for r, w in enumerate(sorted(index, key=lambda w: PERIODS.get(w["num"], {"key": (9999,0,0,0)})["key"])):
+    w["order"] = r
+
 json.dump(index, open(f"{OUT}/index.json", "w", encoding='utf-8'), ensure_ascii=False, separators=(',',':'))
-for w in index:
-    print(f'{w["num"]} {w["title"]}\t{w["count"]}章\t{w["chars"]}字')
+for w in sorted(index, key=lambda w: w["order"]):
+    print(f'{w["order"]:>2} {w["num"]:>3} {w["kind"]} {w["title"]}\t{w["period"]}\t{w["count"]}章\t{w["chars"]}字')
 print("total", sum(w["chars"] for w in index))
 _n = sum(len(v) for v in NOTES.values())
 _c = sum(w["count"] for w in index)

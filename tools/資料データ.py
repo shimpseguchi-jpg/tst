@@ -6,7 +6,7 @@ W = {  # 作品番号 → 表示名と時期
  "04":"餃子パン","05":"のぼせる","06":"月水金","07":"赤いバツ"
 }
 
-# ---- 作品の一覧も 商店街連作設定.md の「既刊」表から作る ----
+# ---- 作品の一覧も 商店街連作設定.md の「本編（既刊）」表から作る ----
 # 番号・題・時期・舞台の四つを取って、時期の頭が早い順に並べ直す。
 # 表の時期は算用数字なので、ここで漢数字に直す（年は一字ずつ、日付はふつうの読み）。
 
@@ -27,7 +27,7 @@ def _num2kan(t):
 def _read_works():
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     src = io.open(os.path.join(root, "商店街連作設定.md"), encoding="utf-8").read()
-    seg = src[src.index("## 既刊"):src.index("番号は執筆順")]
+    seg = src[src.index("## 本編（既刊）"):src.index("番号は執筆順")]
     out = []
     for line in seg.split("\n"):
         line = line.strip()
