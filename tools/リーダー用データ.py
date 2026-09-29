@@ -1,4 +1,4 @@
-import json, os, re, glob
+import io, json, os, re, glob
 
 OUT = "reader/data"
 ROOT = "."
@@ -35,6 +35,48 @@ META = {
  "i5": ("四年と三週間", "幕間・水曜の厨房",     "山根ともが自分から言う。「うち、いま付き合っとる人がおる」。その場に、四年その人の配信を聞いている人がいる。"),
 }
 
+def load_notes(path="資料/一言.md"):
+    """章末の一言を読む。
+
+       ## 01            作品番号（幕間は i1 のように書く）
+       ### 3            その作品の何章目か（一から数える）
+       **名前**         選んだ人
+       　本文           一言（複数行なら改行で区切る）
+
+       本文の .md には一行も書かない。ここだけに置く。
+    """
+    notes = {}
+    if not os.path.exists(path):
+        return notes
+    work = chap = who = None
+    buf = []
+
+    def flush():
+        if work and chap and who and buf:
+            notes.setdefault(work, {})[chap] = {"who": who, "text": "\n".join(buf)}
+
+    for ln in io.open(path, encoding="utf-8").read().split("\n"):
+        t = ln.strip()
+        if t.startswith("## "):
+            flush(); who, buf = None, []
+            work = t[3:].split("\u3000")[0].split()[0].strip()
+            chap = None
+        elif t.startswith("### "):
+            flush(); who, buf = None, []
+            chap = int(t[4:].strip())
+        elif set(t) == {"-"} and len(t) >= 3:
+            pass                      # 見出しのあいだの区切り線。一言には入れない
+        elif chap and t and who is None:
+            who = t.strip("*").strip()
+        elif chap and who is not None and t:
+            buf.append(t.lstrip("\u3000"))
+    flush()
+    return notes
+
+
+NOTES = load_notes()
+
+
 def count(s):
     s = re.sub(r'^#.*$', '', s, flags=re.M)
     return len(re.sub(r'\s', '', s))
@@ -61,7 +103,11 @@ for d in dirs:
                 scenes.append(paras)
         n = count(raw)
         total += n
-        chapters.append({"title": head, "scenes": scenes, "chars": n})
+        ch = {"title": head, "scenes": scenes, "chars": n}
+        note = NOTES.get(num, {}).get(len(chapters) + 1)
+        if note:
+            ch["note"] = note
+        chapters.append(ch)
     json.dump({"num": num, "title": title, "genre": genre, "blurb": blurb,
                "chars": total, "chapters": chapters},
               open(f"{OUT}/{num}.json", "w", encoding='utf-8'), ensure_ascii=False, separators=(',',':'))
@@ -73,3 +119,6 @@ json.dump(index, open(f"{OUT}/index.json", "w", encoding='utf-8'), ensure_ascii=
 for w in index:
     print(f'{w["num"]} {w["title"]}\t{w["count"]}章\t{w["chars"]}字')
 print("total", sum(w["chars"] for w in index))
+_n = sum(len(v) for v in NOTES.values())
+_c = sum(w["count"] for w in index)
+print(f"一言 {_n}/{_c} 章")
