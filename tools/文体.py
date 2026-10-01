@@ -4,7 +4,7 @@
     python3 tools/文体.py 作品04_餃子パン/02章.md
     python3 tools/文体.py 作品04_餃子パン          # 一篇まとめて
 
-  読点.py が読点だけを見るのに対して、これは一章の速さを十一の数で出す。
+  読点.py が読点だけを見るのに対して、これは一章の速さを十二の数で出す。
   作品の 設定.md に「## 文体の目標」の表があれば、そこと突き合わせて
   外れた行に ← をつける。**目標がない作品は、数を出すだけで何も言わない。**
 
@@ -16,14 +16,18 @@
   二十五字前後あるので、行で数えると台詞が多く見える。
   作品04は会話行 55%だが、**字で数えると 33%で、三分の二は地の文である。**
   読む人が感じるのは字のほうなので、迷ったら「会話字」を見る。
+
+  **文の長さは、地の文だけで測る。**台詞を混ぜると短く出る。
+  作品04 の文を混みで数えると 10字だが、**地の文だけなら 14字である。**
 """
 import io, os, re, sys, glob, statistics as st
 
-KEYS = ["文の中央値", "長文", "会話字", "会話行", "会話一行", "地の一行",
-        "地の連（字）", "地の連（行）", "会話の連（行）", "読点", "場面"]
-UNIT = {"文の中央値": "字", "長文": "%", "会話字": "%", "会話行": "%",
-        "会話一行": "字", "地の一行": "字", "地の連（字）": "字",
-        "地の連（行）": "行", "会話の連（行）": "行",
+KEYS = ["地の文の文", "長文", "一行の文数", "地の一行",
+        "地の連（字）", "地の連（行）",
+        "会話字", "会話行", "会話一行", "会話の連（行）", "読点", "場面"]
+UNIT = {"地の文の文": "字", "長文": "%", "一行の文数": "文", "地の一行": "字",
+        "地の連（字）": "字", "地の連（行）": "行",
+        "会話字": "%", "会話行": "%", "会話一行": "字", "会話の連（行）": "行",
         "読点": "字に一つ", "場面": "／章"}
 
 
@@ -69,7 +73,7 @@ def 連なり(seq, pred):
 def 測る(paths):
     chars = tou = long_ = 0
     lines, talk, scenes = [], 0, 0
-    sent, tl, nl, tr, nr = [], [], [], [], []
+    sent, tl, nl, tr, nr, per = [], [], [], [], [], []
     talkc = narrc = 0
     for p in paths:
         b = 本文(p)
@@ -89,10 +93,14 @@ def 測る(paths):
                 talk += 1
                 tl.append(n)
                 talkc += n
-            else:
-                nl.append(n)
-                narrc += n
-            for one in re.split(r'(?<=[。？！」])', s):
+                continue
+            # 地の文だけを測る。**台詞を混ぜると文が短く出る。**
+            # 台詞の行は十字前後なので、混ぜると中央値がそちらへ引かれる
+            nl.append(n)
+            narrc += n
+            ones = [x for x in re.split(r'(?<=[。？！])', s) if x.strip()]
+            per.append(len(ones))
+            for one in ones:
                 c = len(re.sub(r'\s', '', one))
                 if c:
                     sent.append(c)
@@ -100,14 +108,15 @@ def 測る(paths):
                         long_ += 1
     n = len(paths)
     return {
-        "文の中央値":     st.median(sent),
-        "長文":           long_ / len(sent) * 100,
-        "会話字":         talkc / (talkc + narrc) * 100,
-        "会話行":         talk / len(lines) * 100,
-        "会話一行":       st.mean(tl) if tl else 0.0,
+        "地の文の文":     st.median(sent) if sent else 0.0,
+        "長文":           long_ / len(sent) * 100 if sent else 0.0,
+        "一行の文数":     st.mean(per) if per else 0.0,
         "地の一行":       st.mean(nl) if nl else 0.0,
         "地の連（字）":   st.mean([b for a, b in nr]) if nr else 0.0,
         "地の連（行）":   st.mean([a for a, b in nr]) if nr else 0.0,
+        "会話字":         talkc / (talkc + narrc) * 100 if (talkc + narrc) else 0.0,
+        "会話行":         talk / len(lines) * 100,
+        "会話一行":       st.mean(tl) if tl else 0.0,
         "会話の連（行）": st.mean([a for a, b in tr]) if tr else 0.0,
         "読点":           chars / tou if tou else 0.0,
         "場面":           scenes / n,
