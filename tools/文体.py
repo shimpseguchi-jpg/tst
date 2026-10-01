@@ -4,20 +4,26 @@
     python3 tools/文体.py 作品04_餃子パン/02章.md
     python3 tools/文体.py 作品04_餃子パン          # 一篇まとめて
 
-  読点.py が読点だけを見るのに対して、これは一章の速さを九つの数で出す。
+  読点.py が読点だけを見るのに対して、これは一章の速さを十一の数で出す。
   作品の 設定.md に「## 文体の目標」の表があれば、そこと突き合わせて
   外れた行に ← をつける。**目標がない作品は、数を出すだけで何も言わない。**
 
   この連作は作品ごとに速さが違う。速いほうの端が作品04『餃子パン』、
   遅いほうの端が作品13『重ならない』と作品16『三段目』である。
   どちらが正しいということはない。**その作品が狙った速さから外れていないかだけを見る。**
+
+  **「会話行」と「会話字」は別物である。**台詞の行は十字前後、地の文の行は
+  二十五字前後あるので、行で数えると台詞が多く見える。
+  作品04は会話行 55%だが、**字で数えると 33%で、三分の二は地の文である。**
+  読む人が感じるのは字のほうなので、迷ったら「会話字」を見る。
 """
 import io, os, re, sys, glob, statistics as st
 
-KEYS = ["文の中央値", "長文", "会話行", "会話一行", "地の連なり",
-        "会話の連なり", "一行", "読点", "場面"]
-UNIT = {"文の中央値": "字", "長文": "%", "会話行": "%", "会話一行": "字",
-        "地の連なり": "行", "会話の連なり": "行", "一行": "字",
+KEYS = ["文の中央値", "長文", "会話字", "会話行", "会話一行", "地の一行",
+        "地の連（字）", "地の連（行）", "会話の連（行）", "読点", "場面"]
+UNIT = {"文の中央値": "字", "長文": "%", "会話字": "%", "会話行": "%",
+        "会話一行": "字", "地の一行": "字", "地の連（字）": "字",
+        "地の連（行）": "行", "会話の連（行）": "行",
         "読点": "字に一つ", "場面": "／章"}
 
 
@@ -41,23 +47,30 @@ def 台詞(s):
 
 
 def 連なり(seq, pred):
-    out, n = [], 0
+    """続いた塊を（行数, 字数）で返す。
+
+       **行だけで数えると足をすくわれる。**台詞の行は十字前後、
+       地の文の行は二十五字前後あるので、行の数は量を表さない。
+    """
+    out, c, k = [], 0, 0
     for x in seq:
         if pred(x):
-            n += 1
+            c += 1
+            k += len(re.sub(r'\s', '', x))
         else:
-            if n:
-                out.append(n)
-            n = 0
-    if n:
-        out.append(n)
+            if c:
+                out.append((c, k))
+            c = k = 0
+    if c:
+        out.append((c, k))
     return out
 
 
 def 測る(paths):
     chars = tou = long_ = 0
     lines, talk, scenes = [], 0, 0
-    sent, tl, tr, nr = [], [], [], []
+    sent, tl, nl, tr, nr = [], [], [], [], []
+    talkc = narrc = 0
     for p in paths:
         b = 本文(p)
         chars += len(re.sub(r'\s', '', b))
@@ -75,6 +88,10 @@ def 測る(paths):
             if 台詞(s):
                 talk += 1
                 tl.append(n)
+                talkc += n
+            else:
+                nl.append(n)
+                narrc += n
             for one in re.split(r'(?<=[。？！」])', s):
                 c = len(re.sub(r'\s', '', one))
                 if c:
@@ -83,15 +100,17 @@ def 測る(paths):
                         long_ += 1
     n = len(paths)
     return {
-        "文の中央値":   st.median(sent),
-        "長文":         long_ / len(sent) * 100,
-        "会話行":       talk / len(lines) * 100,
-        "会話一行":     st.mean(tl) if tl else 0.0,
-        "地の連なり":   st.mean(nr) if nr else 0.0,
-        "会話の連なり": st.mean(tr) if tr else 0.0,
-        "一行":         chars / len(lines),
-        "読点":         chars / tou if tou else 0.0,
-        "場面":         scenes / n,
+        "文の中央値":     st.median(sent),
+        "長文":           long_ / len(sent) * 100,
+        "会話字":         talkc / (talkc + narrc) * 100,
+        "会話行":         talk / len(lines) * 100,
+        "会話一行":       st.mean(tl) if tl else 0.0,
+        "地の一行":       st.mean(nl) if nl else 0.0,
+        "地の連（字）":   st.mean([b for a, b in nr]) if nr else 0.0,
+        "地の連（行）":   st.mean([a for a, b in nr]) if nr else 0.0,
+        "会話の連（行）": st.mean([a for a, b in tr]) if tr else 0.0,
+        "読点":           chars / tou if tou else 0.0,
+        "場面":           scenes / n,
     }, chars, n
 
 
