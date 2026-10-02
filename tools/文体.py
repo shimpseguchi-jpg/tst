@@ -198,6 +198,11 @@ def 走る(arg):
 
 
 if __name__ == "__main__":
+    try:
+        import signal
+        signal.signal(signal.SIGPIPE, signal.SIG_DFL)   # head に渡しても落ちないように
+    except Exception:
+        pass
     if len(sys.argv) < 2:
         print(__doc__)
         sys.exit(1)
