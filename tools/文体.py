@@ -82,7 +82,7 @@ def 測る(paths):
         # 場面の切れ目は二通りある。空行二つで切るものと、行頭の「——」で起こすもの。
         # 幕間は後者しか使っていないので、両方を数えないと一章＝一場面に見えてしまう
         scenes += len([x for x in re.split(r'\n{3,}', b.strip()) if x.strip()])
-        scenes += len(re.findall(r'^\s*——', b, flags=re.M))
+        scenes += len(re.findall(r'^\s*(——|――)', b, flags=re.M))   # 「――」が正。古い章の「——」も数える
         L = [l.strip() for l in b.split("\n") if l.strip()]
         lines += L
         tr += 連なり(L, 台詞)
