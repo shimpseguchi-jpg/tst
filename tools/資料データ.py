@@ -383,10 +383,11 @@ def md_to_html(md):
         out.append("<p>" + "<br>".join(_inline(x) for x in para) + "</p>")
     return "".join(out)
 
-def _doc(path, meta):
+def _doc(path, meta, full=False):
+    """full=True なら、最初の --- より前（前書き・凡例）も載せる"""
     src = open(path, encoding="utf-8").read()
     body = src.split("\n", 1)[1]
-    if "---" in body:
+    if "---" in body and not full:
         body = body.split("---", 1)[1]
     d = dict(meta)
     d["html"] = md_to_html(body)
@@ -473,6 +474,14 @@ docs = [
         "from": "持っているもの・出しているもの・出さないもの",
         "note": "本編はサービスの名前を一度も書いていない。ここでも書かない。持っていない人が四人いて、理由は四つとも別である。十二人のうち、自分の顔を出している人は一人もいない。",
     }),
+    _doc("資料/柏尾郷土史.md", {
+        "title": "柏尾郷土史",
+        "tab": "郷土史",
+        "to": "柏尾市",
+        "date": "古いほうから二〇三〇年まで",
+        "from": "書く側でまとめたもの（宿場町から、屋根を外すまで）",
+        "note": "本編が書いた事実を土台に、書いていない過去を埋めたもの。行末に作品名のある行は既刊で決まっていた事実、ない行はここで初めて決めた事実である。",
+    }, full=True),
     _doc("資料/ポケットの中.md", {
         "title": "ポケットの中",
         "tab": "ポケット",
