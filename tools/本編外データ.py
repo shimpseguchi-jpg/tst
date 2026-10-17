@@ -11,7 +11,7 @@
 
    どちらも正史ではない。index.json にも guide.json にも載せない。
    既刊表にも年表にも字数の合計にも入れない。
-   番号（x1〜x17）は書いた順の通し番号で、二つの区分をまたいでいる。
+   番号（x1〜x18）は書いた順の通し番号で、二つの区分をまたいでいる。
    本文中の {{ }} は、そのまま通す（リーダー側で黒い帯になる）。
 """
 import io, json, os, re, glob
@@ -68,7 +68,7 @@ for d, kind in DIRS:
                       "chars": total, "count": len(chapters),
                       "chapters": [c["title"] for c in chapters]})
 
-# 書いた順（通番）に並べ替える。x1〜x17
+# 書いた順（通番）に並べ替える。x1〜x18
 index.sort(key=lambda w: int(w["num"][1:]))
 json.dump(index, io.open(os.path.join(OUT, "x.json"), "w", encoding="utf-8"),
           ensure_ascii=False, separators=(",", ":"))
